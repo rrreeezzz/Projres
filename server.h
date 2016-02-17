@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <signal.h>
 
 #define WRITE_SIZE 80
 #define MSG_SIZE WRITE_SIZE+25
@@ -23,6 +24,7 @@
 
 extern int rechercheCmd(const char *msg);
 extern void exitClient(int fd, fd_set *readfds, char *fd_array, int *num_clients);
-extern void traiterRequete(int fd, fd_set *readfds, char *fd_array, int *num_clients); 
+extern void traiterRequete(int fd, fd_set *readfds, char *fd_array, int *num_clients);
+extern void quit_server(fd_set *readfds, char *fd_array, int *server_sockfd, int *num_clients);
 
 #endif
