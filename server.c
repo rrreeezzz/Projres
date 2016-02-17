@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
 	/*Mise en plase du handler pour SIGINT*/
 	/*On l'ignore car impossible de passer arguments a handler, sauf en passant par des variables globales*/
 	/*On ne peut par contre pas intercepter SIGSTOP (ctrl-z) ou SIGKILL*/
+
 	struct sigaction handler;
 	memset(&handler, 0, sizeof(handler));
 	handler.sa_handler = SIG_IGN;
