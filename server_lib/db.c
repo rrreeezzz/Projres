@@ -15,7 +15,7 @@ void connect_mysql(){ //si ne se connecte pas, c'est ce fichier qui gère l'erre
     exit(EXIT_FAILURE);
   }
 
-  if (mysql_real_connect(db, "localhost", "root", "test49", NULL, 0, NULL, 0) == NULL) //pour l'instant en clair, mais créer fichier de configuration
+  if (mysql_real_connect(db, "localhost", "***", "***", NULL, 0, NULL, 0) == NULL) //pour l'instant en clair, mais créer fichier de configuration
   error_mysql(db);
 
   if (mysql_query(db, "USE pswd")) //retourne 0 si succes, on utilise la database pswd existe
