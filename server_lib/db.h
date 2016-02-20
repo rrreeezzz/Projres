@@ -15,6 +15,7 @@ extern void connect_mysql();
 extern void exit_mysql();
 extern int exist_user_mysql(char *name);
 extern int id_user_mysql(char *name);
+extern char * name_user_mysql(int id);
 extern void add_user_mysql(char *name);
 extern int last_id_mysql();
 

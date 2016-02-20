@@ -8,5 +8,6 @@ Lancer mysql avec : mysql -u'user' -p'password'
 Créer une base de donnée avec: CREATE DATABASE pswd;
 Puis créer les tables: CREATE TABLE pswd(ID INT, USER TEXT);
 
-Ensuite remplacer dans db.c a la ligne 18 avec les identifiants avec lesquels vous vous connectez au serveur mysql.
+Remplacer ensuite les infos dans conf.txt
+Lancer le make
 

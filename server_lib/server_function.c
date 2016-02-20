@@ -10,44 +10,49 @@ int rechercheCmd(const char *msg) { //les erreurs de cmd seront gérées côté 
 	} else { return ALL2; }
 }
 
-void exitClient(int fd, fd_set *readfds, char *fd_array, int *num_clients){
+void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients){
 	int i;
 	close(fd);
 	FD_CLR(fd, readfds); //on enlève le leaver du tableau de clients
 	for (i = 0; i < (*num_clients) - 1; i++)
-	 if (fd_array[i] == fd)
+	 if (fd_array[i].fd_client == fd)
 	   break;
 	for (; i < (*num_clients) - 1; i++)
-	 (fd_array[i]) = (fd_array[i + 1]);
+	 (fd_array[i].fd_client) = (fd_array[i + 1].fd_client);
 	(*num_clients)--;
 }
 
-void quit_server(fd_set *readfds, char *fd_array, int *server_sockfd, int *num_clients){
+void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
 	int i;
 	char msg[WRITE_SIZE];
 	printf("--- Server is shutting down\n");
 	sprintf(msg, "X[SERVER] : Server is shutting down.\n");  // modifier le X pour dire au client de couper
 	for (i = 0; i < *num_clients ; i++) {
-		write(fd_array[i], msg, strlen(msg));
-		close(fd_array[i]);
+		write(fd_array[i].fd_client, msg, strlen(msg));
+		close(fd_array[i].fd_client);
 	}
 	close(*server_sockfd);
 	exit_mysql();
 	exit(0);
 }
 
-void traiterRequete(int fd, fd_set *readfds, char *fd_array, int *num_clients) {
+void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char msg[WRITE_SIZE];
 	char rep_msg[MSG_SIZE];
 	int i, result;
+	char *user_name;
+	int user_id;
+
+	user_id = search_client(fd, fd_array, num_clients);
+	user_name = name_user_mysql(user_id);
 
 	if ((result = read(fd, msg, WRITE_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
-		msg[result-1] = '\0'; //-1 sinon on remplace déjà le '\0' pr '\0', ici je le met a la place du '\n'
-		printf("Client %d : %s\n", fd, msg); // a modifier avec le pseudo du mec, on rajoute le '\n' du coup
+		msg[result] = '\0';
+		printf("Client %d as %s: %s", user_id, user_name, msg); // a modifier avec le pseudo du mec, on rajoute le '\n' du coup
 
 		switch(rechercheCmd(msg)) {
 			case QUIT:
-			printf("--- Client %d left\n", fd);  // a modifier avec le pseudo du mec
+			printf("--- Client %d as %s left\n", user_id, user_name);  // a modifier avec le pseudo du mec
 			exitClient(fd, readfds, fd_array, num_clients);
 			break;
 			case MSG:
@@ -57,25 +62,28 @@ void traiterRequete(int fd, fd_set *readfds, char *fd_array, int *num_clients) {
 			//on envoie au groupe
 			break;
 			case ALL1: // comande /all
-			sprintf(rep_msg, "%d : %s", fd, msg+5); //msg+5 pour enlever le /all
+			sprintf(rep_msg, "%s : %s", user_name, msg+5); //msg+5 pour enlever le /all
 			for(i=0; i<(*num_clients); i++){
-				if (fd_array[i] != fd)  /* on ne renvoie pas à l'emetteur */
-				if ((result = write(fd_array[i], rep_msg, strlen(rep_msg))) < 0) { perror("write ALL1"); exit(EXIT_FAILURE); }
+				if (fd_array[i].fd_client != fd)  /* on ne renvoie pas à l'emetteur */
+				if ((result = write(fd_array[i].fd_client, rep_msg, strlen(rep_msg))) < 0) { perror("write ALL1"); exit(EXIT_FAILURE); }
 			}
 			break;
 			case ALL2: //ici pas de /all
-			sprintf(rep_msg, "%d : %s", fd, msg);
+			sprintf(rep_msg, "%s : %s", user_name, msg);
 			for(i=0; i<(*num_clients); i++){
-				if (fd_array[i] != fd)  /* on ne renvoie pas à l'emetteur */
-				if ((result = write(fd_array[i], rep_msg, strlen(rep_msg))) < 0) { perror("write ALL2"); exit(EXIT_FAILURE); }
+				if (fd_array[i].fd_client != fd)  /* on ne renvoie pas à l'emetteur */
+				if ((result = write(fd_array[i].fd_client, rep_msg, strlen(rep_msg))) < 0) { perror("write ALL2"); exit(EXIT_FAILURE); }
 			}
 			break;
 		} //switch
 
 	} else {
-		printf("--- End of connection of client %d\n", fd);  // a modifier avec le pseudo du mec
+		printf("--- End of connection of client %d as %s\n", user_id, user_name);  // a modifier avec le pseudo du mec
 		exitClient(fd, readfds, fd_array, num_clients);
 	} //if read
+
+	free(user_name);
+
 }
 
 void handler_sigint(){
@@ -122,8 +130,8 @@ void routine_server(int * server_sockfd){
   int client_sockfd;
   struct sockaddr_in client_address;
   int addresslen = sizeof(struct sockaddr_in);
-  int fd;
-  char fd_array[MAX_CLIENTS];
+  int fd; //desc quand un client parle
+  client_data fd_array[MAX_CLIENTS]; //tableau de data client
   fd_set readfds, testfds;
   int maxfds;
   char msg[WRITE_SIZE];
@@ -151,7 +159,7 @@ void routine_server(int * server_sockfd){
 
             opt_desc(&client_sockfd, &maxfds, &readfds); //optimisation descripteurs
 
-            login_client(&client_sockfd, fd_array, &num_clients);
+            login_client(&client_sockfd, fd_array, &num_clients, &readfds);
 
           } else {
             printf("--- Someone tried to connect, but too many clients online\n");
@@ -167,7 +175,7 @@ void routine_server(int * server_sockfd){
           } else {
             sprintf(rep_msg, "[SERVER] : %s", msg);
             for (i=0; i<num_clients ; i++)
-            write(fd_array[i], rep_msg, strlen(rep_msg));
+            write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
           }
 
         } else {  /*activité d'un client*/
@@ -198,7 +206,7 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 
 }
 
-void login_client(int *client_sockfd, char *fd_array, int *num_clients){
+void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
 
   char msg[WRITE_SIZE];
   char user[WRITE_SIZE];
@@ -209,9 +217,8 @@ void login_client(int *client_sockfd, char *fd_array, int *num_clients){
 
   do{
     memset (user, '\0', sizeof (user));//réinitialisation chaine
-    if ((result = read(*client_sockfd, user, WRITE_SIZE)) < 0){ //si le client se déco au moment du login
+    if ((result = read(*client_sockfd, user, WRITE_SIZE)) <= 0){ //si le client se déco au moment du login
 		  result = -1;
-      printf("merde");
       break;
     }else if(strlen(user) > 15){
       sprintf(msg, "[SERVER] : Username too long, please enter another: \n");
@@ -223,19 +230,35 @@ void login_client(int *client_sockfd, char *fd_array, int *num_clients){
   }while(strlen(user) > 15 || strlen(user) < 3);
 
   if(result != -1){
-    fd_array[*num_clients]=*client_sockfd;
-    (*num_clients)++;
+    fd_array[*num_clients].fd_client=*client_sockfd;
     user[result-1] = '\0'; //-1 sinon on remplace déjà le '\0' pr '\0', ici je le met a la place du '\n'
     if(exist_user_mysql(user)){
-      sprintf(msg, "[SERVER] : Welcom back %s ! User id is : %d\n", user, id_user_mysql(user));
+			fd_array[*num_clients].id_client=id_user_mysql(user);
+      sprintf(msg, "[SERVER] : Welcom back %s ! User id is : %d\n", user, fd_array[*num_clients].id_client);
       write(*client_sockfd, msg, strlen(msg));
     }else{
       add_user_mysql(user);
-      sprintf(msg, "Oh, you'r new %s ! User id is : %d\n", user, id_user_mysql(user));
+			fd_array[*num_clients].id_client=id_user_mysql(user);
+      sprintf(msg, "Oh, you'r new %s ! User id is : %d\n", user, fd_array[*num_clients].id_client);
       write(*client_sockfd, msg, strlen(msg));
     }
-    printf("--- Client %d joined as : %s\n",id_user_mysql(user), user);///*** a modif avec le pseudo du mec
+		(*num_clients)++;
+    printf("--- Client %d joined as : %s\n",fd_array[*num_clients].id_client, user);///*** a modif avec le pseudo du mec
   }else{
     close(*client_sockfd);
+		FD_CLR(*client_sockfd, readfds);
   }
+}
+
+int search_client(int fd, client_data *fd_array, int *num_clients){
+
+	int i;
+
+	for(i=0; i<*num_clients; i++){
+		if(fd == fd_array[i].fd_client)
+			return fd_array[i].id_client;
+	}
+
+	return -1; //pas exit failure car fct qui peut surement resservir
+
 }
