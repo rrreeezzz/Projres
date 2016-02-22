@@ -24,7 +24,7 @@ struct hostent * ask_server_adress(int *port){
 
 		strncpy(temp, hostname, ((int) strlen(hostname) - (int) strlen(posPort)));
 		temp[((int) strlen(hostname) - (int) strlen(posPort))] = '\0';
-		
+
 		if((hostinfo = gethostbyname(temp)) == NULL)
 		memset(hostname, 0, sizeof (hostname));
 	}
@@ -40,8 +40,7 @@ void viderBuffer() {
 	}
 }
 
-int main(int argc, char *argv[]) {
-
+int client(){
 	fd_set testfds, clientfds;
 	char msg[MSG_SIZE];
 	int fd;

@@ -1,3 +1,4 @@
+#include "utilities.c"
 #include "server_function.h"
 #include "db.h"
 

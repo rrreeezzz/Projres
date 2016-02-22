@@ -13,7 +13,7 @@ void connect_mysql(){ //si ne se connecte pas, c'est ce fichier qui gère l'erre
   char pswd[40];
   char line[256];
 
-  if((file = fopen("conf.txt", "r")) == NULL){
+  if((file = fopen("../conf.txt", "r")) == NULL){
     perror("Error with oppening configuration file");
     exit(EXIT_FAILURE);
   }
