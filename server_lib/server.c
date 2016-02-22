@@ -1,8 +1,9 @@
-#include "utilities.c"
 #include "server_function.h"
 #include "db.h"
 
 int main(int argc, char *argv[]) {
+
+	int * server_sockfd;
 
 	time_server();
 

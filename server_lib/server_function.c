@@ -1,5 +1,6 @@
 #include "server_function.h"
 #include "db.h"
+#include "utilities.h"
 
 int rechercheCmd(const char *msg) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 	if (*msg == '/') {
@@ -114,7 +115,7 @@ int * init_server(){
   *server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_address.sin_port = htons(atoi(get_Conf_Port()));
+  server_address.sin_port = htons(get_Config("Port"));
   if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
   if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
 
