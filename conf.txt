@@ -1,3 +1,6 @@
----PLEASE ENTER YOUR MYSQL INFO---
+---MYSQL INFO---
 user:
 password:
+
+---Protocols---
+Port: 40000
