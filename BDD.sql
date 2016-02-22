@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Client :  localhost:8889
--- Généré le :  Lun 22 Février 2016 à 08:43
+-- Généré le :  Lun 22 Février 2016 à 11:09
 -- Version du serveur :  5.5.38
 -- Version de PHP :  5.6.2
 
@@ -49,8 +49,8 @@ CREATE TABLE `groups` (
 CREATE TABLE `users` (
 `Id` int(11) NOT NULL,
   `Name` varchar(15) NOT NULL,
-  `Creation` date NOT NULL,
-  `Last_Connection` date NOT NULL,
+  `Creation` datetime NOT NULL,
+  `Last_Connection` datetime NOT NULL,
   `Password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
