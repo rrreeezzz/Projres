@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[]) {
 
-	int *server_sockfd;
+	time_server();
 
 	handler_sigint();
 

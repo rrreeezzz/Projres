@@ -37,7 +37,7 @@ void connect_mysql(){ //si ne se connecte pas, c'est ce fichier qui gère l'erre
   if (mysql_real_connect(db, "localhost", admin, pswd, NULL, 0, NULL, 0) == NULL) //pour l'instant en clair, mais créer fichier de configuration
   error_mysql(db);
 
-  if (mysql_query(db, "USE pswd")) //retourne 0 si succes, on utilise la database pswd existe
+  if (mysql_query(db, "USE chat")) //retourne 0 si succes, on utilise la database chat existe
   error_mysql();
 
   fclose(file);
@@ -47,11 +47,11 @@ void exit_mysql(){
   mysql_close(db);
 }
 
-void add_user_mysql(char *name){
+void add_user_mysql(char *name, char *pswd){
 
   char operation[256]; //mettre un define
 
-  sprintf(operation, "INSERT INTO pswd VALUES(%d, '%s')", last_id_mysql() + 1, name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+  sprintf(operation, "INSERT INTO users VALUES(%d, '%s', NOW(), NOW(), '%s')", last_id_mysql() + 1, name, pswd);
 
   if (mysql_query(db, operation))
     error_mysql();
@@ -65,7 +65,7 @@ int exist_user_mysql(char *name){
   char operation[256]; //mettre un define
   int nb;
 
-  sprintf(operation, "SELECT COUNT(*) FROM pswd WHERE USER = '%s'", name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+  sprintf(operation, "SELECT COUNT(*) FROM users WHERE Name = '%s'", name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
 
   if(mysql_query(db, operation))
     error_mysql();
@@ -90,7 +90,7 @@ int id_user_mysql(char *name){
   char operation[256]; //mettre un define
   int id;
 
-  sprintf(operation, "SELECT ID FROM pswd WHERE USER = '%s'", name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+  sprintf(operation, "SELECT Id FROM users WHERE Name = '%s'", name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
 
   if(mysql_query(db, operation))
     error_mysql();
@@ -112,7 +112,7 @@ int last_id_mysql(){
   char operation[256]; //mettre un define
   int id;
 
-  sprintf(operation, "SELECT MAX(ID) FROM pswd"); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+  sprintf(operation, "SELECT MAX(Id) FROM users"); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
 
   if(mysql_query(db, operation))
     error_mysql();
@@ -138,7 +138,7 @@ char * name_user_mysql(int id){
   char operation[256]; //mettre un define
 
   char *name = (char *) malloc(15*sizeof(char)); //mettre un define, sachant que pas plus grand que 15 dans login_client, va falloir faire un free
-  sprintf(operation, "SELECT USER FROM pswd WHERE ID = '%d'", id); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+  sprintf(operation, "SELECT Name FROM users WHERE Id = '%d'", id); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
 
   if(mysql_query(db, operation))
     error_mysql();
@@ -151,4 +151,29 @@ char * name_user_mysql(int id){
   mysql_free_result(result);
 
   return name;
+}
+
+struct tm * time_server(){
+
+  time_t secondes;
+  struct tm * instant;
+
+  instant = (struct tm *) malloc(sizeof(struct tm));
+
+  time(&secondes);
+  instant=localtime(&secondes);
+
+  printf("%d/%d/%d ; %d:%d:%d\n", instant->tm_mday+1, instant->tm_mon+1,instant->tm_year+1900, instant->tm_hour, instant->tm_min, instant->tm_sec);
+  return instant;
+}
+
+void last_connection_mysql(int id){
+
+  char operation[256]; //mettre un define
+
+  sprintf(operation, "UPDATE users SET Last_Connection = NOW() WHERE Id = %d", id); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
+
+  if (mysql_query(db, operation))
+    error_mysql();
+
 }

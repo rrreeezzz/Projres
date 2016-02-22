@@ -210,6 +210,7 @@ void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, f
 
   char msg[WRITE_SIZE];
   char user[WRITE_SIZE];
+	char pswd[WRITE_SIZE] = "***"; // Provisoire
   int result = -1;
 
   sprintf(msg, "[SERVER] : Please log in : \n");
@@ -237,7 +238,7 @@ void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, f
       sprintf(msg, "[SERVER] : Welcom back %s ! User id is : %d\n", user, fd_array[*num_clients].id_client);
       write(*client_sockfd, msg, strlen(msg));
     }else{
-      add_user_mysql(user);
+      add_user_mysql(user, pswd);
 			fd_array[*num_clients].id_client=id_user_mysql(user);
       sprintf(msg, "Oh, you'r new %s ! User id is : %d\n", user, fd_array[*num_clients].id_client);
       write(*client_sockfd, msg, strlen(msg));
