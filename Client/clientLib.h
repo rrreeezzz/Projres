@@ -14,5 +14,7 @@ extern char General_Name[16];
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern void viderBuffer();
 extern struct hostent * ask_server_adress(int *port);
+extern int client(int *maxfds, fd_set *readfds);
+extern int client(int *maxfds, fd_set *readfds);
 
 #endif
