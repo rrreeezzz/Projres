@@ -25,7 +25,7 @@
 typedef struct {
   int fd_client;
   char id_client;
-  char name_client[15];
+  char name_client[16];
 } client_data;
 
 extern int rechercheCmd(const char *msg);
@@ -38,5 +38,5 @@ extern void routine_server(int * server_sockfd);
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
 extern int search_client(int fd, client_data *fd_array, int *num_clients);
-int client();
+int client(int *maxfds, fd_set *readfds);
 #endif

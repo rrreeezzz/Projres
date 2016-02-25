@@ -138,7 +138,7 @@ void routine_server(int * server_sockfd){
           if (strcmp(msg, "quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
             quit_server(&readfds, fd_array, server_sockfd, &num_clients);
 					} else if (strcmp(msg, "connect\n")==0){
-						client();
+						client(&maxfds, &readfds);
           } else {
             sprintf(rep_msg, "%s", msg);
             for (i=0; i<num_clients ; i++)

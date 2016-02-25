@@ -1,5 +1,5 @@
-#include "client_function.c"
-#include "clientLib.c"
+#include "client_function.h"
+#include "clientLib.h"
 
 int main(int argc, char *argv[]) {
 

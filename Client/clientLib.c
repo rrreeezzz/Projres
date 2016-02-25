@@ -40,7 +40,7 @@ void viderBuffer() {
 	}
 }
 
-int client(){
+int client(int *maxfds, fd_set *readfds){
 	int sockfd;
 	struct hostent *hostinfo;
 	struct sockaddr_in address;
@@ -62,6 +62,6 @@ int client(){
 	/* Connection au serveur */
 	if(connect(sockfd, (struct sockaddr *)&address, sizeof(address)) < 0) { perror("connect"); exit(EXIT_FAILURE); }
 
-	
+
 	return 0;
 }//main
