@@ -116,7 +116,6 @@ int * init_server(){
 
 void routine_server(int * server_sockfd){
 
-  int i=0;
   int num_clients = 0;
   int client_sockfd;
   struct sockaddr_in client_address;
@@ -126,7 +125,6 @@ void routine_server(int * server_sockfd){
   fd_set readfds, testfds;
   int maxfds;
   char msg[WRITE_SIZE];
-  char rep_msg[MSG_SIZE];
 
   maxfds = *server_sockfd;
   if(listen(*server_sockfd, 1) < 0) { perror("listen"); exit(EXIT_FAILURE); } // mettre plus que 1 utile ???
@@ -160,17 +158,7 @@ void routine_server(int * server_sockfd){
           } //if num_clients < MAX_CLIENTS
 
         } else if (fd == 0) {  /*activité sur le clavier*/
-          fgets(msg, WRITE_SIZE, stdin);
-          if (strcmp(msg, "quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
-            quit_server(&readfds, fd_array, server_sockfd, &num_clients);
-					} else if (strcmp(msg, "connect\n")==0){
-						client(&maxfds, &readfds);
-          } else {
-            sprintf(rep_msg, "%s", msg);
-            for (i=0; i<num_clients ; i++)
-            write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
-          }
-
+					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
         } else {  /*activité d'un client*/
           traiterRequete(fd, &readfds, fd_array, &num_clients);
         }//if fd ==
@@ -238,4 +226,23 @@ int search_client(int fd, client_data *fd_array, int *num_clients){
 			return fd_array[i].id_client;
 	}
 	return -1; //pas exit failure car fct qui peut surement resservir
+}
+
+void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){
+
+	char msg[WRITE_SIZE];
+	char rep_msg[MSG_SIZE];
+	int i;
+
+	fgets(msg, WRITE_SIZE, stdin);
+	if (strcmp(msg, "quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
+		quit_server(readfds, fd_array, server_sockfd, num_clients);
+	} else if (strcmp(msg, "connect\n")==0){
+		client(maxfds, readfds);
+	} else {
+		sprintf(rep_msg, "%s", msg);
+		for (i=0; i<*num_clients ; i++)
+		write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
+	}
+
 }

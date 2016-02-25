@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <signal.h>
+#include "clientLib.h"
 
 char General_Name[16];
 
@@ -40,6 +41,7 @@ extern void routine_server(int * server_sockfd);
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
 extern int search_client(int fd, client_data *fd_array, int *num_clients);
-int client(int *maxfds, fd_set *readfds);
-void ask_name();
+extern void ask_name();
+extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients);
+
 #endif

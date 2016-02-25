@@ -13,5 +13,7 @@
 
 extern void viderBuffer();
 extern struct hostent * ask_server_adress(int *port);
+extern int client(int *maxfds, fd_set *readfds);
+extern int client(int *maxfds, fd_set *readfds);
 
 #endif
