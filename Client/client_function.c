@@ -1,5 +1,31 @@
 #include "client_function.h"
 
+void ask_name(){
+	char user[20];
+	char msg[100];
+	int result;
+
+	printf("Please enter your name: \n");
+	do{
+    memset (user, '\0', sizeof(user));//réinitialisation chaine
+    if ((result = read(0, user, WRITE_SIZE)) <= 0){
+			perror("Name read error.");
+			exit(EXIT_FAILURE);
+			break;
+    }else if(strlen(user) > 15){
+      sprintf(msg, "Username too long, please enter another: \n");
+      write(0,msg, strlen(msg));
+    }else if(strlen(user) < 3){
+      sprintf(msg, "Username too short, please enter another: \n");
+      write(0,msg, strlen(msg));
+    }
+  }while(strlen(user) > 15 || strlen(user) < 3);
+	strcpy(General_Name,user);
+
+	printf("Your name is: %s\n",General_Name);
+
+}
+
 int rechercheCmd(const char *msg) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 	if (*msg == '/') {
 		if (!strncmp(msg+1, "quit", 4)) { return QUIT;
@@ -185,7 +211,7 @@ void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, f
 
 	//Si le nom est invalide
   }else if(strlen(user) > 15 || strlen(user) < 3){
-		sprintf(msg, " Invalid name\n");
+		sprintf(msg, "Invalid name\n");
     write(*client_sockfd, msg, strlen(msg));
 		result = -1;
   }
@@ -193,7 +219,7 @@ void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, f
   if(result != -1){
     fd_array[*num_clients].fd_client=*client_sockfd;
 		fd_array[*num_clients].id_client=*num_clients;
-    user[result-1] = '\0'; //-1 sinon on remplace déjà le '\0' pr '\0', ici je le met a la place du '\n'
+    user[result] = '\0';
 		strcpy(fd_array[*num_clients].name_client,user);
     sprintf(msg, "Welcome %s !\n", user);
     write(*client_sockfd, msg, strlen(msg));

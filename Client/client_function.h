@@ -11,6 +11,8 @@
 #include <netdb.h>
 #include <signal.h>
 
+char General_Name[16];
+
 #define WRITE_SIZE 100
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_CLIENTS 95
@@ -39,4 +41,5 @@ extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
 extern int search_client(int fd, client_data *fd_array, int *num_clients);
 int client(int *maxfds, fd_set *readfds);
+void ask_name();
 #endif

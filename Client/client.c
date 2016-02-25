@@ -2,8 +2,9 @@
 #include "clientLib.h"
 
 int main(int argc, char *argv[]) {
-
 	int * server_sockfd;
+
+	ask_name();
 
 	handler_sigint();
 
