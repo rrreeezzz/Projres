@@ -219,7 +219,6 @@ void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, f
   if(result != -1){
     fd_array[*num_clients].fd_client=*client_sockfd;
 		fd_array[*num_clients].id_client=*num_clients;
-    user[result] = '\0';
 		strcpy(fd_array[*num_clients].name_client,user);
     sprintf(msg, "Welcome %s !\n", user);
     write(*client_sockfd, msg, strlen(msg));

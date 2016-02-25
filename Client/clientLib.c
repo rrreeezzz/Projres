@@ -62,6 +62,9 @@ int client(int *maxfds, fd_set *readfds){
 	/* Connection au serveur */
 	if(connect(sockfd, (struct sockaddr *)&address, sizeof(address)) < 0) { perror("connect"); exit(EXIT_FAILURE); }
 
+	write(sockfd, General_Name, strlen(General_Name));
+
+	opt_desc(&sockfd, &*maxfds, &*readfds);
 
 	return 0;
 }//main
