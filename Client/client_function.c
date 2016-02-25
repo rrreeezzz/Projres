@@ -1,7 +1,7 @@
 #include "client_function.h"
 
 void ask_name(){
-	char user[20];
+	char user[WRITE_SIZE]; //laisser a write size pour que ce soit cohérent avec le read
 	char msg[100];
 	int result;
 
@@ -12,14 +12,15 @@ void ask_name(){
 			perror("Name read error.");
 			exit(EXIT_FAILURE);
 			break;
-    }else if(strlen(user) > 15){
+    }else if(result > 16){ //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
       sprintf(msg, "Username too long, please enter another: \n");
       write(0,msg, strlen(msg));
-    }else if(strlen(user) < 3){
+    }else if(result < 4){
       sprintf(msg, "Username too short, please enter another: \n");
       write(0,msg, strlen(msg));
     }
-  }while(strlen(user) > 15 || strlen(user) < 3);
+  }while(result > 16 || result < 4);
+	user[strlen(user)-1] = '\0';
 	strcpy(General_Name,user);
 
 	printf("Your name is: %s\n",General_Name);
@@ -69,7 +70,7 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 	if ((result = read(fd, msg, WRITE_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
 		msg[result] = '\0';
 
-		printf("%s : %s\n",fd_array[user_id].name_client,msg);
+		printf("%s : %s",fd_array[user_id].name_client,msg);
 	} else {
 		printf("End of connection of client as %s\n", fd_array[user_id].name_client);  // a modifier avec le pseudo du mec
 		exitClient(fd, readfds, fd_array, num_clients);
@@ -148,6 +149,8 @@ void routine_server(int * server_sockfd){
 
             opt_desc(&client_sockfd, &maxfds, &readfds); //optimisation descripteurs
 
+						write(client_sockfd, General_Name, sizeof(General_Name));
+
             login_client(&client_sockfd, fd_array, &num_clients, &readfds);
 
           } else {
@@ -189,29 +192,27 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 
 void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
 
-  char msg[WRITE_SIZE];
-  char user[WRITE_SIZE];
-  int result = -1;
+	char msg[WRITE_SIZE];
+	char user[WRITE_SIZE];
+	int result = -1;
 
-  memset (user, '\0', sizeof (user));//réinitialisation chaine
-  if ((result = read(*client_sockfd, user, WRITE_SIZE)) <= 0){ //si le client se déco au moment du login
+	memset (user, '\0', sizeof (user));//réinitialisation chaine
+	if ((result = read(*client_sockfd, user, WRITE_SIZE)) <= 0){ //si le client se déco au moment du login
 		result = -1;
-
-	//Si le nom est invalide
-  }else if(strlen(user) > 15 || strlen(user) < 3){
+		//Si le nom est invalide
+	}else if(result > 16 || result < 4){
+		printf("%s len : %d\n", user, (int) strlen(user));
 		sprintf(msg, "Invalid name\n");
-    write(*client_sockfd, msg, strlen(msg));
+		write(*client_sockfd, msg, strlen(msg));
 		result = -1;
-  }
+	}
 
   if(result != -1){
     fd_array[*num_clients].fd_client=*client_sockfd;
 		fd_array[*num_clients].id_client=*num_clients;
 		strcpy(fd_array[*num_clients].name_client,user);
-    sprintf(msg, "Welcome %s !\n", user);
-    write(*client_sockfd, msg, strlen(msg));
 		(*num_clients)++;
-    printf("Client joined as : %s\n", user);
+    printf("You are now in communication with : %s\n", user);
   }else{
     close(*client_sockfd);
 		FD_CLR(*client_sockfd, readfds);
@@ -234,10 +235,10 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	int i;
 
 	fgets(msg, WRITE_SIZE, stdin);
-	if (strcmp(msg, "quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
+	if (strcmp(msg, "/quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
-	} else if (strcmp(msg, "connect\n")==0){
-		client(maxfds, readfds);
+	} else if (strcmp(msg, "/connect\n")==0){
+		client(maxfds, readfds, num_clients, fd_array);
 	} else {
 		sprintf(rep_msg, "%s", msg);
 		for (i=0; i<*num_clients ; i++)

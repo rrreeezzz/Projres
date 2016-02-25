@@ -12,8 +12,6 @@
 #include <signal.h>
 #include "clientLib.h"
 
-char General_Name[16];
-
 #define WRITE_SIZE 100
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_CLIENTS 95
@@ -24,12 +22,6 @@ char General_Name[16];
 #define ALL2 3
 #define GRP 4
 #define HELP 5
-
-typedef struct {
-  int fd_client;
-  char id_client;
-  char name_client[16];
-} client_data;
 
 extern int rechercheCmd(const char *msg);
 extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
