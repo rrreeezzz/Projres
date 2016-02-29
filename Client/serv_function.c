@@ -43,6 +43,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			//case 201:
 
 		}
+	free(msg_rcv.msg_content);
 	}
 }
 
@@ -263,6 +264,7 @@ int protocol_parser(char *msg, message *msg_rcv){
 	char * sep = NULL;
 
 	if((sep = strchr(msg, '/')) != NULL){
+		(*msg_rcv).msg_content = malloc(sizeof(sep+1));
 		strcpy((*msg_rcv).msg_content, sep+1);
 		return 0;
 	}
