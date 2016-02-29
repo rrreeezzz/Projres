@@ -1,5 +1,5 @@
 #include "client_function.h"
-#include "clientLib.h"
+#include "serv_function.h"
 
 int main(int argc, char *argv[]) {
 	int * server_sockfd;

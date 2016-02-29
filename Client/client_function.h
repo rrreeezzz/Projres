@@ -1,5 +1,5 @@
-#ifndef __SERVER_FUNCTION_H__
-#define __SERVER_FUNCTION_H__
+#ifndef __CLIENT_H__
+#define __CLIENT_H__
 
 #include <stdio.h>
 #include <unistd.h>
@@ -9,31 +9,32 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <signal.h>
-#include "clientLib.h"
 
 #define WRITE_SIZE 100
 #define MSG_SIZE WRITE_SIZE+25
-#define MAX_CLIENTS 95
-#define Max(x,y) (x>y ? x:y)
-#define QUIT 0
-#define MSG 1
-#define ALL1 2
-#define ALL2 3
-#define GRP 4
-#define HELP 5
 
-extern int rechercheCmd(const char *msg);
-extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
-extern void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
-extern void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients);
-extern void handler_sigint();
-extern int * init_server();
-extern void routine_server(int * server_sockfd);
+typedef struct {
+  int fd_client;
+  char id_client;
+  char name_client[16];
+} client_data;
+
+typedef struct {
+  int code;
+  char *msg_content;
+  //time
+} message;
+
+char General_Name[16];
+
+//Fonction que le fichier va chercher a coté, pour pas a avoir a iclure client_function.h dans ce fichier
+extern char General_Name[16];
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
-extern void login_client(int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
-extern int search_client(int fd, client_data *fd_array, int *num_clients);
-extern void ask_name();
-extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients);
+extern void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
+extern void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
+
+extern void viderBuffer();
+extern struct hostent * ask_server_adress(int *port);
+extern int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array);
 
 #endif

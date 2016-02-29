@@ -1,4 +1,4 @@
 CFLAGS=-Wall
 
-client: client.c clientLib.h clientLib.c client_function.h client_function.c
-	gcc -o $@ client.c clientLib.c client_function.c ${CFLAGS}
+client: client.c client_function.h client_function.c serv_function.h serv_function.c
+	gcc -o $@ client.c client_function.c serv_function.c ${CFLAGS}
