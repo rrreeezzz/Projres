@@ -27,26 +27,6 @@ void ask_name(){
 
 }
 
-void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
-
-	message msg_rcv;
-
-	sscanf(msg, "%d/", &msg_rcv.code);
-
-	if(protocol_parser(msg, &msg_rcv) != -1){
-		printf("%s\n", msg_rcv.msg_content);
-
-		switch(msg_rcv.code){
-			case 200:
-			login_client(msg_rcv.msg_content, client_sockfd, fd_array, num_clients, readfds);
-			break;
-			//case 201:
-
-		}
-	free(msg_rcv.msg_content);
-	}
-}
-
 void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients){
 	int i;
 	close(fd);
@@ -80,8 +60,8 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 
 	if ((result = read(fd, msg, WRITE_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
 		msg[result] = '\0';
-
-		printf("%s : %s",fd_array[user_id].name_client,msg);
+		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds);
+		//printf("%s : %s",fd_array[user_id].name_client,msg);
 	} else {
 		printf("End of connection of client as %s\n", fd_array[user_id].name_client);  // a modifier avec le pseudo du mec
 		exitClient(fd, readfds, fd_array, num_clients);
@@ -178,67 +158,12 @@ void routine_server(int * server_sockfd){
         } else if (fd == 0) {  /*activité sur le clavier*/
 					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
         } else {  /*activité d'un client*/
-          traiterRequete(fd, &readfds, fd_array, &num_clients);
+					traiterRequete(fd, &readfds, fd_array, &num_clients);
         }//if fd ==
       }//if FD_ISSET
     }//for
   }//while
-}
-
-void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
-
-  /* Ajouter client_sockfd dans la liste des descripteurs en attente */
-  /* Pour cela, on cherche si un descripteur plus petit est libre */
-  /* Optimisation de descripteurs*/
-
-  int descDup;
-  descDup = dup(*client_sockfd);
-  if (*client_sockfd < descDup) {
-    close(descDup);
-    *maxfds = Max(*client_sockfd, *maxfds);
-    FD_SET(*client_sockfd, readfds);
-  } else {
-    close(*client_sockfd);
-    *maxfds = Max(descDup, *maxfds);
-    FD_SET(descDup, readfds);
-  }
-
-}
-
-void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
-
-	char user[WRITE_SIZE];
-
-	sscanf(msg, "%s", user);
-
-  if(search_client_name(user, fd_array, num_clients) == -1){ //si on a pas de conversation déjà commencé avec le client
-    fd_array[*num_clients].fd_client=*client_sockfd;
-		fd_array[*num_clients].id_client=*num_clients;
-		strcpy(fd_array[*num_clients].name_client,user);
-		(*num_clients)++;
-    printf("You are now in communication with : %s\n", user);
-  }else{
-    close(*client_sockfd);
-		FD_CLR(*client_sockfd, readfds);
-  }
-}
-
-int search_client_id(int fd, client_data *fd_array, int *num_clients){
-	int i;
-	for(i=0; i<*num_clients; i++){
-		if(fd == fd_array[i].fd_client)
-			return fd_array[i].id_client;
-	}
-	return -1; //pas exit failure car fct qui peut surement resservir
-}
-
-int search_client_name(char *user, client_data *fd_array, int *num_clients){
-	int i;
-	for(i=0; i<*num_clients; i++){
-		if(strcmp(user, fd_array[i].name_client) == 0)
-			return fd_array[i].id_client;
-	}
-	return -1; //pas exit failure car fct qui peut surement resservir
+	free(server_sockfd);
 }
 
 void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){
@@ -258,16 +183,4 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
 	}
 
-}
-
-int protocol_parser(char *msg, message *msg_rcv){
-	char * sep = NULL;
-
-	if((sep = strchr(msg, '/')) != NULL){
-		(*msg_rcv).msg_content = malloc(sizeof(sep+1));
-		strcpy((*msg_rcv).msg_content, sep+1);
-		return 0;
-	}
-
-	return -1;
 }
