@@ -60,8 +60,12 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 
 	if ((result = read(fd, msg, WRITE_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
 		msg[result] = '\0';
+<<<<<<< Updated upstream
 		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds);
 		//printf("%s : %s",fd_array[user_id].name_client,msg);
+=======
+		printf("%s : %s",fd_array[user_id].name_client,msg);
+>>>>>>> Stashed changes
 	} else {
 		printf("End of connection of client as %s\n", fd_array[user_id].name_client);  // a modifier avec le pseudo du mec
 		exitClient(fd, readfds, fd_array, num_clients);
@@ -87,17 +91,34 @@ void handler_sigint(){
 }
 
 int * init_server(){
-
+	int optval = 1;
   struct sockaddr_in server_address;
 	int addresslen = sizeof(struct sockaddr_in);
-  int * server_sockfd = (int *) malloc(sizeof(int));;
+  int * server_sockfd = (int *) malloc(sizeof(int));
 
   printf("\n*** Server program starting (enter \"quit\" to stop) ***\n");
+	*server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (*server_sockfd < 0){
+		perror("socket server");
+		exit(EXIT_FAILURE);
+	}
 
-  *server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if(setsockopt(*server_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0){
+		perror("setsockopt() error: Re-use address");
+		close(*server_sockfd);
+		exit(EXIT_FAILURE);
+	}
+
+	if(setsockopt(*server_sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval)) < 0) {
+		 perror("setsockopt() error: Keep Alive");
+		 close(*server_sockfd);
+		 exit(EXIT_FAILURE);
+	}
+
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
   server_address.sin_port = 0;
+
   if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
   if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
 
@@ -149,8 +170,8 @@ void routine_server(int * server_sockfd){
 						rechercheProtocol(msg, &client_sockfd, fd_array, &num_clients, &readfds);
 
           } else {
-            printf("--- Someone tried to connect, but too many clients online\n");
-            sprintf(msg, "Sorry, too many clients online. Try again later.\n"); // modifier le X pour dire au client de couper
+            printf("Someone tried to connect, but too many clients online\n");
+            sprintf(msg, "204/\n");
             write(client_sockfd, msg, strlen(msg));
             close(client_sockfd);
           } //if num_clients < MAX_CLIENTS
