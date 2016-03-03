@@ -38,12 +38,13 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	struct sockaddr_in address;
 	char msg[MSG_SIZE];
 	int port = -1;
+	message segment;
 
 	printf("\n*** Enter server's address : ***\n");
 
 	hostinfo = ask_server_adress(&port);
 
-	printf("\n*** Client program starting (enter \"quit\" to stop): ***\n");
+	printf("\n*** Client program starting (enter \"/quit\" to stop): ***\n");
 
 	sock_host = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -56,13 +57,12 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	opt_desc(&sock_host, maxfds, readfds);
 
-	sprintf(msg, "200/%s", General_Name);
-	write(sock_host, msg, sizeof(General_Name));
+	login_msg(&segment); //génération du message de login
+	send_msg(&segment, &sock_host); //on envois le message
+	free(segment.msg_content);
 
-	memset (msg, '\0', sizeof (msg));//réinitialisation chaine
-
-	read(sock_host, msg, sizeof(msg));
-	rechercheProtocol(msg, &sock_host, fd_array, num_clients, readfds);
+	//read(sock_host, msg, sizeof(msg));
+	//rechercheProtocol(msg, &sock_host, fd_array, num_clients, readfds);
 
 	return 0;
 }//main
@@ -89,9 +89,9 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 
 void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
 
-	char user[WRITE_SIZE];
+	char user[MAX_SIZE_USERNAME];
 
-	sscanf(msg, "%s", user);
+	sscanf(msg, "FROM:%s", user);
 
   if(search_client_name(user, fd_array, num_clients) == -1){ //si on a pas de conversation déjà commencé avec le client
     fd_array[*num_clients].fd_client=*client_sockfd;

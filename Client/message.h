@@ -22,6 +22,9 @@
 #define GRP 4
 #define HELP 5
 
+#define MAX_SIZE_USERNAME 16
+char General_Name[MAX_SIZE_USERNAME];
+
 typedef struct {
   int code;
   int length;
@@ -29,6 +32,12 @@ typedef struct {
   time_t temps; //temps en secondes depuis le 1er janvier 1970
 } message;
 
-extern void send_time(time_t *temps);
+typedef struct {
+  int fd_client;
+  char id_client;
+  char name_client[MAX_SIZE_USERNAME];
+} client_data;
+
+extern void login_msg(message *segment);
 
 #endif

@@ -1,5 +1,10 @@
-void send_time(time_t *temps){
+#include "message.h"
 
-	time(temps);
+void login_msg(message *segment){
+
+	(*segment).code = 200;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+
+	sprintf((*segment).msg_content, "FROM:%s", General_Name);
 
 }

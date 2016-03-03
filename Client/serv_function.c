@@ -53,21 +53,19 @@ void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int
 }
 
 void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+
+	/*Fonction qui lit les messages en attentes sur le file descriptor*/
+
 	char msg[WRITE_SIZE];
 	int  result;
 
-	int user_id = search_client_id(fd, fd_array, num_clients);
+	memset(msg, '\0', WRITE_SIZE);
 
-	if ((result = read(fd, msg, WRITE_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
-		msg[result] = '\0';
-<<<<<<< Updated upstream
+	if ((result = read(fd, msg, MSG_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
+		printf("msg recu : %s\n", msg);
 		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds);
-		//printf("%s : %s",fd_array[user_id].name_client,msg);
-=======
-		printf("%s : %s",fd_array[user_id].name_client,msg);
->>>>>>> Stashed changes
 	} else {
-		printf("End of connection of client as %s\n", fd_array[user_id].name_client);  // a modifier avec le pseudo du mec
+		//printf("End of connection of client as %s\n", fd_array[user_id].name_client);
 		exitClient(fd, readfds, fd_array, num_clients);
 	} //if read
 
@@ -78,6 +76,7 @@ void handler_sigint(){
   /*Mise en plase du handler pour SIGINT*/
   /*On l'ignore car impossible de passer arguments a handler, sauf en passant par des variables globales*/
   /*On ne peut par contre pas intercepter SIGSTOP (ctrl-z) ou SIGKILL*/
+
   struct sigaction handler;
   memset(&handler, 0, sizeof(handler));
   handler.sa_handler = SIG_IGN;
@@ -96,7 +95,7 @@ int * init_server(){
 	int addresslen = sizeof(struct sockaddr_in);
   int * server_sockfd = (int *) malloc(sizeof(int));
 
-  printf("\n*** Server program starting (enter \"quit\" to stop) ***\n");
+  printf("\n*** Server program starting (enter \"/quit\" to stop) ***\n");
 	*server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (*server_sockfd < 0){
 		perror("socket server");
@@ -137,7 +136,7 @@ void routine_server(int * server_sockfd){
   client_data fd_array[MAX_CLIENTS]; //tableau de data client
   fd_set readfds, testfds;
   int maxfds;
-  char msg[WRITE_SIZE];
+  char msg[MSG_SIZE];
 
   maxfds = *server_sockfd;
   if(listen(*server_sockfd, 1) < 0) { perror("listen"); exit(EXIT_FAILURE); } // mettre plus que 1 utile ???
@@ -161,14 +160,6 @@ void routine_server(int * server_sockfd){
 
             opt_desc(&client_sockfd, &maxfds, &readfds); //optimisation descripteurs
 
-						sprintf(msg, "200/%s", General_Name); //1ere étape, on envois le nom du serveur
-						write(client_sockfd, msg, sizeof(General_Name));
-
-						memset (msg, '\0', sizeof (msg));//réinitialisation chaine
-
-						read(client_sockfd, msg, sizeof(msg));
-						rechercheProtocol(msg, &client_sockfd, fd_array, &num_clients, &readfds);
-
           } else {
             printf("Someone tried to connect, but too many clients online\n");
             sprintf(msg, "204/\n");
@@ -180,6 +171,7 @@ void routine_server(int * server_sockfd){
 					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
         } else {  /*activité d'un client*/
 					traiterRequete(fd, &readfds, fd_array, &num_clients);
+					printf("jsuis ok\n");
         }//if fd ==
       }//if FD_ISSET
     }//for

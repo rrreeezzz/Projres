@@ -13,25 +13,6 @@
 #include "protocole.h"
 #include "message.h"
 
-#define WRITE_SIZE 100
-#define MSG_SIZE WRITE_SIZE+25
-#define MAX_CLIENTS 95
-#define Max(x,y) (x>y ? x:y)
-#define QUIT 0
-#define MSG 1
-#define ALL1 2
-#define ALL2 3
-#define GRP 4
-#define HELP 5
-
-typedef struct {
-  int fd_client;
-  char id_client;
-  char name_client[16];
-} client_data;
-
-char General_Name[16];
-
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
 extern void viderBuffer();
