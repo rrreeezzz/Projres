@@ -26,7 +26,8 @@ int protocol_parser(char *msg, message *msg_rcv){
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
-		(*msg_rcv).msg_content = data;
+		(*msg_rcv).msg_content = malloc(strlen(data)*sizeof(char));
+		strcpy((*msg_rcv).msg_content,data);
 		return 0;
 	}
 	/*
@@ -58,5 +59,6 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				break;
 		}
 	}
+	free((*msg_rcv).msg_content);
 	free(msg_rcv);
 }

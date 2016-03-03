@@ -90,7 +90,6 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
 
 	char user[MAX_SIZE_USERNAME];
-
 	sscanf(msg, "FROM:%s", user);
 
   if(search_client_name(user, fd_array, num_clients) == -1){ //si on a pas de conversation déjà commencé avec le client
