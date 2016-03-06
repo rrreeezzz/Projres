@@ -38,6 +38,8 @@ typedef struct {
   char name_client[MAX_SIZE_USERNAME];
 } client_data;
 
-extern void login_msg(message *segment);
+extern void session_initiate(message *segment);
+extern void session_accept(message *segment);
+extern void normal_msg(message *segment, char * data);
 
 #endif

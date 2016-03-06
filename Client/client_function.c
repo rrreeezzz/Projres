@@ -57,7 +57,7 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	opt_desc(&sock_host, maxfds, readfds);
 
-	login_msg(&segment); //génération du message de login
+	session_initiate(&segment); //génération du message de session-initiate
 	send_msg(&segment, &sock_host); //on envois le message
 	free(segment.msg_content);
 
@@ -102,6 +102,9 @@ void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num
 }
 
 int search_client_id(int fd, client_data *fd_array, int *num_clients){
+
+/*Fonction qui prend un file descriptor et renvois l'ID du client s'il existe*/
+
 	int i;
 	for(i=0; i<*num_clients; i++){
 		if(fd == fd_array[i].fd_client)
@@ -111,6 +114,9 @@ int search_client_id(int fd, client_data *fd_array, int *num_clients){
 }
 
 int search_client_name(char *user, client_data *fd_array, int *num_clients){
+
+	/*Fonction qui prend un username de client et renvois l'ID du client s'il existe*/
+
 	int i;
 	for(i=0; i<*num_clients; i++){
 		if(strcmp(user, fd_array[i].name_client) == 0)

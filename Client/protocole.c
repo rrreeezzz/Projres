@@ -5,8 +5,8 @@ void send_msg(message *segment, int *fd){
 	/*Fonction qui concatène et envois les trames*/
 
 	(*segment).temps = time(NULL);
-	(*segment).length = MSG_SIZE;
-	char msg[(*segment).length];
+	(*segment).length = strlen((*segment).msg_content);
+	char msg[MSG_SIZE];
 
 	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
 
@@ -36,24 +36,34 @@ int protocol_parser(char *msg, message *msg_rcv){
 
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
-	/*Fonction qui va, en focntion du type de message reçu, appliquer la bonne opération dessus*/
+	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
 
 	message * msg_rcv = (message *) malloc(sizeof(message));
+	message * msg_send = (message *) malloc(sizeof(message));
 
 	if(protocol_parser(msg, msg_rcv) != -1){
 
+		/*Ecrire une fonction qui check quand le message a été envoyé
+		et si trop vieux on fait pas le switch case*/
+
 		switch((*msg_rcv).code){
 			/*case 100:
-				display_msg
-				break;*/
+				if(search_client_id(*client_sockfd, fd_array, num_clients) != -1) //on regarde si on connait le client (session-initiate et session_accept passé)
+					*/
 			case 200:
-			login_client((*msg_rcv).msg_content, client_sockfd, fd_array, num_clients, readfds);
-			break;
-			//case 201:
+				login_client((*msg_rcv).msg_content, client_sockfd, fd_array, num_clients, readfds);
+				session_accept(msg_send); //on créer le message de session-accept
+				send_msg(msg_send, client_sockfd);
+				break;
+			case 201:
+				login_client((*msg_rcv).msg_content, client_sockfd, fd_array, num_clients, readfds);
+				break;
 			default:
 				break;
 		}
+		free((*msg_rcv).msg_content);
+		free((*msg_send).msg_content);
 	}
-	free((*msg_rcv).msg_content);
+	free(msg_send);
 	free(msg_rcv);
 }
