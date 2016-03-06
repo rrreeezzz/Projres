@@ -171,7 +171,6 @@ void routine_server(int * server_sockfd){
 					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
         } else {  /*activité d'un client*/
 					traiterRequete(fd, &readfds, fd_array, &num_clients);
-					printf("jsuis ok\n");
         }//if fd ==
       }//if FD_ISSET
     }//for

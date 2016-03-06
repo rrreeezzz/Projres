@@ -11,7 +11,7 @@ void send_msg(message *segment, int *fd){
 	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
 
 	printf("msg envoyé : %s\n", msg);
-	write(*fd, msg, MSG_SIZE); //gerer les erreurs ?
+	write(*fd, msg, strlen(msg)); //avec strlen pas de bug, bizarre... changer avec la bonne taille
 
 }
 
@@ -21,20 +21,15 @@ int protocol_parser(char *msg, message *msg_rcv){
 
 	char * sep = NULL;
 	char code[3], length[MSG_SIZE], send_time[MSG_SIZE], data[MSG_SIZE];
+	(*msg_rcv).msg_content = malloc(MSG_SIZE);
 
 	if(sscanf(msg, "%[^'/']/%[^'/']/%[^'/']/%[^'/]/END", code, length, send_time, data) == 4){
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
-		(*msg_rcv).msg_content = malloc(strlen(data)*sizeof(char));
-		strcpy((*msg_rcv).msg_content,data);
+		memcpy((*msg_rcv).msg_content,data, (*msg_rcv).length);
 		return 0;
 	}
-	/*
-	if((sep = strchr(msg, '/')) != NULL){
-		strcpy((*msg_rcv).msg_content, sep+1);
-		return 0;
-	}*/
 
 	return -1;
 }

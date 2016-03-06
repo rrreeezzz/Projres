@@ -61,9 +61,6 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	send_msg(&segment, &sock_host); //on envois le message
 	free(segment.msg_content);
 
-	//read(sock_host, msg, sizeof(msg));
-	//rechercheProtocol(msg, &sock_host, fd_array, num_clients, readfds);
-
 	return 0;
 }//main
 
