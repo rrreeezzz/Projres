@@ -27,7 +27,7 @@ int protocol_parser(char *msg, message *msg_rcv){
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
-		memcpy((*msg_rcv).msg_content,data, (*msg_rcv).length);
+		memcpy((*msg_rcv).msg_content, data, (*msg_rcv).length);
 		return 0;
 	}
 
@@ -37,7 +37,6 @@ int protocol_parser(char *msg, message *msg_rcv){
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
-
 	message * msg_rcv = (message *) malloc(sizeof(message));
 	message * msg_send = (message *) malloc(sizeof(message));
 
@@ -47,17 +46,26 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 		et si trop vieux on fait pas le switch case*/
 
 		switch((*msg_rcv).code){
-			/*case 100:
-				if(search_client_id(*client_sockfd, fd_array, num_clients) != -1) //on regarde si on connait le client (session-initiate et session_accept passé)
-					*/
+			case 100:
+				if (search_client_ready_by_fd(client_sockfd, fd_array, num_clients) != -1) //on regarde si le client est ready (session-initiate et session_accept passées)
+					/* à faire*/
+                else
+                    printf("Client not ready for communication\n");
 			case 200:
-				login_client((*msg_rcv).msg_content, client_sockfd, fd_array, num_clients, readfds);
-				session_accept(msg_send); //on créer le message de session-accept
-				send_msg(msg_send, client_sockfd);
-				break;
+                if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
+                    session_accept(msg_send, 1); //on créer le message de session-accept-1
+                    send_msg(msg_send, client_sockfd);
+                }
+                break;
 			case 201:
-				login_client((*msg_rcv).msg_content, client_sockfd, fd_array, num_clients, readfds);
+                if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
+                    session_accept(msg_send, 2); //on créer le message de session-accept-2
+                    send_msg(msg_send, client_sockfd);
+                    client_ready(client_sockfd, fd_array, num_clients);
+                }
 				break;
+            case 202:
+                client_ready(client_sockfd, fd_array, num_clients);
 			default:
 				break;
 		}

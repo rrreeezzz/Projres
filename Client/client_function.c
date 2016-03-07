@@ -84,27 +84,60 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 
 }
 
-void login_client(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds){
+int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) {
 
 	char user[MAX_SIZE_USERNAME];
-	sscanf(msg, "FROM:%s", user);
+    sscanf((*segment).msg_content, "FROM:%s", user);
 
-  if(search_client_name(user, fd_array, num_clients) == -1){ //si on a pas de conversation déjà commencé avec le client
-    fd_array[*num_clients].fd_client=*client_sockfd;
-		fd_array[*num_clients].id_client=*num_clients;
-		strcpy(fd_array[*num_clients].name_client,user);
-		(*num_clients)++;
-    printf("You are now in communication with : %s\n", user);
-  }else{
-    close(*client_sockfd);
-		FD_CLR(*client_sockfd, readfds);
-  }
+    if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
+        fd_array[*num_clients].fd_client=*client_sockfd;
+        fd_array[*num_clients].id_client=*num_clients;
+        strcpy(fd_array[*num_clients].name_client,user);
+        (*num_clients)++;
+        printf("You are now in communication with : %s\n", user);
+        return 0;
+    }else{
+        printf("Session denied : %s already connected\n", user);
+        session_denied(msg_send, 1);
+        send_msg(msg_send, *client_sockfd);
+        close(*client_sockfd);
+        FD_CLR(*client_sockfd, readfds);
+        return -1;
+    }
 }
 
-int search_client_id(int fd, client_data *fd_array, int *num_clients){
+void client_ready(int fd, client_data *fd_array, int *num_clients) {
 
-/*Fonction qui prend un file descriptor et renvois l'ID du client s'il existe*/
+/* met le client en ready, maintenant on peut lui parler */
+    int i = search_client_array_by_fd(client_sockfd, fd_array, num_clients);
+    fd_array[i].rdy = 1;
+}
 
+int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_clients) {
+
+/*Fonction qui prend un file descriptor et renvoie si le client est ready*/
+    int i = 0;
+    if ((i = search_client_array_by_fd(fd, fd_array, num_clients)) != -1) {
+        if (fd_array[i].rdy == 1)
+            return 0;
+    }
+    return -1;
+}
+
+int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients) {
+
+/*Fonction qui prend un file descriptor et renvoie l'indice dans fd_array correspondant au client s'il existe*/
+	int i;
+	for(i=0; i<*num_clients; i++){
+		if(fd == fd_array[i].fd_client)
+			return i;
+	}
+	return -1; //pas exit failure car fct qui peut surement resservir
+}
+
+int search_client_id_by_fd(int fd, client_data *fd_array, int *num_clients) {
+
+/*Fonction qui prend un file descriptor et renvoie l'ID du client s'il existe*/
 	int i;
 	for(i=0; i<*num_clients; i++){
 		if(fd == fd_array[i].fd_client)
@@ -113,10 +146,9 @@ int search_client_id(int fd, client_data *fd_array, int *num_clients){
 	return -1; //pas exit failure car fct qui peut surement resservir
 }
 
-int search_client_name(char *user, client_data *fd_array, int *num_clients){
+int search_client_id_by_name(char *user, client_data *fd_array, int *num_clients) {
 
-	/*Fonction qui prend un username de client et renvois l'ID du client s'il existe*/
-
+	/*Fonction qui prend un username de client et renvoie l'ID du client s'il existe*/
 	int i;
 	for(i=0; i<*num_clients; i++){
 		if(strcmp(user, fd_array[i].name_client) == 0)

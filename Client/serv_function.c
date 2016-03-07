@@ -136,7 +136,7 @@ void routine_server(int * server_sockfd){
   client_data fd_array[MAX_CLIENTS]; //tableau de data client
   fd_set readfds, testfds;
   int maxfds;
-  char msg[MSG_SIZE];
+  message *msg = (message *) malloc(sizeof(message));
 
   maxfds = *server_sockfd;
   if(listen(*server_sockfd, 1) < 0) { perror("listen"); exit(EXIT_FAILURE); } // mettre plus que 1 utile ???
@@ -162,8 +162,8 @@ void routine_server(int * server_sockfd){
 
           } else {
             printf("Someone tried to connect, but too many clients online\n");
-            sprintf(msg, "204/\n");
-            write(client_sockfd, msg, strlen(msg));
+            session_denied(msg, 0);
+            send_msg(msg_send, client_sockfd);
             close(client_sockfd);
           } //if num_clients < MAX_CLIENTS
 
@@ -174,8 +174,10 @@ void routine_server(int * server_sockfd){
         }//if fd ==
       }//if FD_ISSET
     }//for
+    free((*msg_rcv).msg_content); // JE SUIS PAS SUR DE MOI LA !!!!!
   }//while
-	free(server_sockfd);
+    free(msg);
+    free(server_sockfd);
 }
 
 void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){
@@ -194,5 +196,4 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		for (i=0; i<*num_clients ; i++)
 		write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
 	}
-
 }

@@ -23,6 +23,7 @@
 #define HELP 5
 
 #define MAX_SIZE_USERNAME 16
+
 char General_Name[MAX_SIZE_USERNAME];
 
 typedef struct {
@@ -36,6 +37,7 @@ typedef struct {
   int fd_client;
   char id_client;
   char name_client[MAX_SIZE_USERNAME];
+  int rdy;
 } client_data;
 
 extern void session_initiate(message *segment);
