@@ -94,15 +94,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 300 : SESSION_DENIED
 			case 300:
-				break;
-
 			// 301 : SESSION_DENIED
 			case 301:
 				printf("%s\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
-				
+
 			// 302 : SESSION_END
 			case 302:
 				printf("%s\n", (*msg_rcv).msg_content);
