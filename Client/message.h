@@ -42,6 +42,9 @@ typedef struct {
 
 extern void session_initiate(message *segment);
 extern void session_accept(message *segment);
+extern void session_confirmed(message *segment);
+extern void session_denied(message *segment, int type);
 extern void normal_msg(message *segment, char * data);
+extern void session_end(message *segment);
 
 #endif

@@ -1,6 +1,6 @@
 #include "protocole.h"
 
-void send_msg(message *segment, int *fd){
+void send_msg(message *segment, int *fd) {
 
 	/*Fonction qui concatène et envois les trames*/
 
@@ -12,10 +12,9 @@ void send_msg(message *segment, int *fd){
 
 	printf("msg envoyé : %s\n", msg);
 	write(*fd, msg, strlen(msg)); //avec strlen pas de bug, bizarre... changer avec la bonne taille
-
 }
 
-int protocol_parser(char *msg, message *msg_rcv){
+int protocol_parser(char *msg, message *msg_rcv) {
 
 	/*Fonction qui se charge de séparer les différents champs de la trame reçu*/
 
@@ -53,19 +52,30 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
                     printf("Client not ready for communication\n");
 			case 200:
                 if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
-                    session_accept(msg_send, 1); //on créer le message de session-accept-1
+                    session_accept(msg_send); //on créer le message de session-accept-1
                     send_msg(msg_send, client_sockfd);
                 }
                 break;
 			case 201:
                 if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
-                    session_accept(msg_send, 2); //on créer le message de session-accept-2
+                    session_confirmed(msg_send); //on créer le message de session-accept-2
                     send_msg(msg_send, client_sockfd);
                     client_ready(client_sockfd, fd_array, num_clients);
+                    printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
                 }
 				break;
             case 202:
                 client_ready(client_sockfd, fd_array, num_clients);
+                printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
+            case 300:
+            case 301:
+                printf("%s\n", (*msg_rcv).msg_content);
+                close(client_sockfd);
+                FD_CLR(client_sockfd, readfds);
+                break;
+            case 302:
+                printf("%s\n", (*msg_rcv).msg_content);
+                exitClient(client_sockfd, readfds, fd_array, num_clients);
 			default:
 				break;
 		}
