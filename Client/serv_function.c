@@ -32,16 +32,15 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	close(fd);
 	FD_CLR(fd, readfds); //on enlève le leaver du tableau de clients
 	for (i = 0; i < (*num_clients) - 1; i++)
-	 if (fd_array[i].fd_client == fd)
-	   break;
+	i = search_client_array_by_fd(fd, fd_array, num_clients);
 	for (; i < (*num_clients) - 1; i++)
-	 (fd_array[i].fd_client) = (fd_array[i + 1].fd_client);
+        fd_array[i] = fd_array[i + 1];
 	(*num_clients)--;
 }
 
 void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
 	int i;
-	char msg[WRITE_SIZE];
+	message msg;
 	printf("--- Server is shutting down\n");
 	sprintf(msg, "X[SERVER] : Server is shutting down.\n");  // modifier le X pour dire au client de couper
 	for (i = 0; i < *num_clients ; i++) {
@@ -90,15 +89,15 @@ void handler_sigint(){
 }
 
 int * init_server(){
-	int optval = 1;
-  struct sockaddr_in server_address;
-	int addresslen = sizeof(struct sockaddr_in);
-  int * server_sockfd = (int *) malloc(sizeof(int));
+    int optval = 1;
+    struct sockaddr_in server_address;
+    int addresslen = sizeof(struct sockaddr_in);
+    int * server_sockfd = (int *) malloc(sizeof(int));
 
-  printf("\n*** Server program starting (enter \"/quit\" to stop) ***\n");
-	*server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (*server_sockfd < 0){
-		perror("socket server");
+    printf("\n*** Server program starting (enter \"/quit\" to stop) ***\n");
+    *server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*server_sockfd < 0){
+        perror("socket server");
 		exit(EXIT_FAILURE);
 	}
 
@@ -114,16 +113,16 @@ int * init_server(){
 		 exit(EXIT_FAILURE);
 	}
 
-  server_address.sin_family = AF_INET;
-  server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-  server_address.sin_port = 0;
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_address.sin_port = 0;
 
-  if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
-  if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
+    if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
+    if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
 
-  printf("\n*** Connections available on port : %d ***\n", ntohs(server_address.sin_port));
+    printf("\n*** Connections available on port : %d ***\n", ntohs(server_address.sin_port));
 
-  return server_sockfd;
+    return server_sockfd;
 }
 
 void routine_server(int * server_sockfd){

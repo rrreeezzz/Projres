@@ -36,9 +36,8 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	int sock_host;
 	struct hostent *hostinfo;
 	struct sockaddr_in address;
-	char msg[MSG_SIZE];
 	int port = -1;
-	message segment;
+	message *msg = (message *) malloc(sizeof(message));
 
 	printf("\n*** Enter server's address : ***\n");
 
@@ -57,9 +56,11 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	opt_desc(&sock_host, maxfds, readfds);
 
-	session_initiate(&segment); //génération du message de session-initiate
-	send_msg(&segment, &sock_host); //on envois le message
-	free(segment.msg_content);
+	session_initiate(msg); //génération du message de session-initiate
+	send_msg(msg, &sock_host); //on envois le message
+
+	free((*msg).msg_content); // JE SUIS PAS SUR DE MOI LA !!!!!
+	free(msg);
 
 	return 0;
 }//main
@@ -92,9 +93,9 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
     if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
         fd_array[*num_clients].fd_client=*client_sockfd;
         fd_array[*num_clients].id_client=*num_clients;
+        fd_array[*num_clients].rdy = 0;
         strcpy(fd_array[*num_clients].name_client,user);
         (*num_clients)++;
-        printf("You are now in communication with : %s\n", user);
         return 0;
     }else{
         printf("Session denied : %s already connected\n", user);
