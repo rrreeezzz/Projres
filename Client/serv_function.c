@@ -40,11 +40,11 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 
 void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
 	int i;
-	message msg;
+	char content[200];
 	printf("--- Server is shutting down\n");
-	sprintf(msg, "X[SERVER] : Server is shutting down.\n");  // modifier le X pour dire au client de couper
+	sprintf(content, "X[SERVER] : Server is shutting down.\n");  // modifier le X pour dire au client de couper
 	for (i = 0; i < *num_clients ; i++) {
-		write(fd_array[i].fd_client, msg, strlen(msg));
+		write(fd_array[i].fd_client, content, strlen(content));
 		close(fd_array[i].fd_client);
 	}
 	close(*server_sockfd);
@@ -162,7 +162,7 @@ void routine_server(int * server_sockfd){
           } else {
             printf("Someone tried to connect, but too many clients online\n");
             session_denied(msg, 0);
-            send_msg(msg_send, client_sockfd);
+            send_msg(msg_send, &client_sockfd);
             close(client_sockfd);
           } //if num_clients < MAX_CLIENTS
 

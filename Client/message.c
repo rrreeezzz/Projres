@@ -36,10 +36,10 @@ void session_denied(message *segment, int type) {
 
     if (type == 0) {
         (*segment).code = 300;
-        sprintf((*segment).msg_content, "Connection denied : too many clients online);
+        sprintf((*segment).msg_content, "Connection denied : too many clients online");
     } else if (type == 1) {
         (*segment).code = 301; //user already connected
-        sprintf((*segment).msg_content, "Connection denied : user already connected);
+        sprintf((*segment).msg_content, "Connection denied : user already connected");
     }
 
 }

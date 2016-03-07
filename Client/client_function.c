@@ -88,7 +88,7 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) {
 
 	char user[MAX_SIZE_USERNAME];
-    sscanf((*segment).msg_content, "FROM:%s", user);
+    sscanf(msg_rcv->msg_content, "FROM:%s", user);
 
     if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
         fd_array[*num_clients].fd_client=*client_sockfd;
@@ -100,7 +100,7 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
     }else{
         printf("Session denied : %s already connected\n", user);
         session_denied(msg_send, 1);
-        send_msg(msg_send, *client_sockfd);
+        send_msg(msg_send, client_sockfd);
         close(*client_sockfd);
         FD_CLR(*client_sockfd, readfds);
         return -1;
@@ -110,7 +110,7 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
 void client_ready(int fd, client_data *fd_array, int *num_clients) {
 
 /* met le client en ready, maintenant on peut lui parler */
-    int i = search_client_array_by_fd(client_sockfd, fd_array, num_clients);
+    int i = search_client_array_by_fd(fd, fd_array, num_clients);
     fd_array[i].rdy = 1;
 }
 
