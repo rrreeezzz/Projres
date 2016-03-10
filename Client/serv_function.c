@@ -60,6 +60,7 @@ void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int
 		close(fd_array[i].fd_client);
 	}
 	free((*msg).msg_content);
+	free(msg);
 	close(*server_sockfd);
 	printf("[Program] Goodbye !\n");
 	*server_sockfd = -1; //On place a -1 pour sortir de la boucle de routine_server.
@@ -75,7 +76,7 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 	memset(msg, '\0', WRITE_SIZE);
 
 	if ((result = read(fd, msg, MSG_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
-		printf("msg recu : %s\n", msg); //pour debug
+		//printf("msg recu : %s\n", msg); //pour debug
 		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds);
 	} else {
 		exitClient(fd, readfds, fd_array, num_clients);
@@ -204,6 +205,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	char msg[WRITE_SIZE];
 	char rep_msg[MSG_SIZE];
 	int i;
+	message *frame = (message *) malloc(sizeof(message));
 
 	fgets(msg, WRITE_SIZE, stdin);
 	if (strcmp(msg, "/quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
@@ -211,8 +213,11 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	} else if (strcmp(msg, "/connect\n")==0){
 		client(maxfds, readfds, num_clients, fd_array);
 	} else {
-		sprintf(rep_msg, "%s", msg);
+		/*Faire une fonction plus poussée pour cette partie.*/
+		normal_msg(frame, msg);
 		for (i=0; i<*num_clients ; i++)
-		write(fd_array[i].fd_client, rep_msg, strlen(rep_msg));
+		send_msg(frame, &fd_array[i].fd_client);
+		free((*frame).msg_content);
+		free(frame);
 	}
 }

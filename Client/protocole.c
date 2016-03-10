@@ -10,7 +10,7 @@ void send_msg(message *segment, int *fd) {
 
 	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
 
-	printf("msg envoyé : %s\n", msg);
+	//printf("msg envoyé : %s\n", msg); //pour debug
 	write(*fd, msg, strlen(msg)); //avec strlen pas de bug, bizarre... changer avec la bonne taille
 }
 
@@ -55,7 +55,8 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			// 100: accepter la connection
 			case 100:
 			if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
-				/* à faire*/
+				/*A CHANGER, TEMPORAIRE*/
+				printf("%s : %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
 			}else{
 				printf("Client not ready for communication\n");
 			}
