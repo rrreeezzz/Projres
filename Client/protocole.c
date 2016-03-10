@@ -10,7 +10,7 @@ void send_msg(message *segment, int *fd) {
 
 	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
 
-	printf("msg envoyé : %s\n", msg);
+	//printf("msg envoyé : %s\n", msg); //pour debug
 	write(*fd, msg, strlen(msg)); //avec strlen pas de bug, bizarre... changer avec la bonne taille
 }
 
@@ -36,6 +36,7 @@ int protocol_parser(char *msg, message *msg_rcv) {
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
+
 	message * msg_rcv = (message *) malloc(sizeof(message));
 	message * msg_send = (message *) malloc(sizeof(message));
 
@@ -48,69 +49,72 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 		switch((*msg_rcv).code){
 
 			/*
-				1** : Messages normaux
+			1** : Messages normaux
 			*/
 
 			// 100: accepter la connection
 			case 100:
-				if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
-					/* à faire*/
-				}else{
-					printf("Client not ready for communication\n");
-				}
-				break;
+			if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
+				/*A CHANGER, TEMPORAIRE*/
+				printf("%s : %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+			}else{
+				printf("Client not ready for communication\n");
+			}
+			break;
 
 			/*
-				2** : Processus d'identification
+			2** : Processus d'identification
 			*/
 
 			// 200 : SESSION_INITIATE
 			case 200:
-				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
-					session_accept(msg_send); //on créer le message de session-accept-1
-					send_msg(msg_send,client_sockfd);
-				}
-				break;
+			if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
+				session_accept(msg_send); //on créer le message de session-accept-1
+				send_msg(msg_send,client_sockfd);
+				free((*msg_send).msg_content);
+			}
+			break;
 
 			// 201 : SESSION_ACCEPT
 			case 201:
-				if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
-					session_confirmed(msg_send); //on créer le message de session-accept-2
-					send_msg(msg_send, client_sockfd);
-					client_ready(*client_sockfd, fd_array, num_clients);
-					printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
-				}
-				break;
+			if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
+				session_confirmed(msg_send); //on créer le message de session-accept-2
+				send_msg(msg_send, client_sockfd);
+				free((*msg_send).msg_content);
+				client_ready(*client_sockfd, fd_array, num_clients);
+				printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
+			}
+			break;
 
 			// 202 : SESSION_CONFIRMED
 			case 202:
-				client_ready(*client_sockfd, fd_array, num_clients);
-				printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
-				break;
+			client_ready(*client_sockfd, fd_array, num_clients);
+			printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
+			break;
 
 			/*
-				3** : Gestion des erreurs
+			3** : Gestion des erreurs
 			*/
 
 			// 300 : SESSION_DENIED
 			case 300:
-			// 301 : SESSION_DENIED
+			printf("[%s] Connection denied : too many client online.\n", (*msg_rcv).msg_content);
+			close(*client_sockfd);
+			FD_CLR(*client_sockfd, readfds);
+			break;			// 300 : SESSION_DENIED
 			case 301:
-				printf("%s\n", (*msg_rcv).msg_content);
-				close(*client_sockfd);
-				FD_CLR(*client_sockfd, readfds);
-				break;
+			printf("[%s] Connection denied : you are already in connection.\n", (*msg_rcv).msg_content);
+			close(*client_sockfd);
+			FD_CLR(*client_sockfd, readfds);
+			break;
 
 			// 302 : SESSION_END
 			case 302:
-				printf("%s\n", (*msg_rcv).msg_content);
-				exitClient(*client_sockfd, readfds, fd_array, num_clients);
-				default:
+			printf("[%s] End of connexion.\n", (*msg_rcv).msg_content);
+			exitClient(*client_sockfd, readfds, fd_array, num_clients);
+			default:
 			break;
 		}
-
-		free((*msg_rcv).msg_content);
-		free((*msg_send).msg_content);
 	}
 
 	free(msg_send);
