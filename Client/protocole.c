@@ -36,23 +36,26 @@ int protocol_parser(char *msg, message *msg_rcv) {
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
+    int file_fd;
+    int tab[2];
+    char filename[256];
 
-	message * msg_rcv = (message *) malloc(sizeof(message));
-	message * msg_send = (message *) malloc(sizeof(message));
 
-	if(protocol_parser(msg, msg_rcv) != -1){
+	message *msg_send = (message *) malloc(sizeof(message));
+
+	if(protocol_parser(msg, msg_rcv) != -1) {
 
 		/*Ecrire une fonction qui check quand le message a été envoyé
 		et si trop vieux on fait pas le switch case*/
 
 		/* On agis en fonctions du type de message */
-		switch((*msg_rcv).code){
+		switch((*msg_rcv).code) {
 
 			/*
 			1** : Messages normaux
 			*/
 
-			// 100: accepter la connection
+			// 100 : masg normal
 			case 100:
 			if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
 				/*A CHANGER, TEMPORAIRE*/
@@ -61,6 +64,11 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				printf("Client not ready for communication\n");
 			}
 			break;
+
+            // 101 : grp ?
+
+            // 102 : données de transfert de fichier
+            write(file_fd, msg_rcv->content, msg_rcv->length); // gestion erreur ?
 
 			/*
 			2** : Processus d'identification
@@ -82,15 +90,30 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				send_msg(msg_send, client_sockfd);
 				free((*msg_send).msg_content);
 				client_ready(*client_sockfd, fd_array, num_clients);
-				printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
+				printf("You are now in communication with : %s\n", (*msg_rcv).msg_content);
 			}
 			break;
 
 			// 202 : SESSION_CONFIRMED
 			case 202:
 			client_ready(*client_sockfd, fd_array, num_clients);
-			printf("You are now in communication with : %s\n", (*msg_rcv).msg_content+5);
+			printf("You are now in communication with : %s\n", (*msg_rcv).msg_content);
 			break;
+
+            // 203 : TRANSFER_INITIATE
+            case 203:
+            if((file_fd = ask_transfer(msg_rcv, filename)) < 0)
+                transfer_refused(msg_send);
+            else
+                transfer_accept(msg_send, filename);
+            send_msg(msg_send, client_sockfd);
+            free((*msg_send).msg_content);
+            break;
+
+            // 204 : TRANSFER_ACCEPT
+            case 204:
+            prepapre_transfer(msg_rcv, client_sockfd);
+
 
 			/*
 			3** : Gestion des erreurs
@@ -101,7 +124,9 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			printf("[%s] Connection denied : too many client online.\n", (*msg_rcv).msg_content);
 			close(*client_sockfd);
 			FD_CLR(*client_sockfd, readfds);
-			break;			// 300 : SESSION_DENIED
+			break;
+
+            // 301 : SESSION_DENIED
 			case 301:
 			printf("[%s] Connection denied : you are already in connection.\n", (*msg_rcv).msg_content);
 			close(*client_sockfd);
@@ -112,6 +137,24 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 302:
 			printf("[%s] End of connexion.\n", (*msg_rcv).msg_content);
 			exitClient(*client_sockfd, readfds, fd_array, num_clients);
+			break;
+
+            // 303 : TRANSFER_REFUSED
+			case 303:
+			printf("[%s] Transfer refused.\n", (*msg_rcv).msg_content);
+			break;
+
+			// 304 : TRANSFER_CANCELLED
+			/*le client peut annuler le transfert, donc on stop le thread, {est ce que ça freee et ça close bien ?} */
+			/* mais si le client plante et quitte sans envoyer de TRANSFER_CANCELLED, il se passe quoi pour le thread ??????????????? */
+
+			// 305 : TRASNFER_ABORTED
+			/* l'expéditeur a annulé, on ferme fd et on demande si le receveur veut garder le fichier */
+
+			//306 : TRANSFER_END
+			printf("Transfer of file %s succeed", (*msg_rcv).msg_content);
+			close(file_fd);
+
 			default:
 			break;
 		}

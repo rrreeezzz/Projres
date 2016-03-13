@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include "message.h"
 #include "client_function.h"
+#include "transfert.h"
 
 extern void send_msg(message *segment, int *fd);
 extern int rcv_protocol_parser(char *msg, message *msg_rcv);

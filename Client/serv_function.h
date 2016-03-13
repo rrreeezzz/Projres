@@ -14,12 +14,14 @@
 #include "protocole.h"
 #include "message.h"
 
+pthread pid_transfer
+
 extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients);
 extern void handler_sigint();
-extern int * init_server();
-extern void routine_server(int * server_sockfd);
+extern int *init_server();
+extern void routine_server(int *server_sockfd);
 extern void ask_name();
 extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients);
 

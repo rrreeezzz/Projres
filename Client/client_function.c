@@ -1,6 +1,6 @@
 #include "client_function.h"
 
-struct hostent * ask_server_adress(int *port){
+struct hostent *ask_server_adress(int *port){
 
 	struct hostent *hostinfo;
 	char *posPort = NULL;
@@ -92,7 +92,7 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
 	autres clients.*/
 
 	char user[MAX_SIZE_USERNAME];
-    sscanf(msg_rcv->msg_content, "FROM:%s", user);
+    sscanf(msg_rcv->msg_content, "%s", user);
 
     if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
         fd_array[*num_clients].fd_client=*client_sockfd;

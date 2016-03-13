@@ -146,7 +146,7 @@ void routine_server(int * server_sockfd){
 
 	/*La routine du programme.*/
 
-	int num_clients = 0;
+    int num_clients = 0;
 	int client_sockfd;
 	struct sockaddr_in client_address;
 	int addresslen = sizeof(struct sockaddr_in);
@@ -175,7 +175,6 @@ void routine_server(int * server_sockfd){
 					if((client_sockfd = accept(*server_sockfd, (struct sockaddr *)&client_address, (socklen_t *)&addresslen )) < 0 ) { perror("accept"); exit(EXIT_FAILURE); }
 
 					if (num_clients < MAX_CLIENTS) {
-
 						opt_desc(&client_sockfd, &maxfds, &readfds); //optimisation descripteurs
 
 					} else {
@@ -188,14 +187,19 @@ void routine_server(int * server_sockfd){
 
 				} else if (fd == 0) {  /*activité sur le clavier*/
 					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
+
 				} else {  /*activité d'un client*/
-				traiterRequete(fd, &readfds, fd_array, &num_clients);
-			}//if fd ==
-		}//if FD_ISSET
-	}//for
-}//while
-free(msg);
-free(server_sockfd);
+                    traiterRequete(fd, &readfds, fd_array, &num_clients);
+                }//if fd ==
+            }//if FD_ISSET
+        }//for
+    }//while
+
+    pthread_join(pid_transfer, NULL);
+    // peut être mettre une variable et faire un pthread_cancel(pid_transfer) si transfer pas terminé
+
+    free(msg);
+    free(server_sockfd);
 }
 
 void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){
@@ -212,6 +216,8 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
 	} else if (strcmp(msg, "/connect\n")==0){
 		client(maxfds, readfds, num_clients, fd_array);
+    } else if (strcmp(msg, "/transfer\n")==0){
+        // A faire ...................................
 	} else {
 		/*Faire une fonction plus poussée pour cette partie.*/
 		normal_msg(frame, msg);
