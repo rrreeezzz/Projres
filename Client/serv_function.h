@@ -13,8 +13,10 @@
 #include "client_function.h"
 #include "protocole.h"
 #include "message.h"
+#include "transfert.h"
+#include <pthread.h>
 
-pthread pid_transfer
+pthread_t pid_transfer;
 
 extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);

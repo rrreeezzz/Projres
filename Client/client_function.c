@@ -117,6 +117,7 @@ void client_ready(int fd, client_data *fd_array, int *num_clients) {
 
     int i = search_client_array_by_fd(fd, fd_array, num_clients);
     fd_array[i].rdy = 1;
+    (*num_clients):++;
 }
 
 int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_clients) {

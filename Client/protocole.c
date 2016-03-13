@@ -42,6 +42,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 
 	message *msg_send = (message *) malloc(sizeof(message));
+	message *msg_rcv = (message *) malloc(sizeof(message));
 
 	if(protocol_parser(msg, msg_rcv) != -1) {
 
@@ -68,7 +69,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
             // 101 : grp ?
 
             // 102 : données de transfert de fichier
-            write(file_fd, msg_rcv->content, msg_rcv->length); // gestion erreur ?
+            write(file_fd, msg_rcv->msg_content, msg_rcv->length); // gestion erreur ?
 
 			/*
 			2** : Processus d'identification
@@ -112,7 +113,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 204 : TRANSFER_ACCEPT
             case 204:
-            prepapre_transfer(msg_rcv, client_sockfd);
+            prepare_transfer(msg_rcv, *client_sockfd);
 
 
 			/*
