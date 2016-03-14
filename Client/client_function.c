@@ -65,7 +65,10 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	address.sin_port = htons(port);
 
 	/* Connection au serveur */
-	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) { perror("connect"); exit(EXIT_FAILURE); } //gérer autrement car il ne faut pas quitter si on arrive pas a se co
+	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) {
+		perror("Connect");
+		return -1;
+	} //gérer autrement car il ne faut pas quitter si on arrive pas a se co
 
 	opt_desc(&sock_host, maxfds, readfds);
 	session_initiate(msg); //génération du message de session-initiate

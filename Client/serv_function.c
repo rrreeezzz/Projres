@@ -171,14 +171,20 @@ void routine_server(int * server_sockfd){
 	/*  Attente de clients et de requêtes */
 	while (*server_sockfd != -1) {
 		testfds = readfds;
-		if(select(maxfds+1, &testfds, NULL, NULL, NULL) < 0) { perror("select"); exit(EXIT_FAILURE); }
+		if(select(maxfds+1, &testfds, NULL, NULL, NULL) < 0) {
+			perror("Select");
+			exit(EXIT_FAILURE);
+		}
 
 		/* Il y a une activité, on cherche sur quel descripteur grâce à FD_ISSET */
 		for (fd=0; fd<maxfds+1; fd++) {
 			if (FD_ISSET(fd, &testfds)) {
 				/* Accept des nouvelles connections */
 				if (fd == *server_sockfd) {
-					if((client_sockfd = accept(*server_sockfd, (struct sockaddr *)&client_address, (socklen_t *)&addresslen )) < 0 ) { perror("accept"); exit(EXIT_FAILURE); }
+					if((client_sockfd = accept(*server_sockfd, (struct sockaddr *)&client_address, (socklen_t *)&addresslen )) < 0 ) {
+						perror("Accept");
+						exit(EXIT_FAILURE);
+					}
 
 					//Si on peut recevoir le client
 					if (num_clients < MAX_CLIENTS) {
@@ -193,21 +199,28 @@ void routine_server(int * server_sockfd){
 						close(client_sockfd);
 					} //if num_clients < MAX_CLIENTS
 
-				} else if (fd == 0) {  /*activité sur le clavier*/
-					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
+					} else if (fd == 0) {  /*activité sur le clavier*/
+						cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
 
-				} else {  /*activité d'un client*/
-                    traiterRequete(fd, &readfds, fd_array, &num_clients);
-                }//if fd ==
-            }//if FD_ISSET
-        }//for
-    }//while
+					} else {  /*activité d'un client*/
+            	traiterRequete(fd, &readfds, fd_array, &num_clients);
+          }//if fd ==
+				int i;
+				printf("FD_array\n");
+				for (i = 0; i < num_clients; i++) {
+					printf("pos:%d fd:%d id:%d name:%s rdy:%d\n",i,fd_array[i].fd_client,fd_array[i].id_client,fd_array[i].name_client,fd_array[i].rdy );
 
-    pthread_join(pid_transfer, NULL);
-    // peut être mettre une variable et faire un pthread_cancel(pid_transfer) si transfer pas terminé
+				}
+				printf("\n");
+	    }//if FD_ISSET
+	  }//for
+	}//while
 
-    free(msg);
-    free(server_sockfd);
+  pthread_join(pid_transfer, NULL);
+  // peut être mettre une variable et faire un pthread_cancel(pid_transfer) si transfer pas terminé
+
+  free(msg);
+  free(server_sockfd);
 }
 
 void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){

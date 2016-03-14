@@ -45,6 +45,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 	message *msg_send = (message *) malloc(sizeof(message));
 	message *msg_rcv = (message *) malloc(sizeof(message));
+	printf("%s\n",msg );
 
 	if(protocol_parser(msg, msg_rcv) != -1) {
 
@@ -52,6 +53,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 		et si trop vieux on fait pas le switch case*/
 
 		/* On agis en fonctions du type de message */
+
 		switch((*msg_rcv).code) {
 
 			/*
