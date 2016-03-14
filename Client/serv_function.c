@@ -146,7 +146,7 @@ void routine_server(int * server_sockfd){
 
 	/*La routine du programme.*/
 
-    int num_clients = 0;
+  int num_clients = 0;
 	int client_sockfd;
 	struct sockaddr_in client_address;
 	int addresslen = sizeof(struct sockaddr_in);
@@ -216,13 +216,17 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
 	} else if (strcmp(msg, "/connect\n")==0){
 		client(maxfds, readfds, num_clients, fd_array);
-    } else if (strcmp(msg, "/transfer\n")==0){
+  } else if (strcmp(msg, "/transfer\n")==0){
         // A faire ...................................
 	} else {
 		/*Faire une fonction plus poussée pour cette partie.*/
+
 		normal_msg(frame, msg);
-		for (i=0; i<*num_clients ; i++)
-		send_msg(frame, &fd_array[i].fd_client);
+		for (i=0; i<*num_clients ; i++) {
+			if (fd_array[i].fd_client != 0){
+				send_msg(frame, &(fd_array[i].fd_client));
+			}
+		}
 		free((*frame).msg_content);
 		free(frame);
 	}

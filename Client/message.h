@@ -39,5 +39,10 @@ extern void session_confirmed(message *segment);
 extern void session_denied(message *segment, int type);
 extern void normal_msg(message *segment, char * data);
 extern void session_end(message *segment);
+void transfer_accept(message *segment, char *filename);
+void transfer_refused(message *segment);
+void transfer_initiate(message *segment, char *filename, int taille);
+void transfer_msg(message *segment, char *data);
+void transfer_end(message *segment, char *filename);
 
 #endif
