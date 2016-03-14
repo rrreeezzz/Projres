@@ -1,6 +1,6 @@
 #include "transfert.h"
 
-void init_transfer(int client_sockfd) {
+void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
     int fd = 0;
     char filename[256];
     int taille;
@@ -9,9 +9,9 @@ void init_transfer(int client_sockfd) {
     printf("Enter the filename :\n");
     fgets(filename, 256, stdin);
     char *positionEntree = NULL;
-    positionEntree = strchr(filename, '\n'); // On recherche l'"Entrée"
+    positionEntree = strchr(filename, '\n'); // On recherche l'"Entrï¿½e"
     *positionEntree = '\0';
-    // mieux gérer les erreurs : if (positionEntree != NULL etc....
+    // mieux gï¿½rer les erreurs : if (positionEntree != NULL etc....
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         printf("Opening file failed\n");
@@ -24,10 +24,11 @@ void init_transfer(int client_sockfd) {
 
     message *msg = (message *) malloc(sizeof(message));
     transfer_initiate(msg, filename, taille);
-    send_msg(msg, &client_sockfd);
+    send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
     free((*msg).msg_content);
     free(msg);
 }
+
 
 int ask_transfer(message *msg, char *filename) {
     char user[16];
@@ -61,40 +62,59 @@ int ask_transfer(message *msg, char *filename) {
     return file_fd; //if fd < 0, send transfer_refused
 }
 
-void prepare_transfer(message *msg, int client_sockfd) {
+void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
     int file_fd = 0;
-    char tab[256+2];
+    paramThread data;
+
     char filename[256];
     sscanf(msg->msg_content, "%[^'/']/%s", filename, filename); // on garde que le %s dans filename
     if ((file_fd = open(filename, O_RDONLY)) < 0) {
         printf("Opening file failed\n");
         return; // faire un transfer_aborted
     }
-    sprintf(tab, "%d/%d/%s", file_fd, client_sockfd, filename);
 
-    if(pthread_create(&pid_transfer, NULL, file_transfer, (void *)tab) != 0){
+    //On remplis la structure
+    data.file_fd = file_fd;
+    data.client_sockfd = client_sockfd;
+    strcpy(data.filename,filename);
+    data.readfds = readfds;
+    data.fd_array = fd_array;
+    data.num_clients = num_clients;
+
+    if(pthread_create(&pid_transfer, NULL, file_transfer, (void *) &data) != 0){
         perror("Probleme avec pthread_create");
         exit(EXIT_FAILURE); // A voir ce qu'on fait ?!;;/:?;:!;:???
     }
 }
 
-void *file_transfer(void *arg) {
-    char *tab = (char *) arg;
-    int file_fd = 0;
-    int client_sockfd = 0;
+void * file_transfer(void *arg) {
+    //On recupere la structure
+    paramThread * data = (paramThread*) arg;
+    int file_fd;
+    int client_sockfd;
     char filename[256];
     char buffer[WRITE_SIZE];
+    fd_set *readfds;
+    client_data *fd_array;
+    int *num_clients;
+
     message *msg = (message *) malloc(sizeof(message));
 
-    sscanf(tab, "%d/%d/%s", &file_fd, &client_sockfd, filename);
+    //On recupere les donnees de la structure
+    file_fd = data->file_fd;
+    client_sockfd = data->client_sockfd;
+    strcpy(filename,data->filename);
+    readfds = data->readfds;
+    fd_array = data->fd_array;
+    num_clients = data->num_clients;
 
 	while ((read(file_fd, buffer, WRITE_SIZE) > 0)) {
         transfer_msg(msg, buffer);
-        send_msg(msg, &client_sockfd);
+        send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
 	}
 
     transfer_end(msg, filename);
-    send_msg(msg, &client_sockfd);
+    send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
     close(file_fd);
     free((*msg).msg_content);

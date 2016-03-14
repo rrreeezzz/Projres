@@ -55,9 +55,8 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) { perror("connect"); exit(EXIT_FAILURE); } //gérer autrement car il ne faut pas quitter si on arrive pas a se co
 
 	opt_desc(&sock_host, maxfds, readfds);
-
 	session_initiate(msg); //génération du message de session-initiate
-	send_msg(msg, &sock_host); //on envois le message
+	send_msg(msg,&sock_host,readfds,fd_array,num_clients);
 
 	free((*msg).msg_content);
 	free(msg);
@@ -99,12 +98,12 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
         fd_array[*num_clients].id_client=*num_clients;
         fd_array[*num_clients].rdy = 0;
         strcpy(fd_array[*num_clients].name_client,user);
-        (*num_clients)++;
+				(*num_clients)++;
         return 0;
     }else{
         printf("Session denied : %s already connected\n", user);
         session_denied(msg_send, 1);
-        send_msg(msg_send, client_sockfd);
+				send_msg(msg_send, client_sockfd,readfds,fd_array,num_clients);
         close(*client_sockfd);
         FD_CLR(*client_sockfd, readfds);
         return -1;
@@ -114,10 +113,8 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
 void client_ready(int fd, client_data *fd_array, int *num_clients) {
 
 /* Met le client en ready, maintenant on peut lui parler */
-
     int i = search_client_array_by_fd(fd, fd_array, num_clients);
     fd_array[i].rdy = 1;
-    (*num_clients)++;
 }
 
 int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_clients) {

@@ -10,9 +10,18 @@
 #include "protocole.h"
 #include "message.h"
 
-extern void init_transfer(int client_sockfd);
+typedef struct paramThread{
+  int file_fd;
+  int client_sockfd;
+  char filename[256];
+  fd_set *readfds;
+  client_data *fd_array;
+  int *num_clients;
+} paramThread;
+
+extern void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern int ask_transfer(message *msg, char *filename);
-extern void prepare_transfer(message *msg, int client_sockfd);
+void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void *file_transfer(void *arg);
 
 #endif

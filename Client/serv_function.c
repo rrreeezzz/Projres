@@ -37,13 +37,19 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	celui-i se déconnecte ou subit une déconnexion.*/
 
 	int i;
+	int index;
 	close(fd);
 	FD_CLR(fd, readfds); //on enlève le leaver du tableau de clients
-	for (i = 0; i < (*num_clients) - 1; i++)
-	i = search_client_array_by_fd(fd, fd_array, num_clients);
-	for (; i < (*num_clients) - 1; i++)
-	fd_array[i] = fd_array[i + 1];
+	//On cherche le FD du client qui se deconnecte
+	for (i = 0; i < (*num_clients) - 1; i++){
+		index = search_client_array_by_fd(fd, fd_array, num_clients);
+	}
+	//On decale les fd superieur a celui qui se connecte
+	for (i=index; i < (*num_clients) - 1; i++){
+		fd_array[i] = fd_array[i + 1];
+	}
 	(*num_clients)--;
+
 }
 
 void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
@@ -56,7 +62,7 @@ void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int
 
 	session_end(msg);
 	for (i = 0; i < *num_clients ; i++) {
-		send_msg(msg, &fd_array[i].fd_client);
+		send_msg(msg, &fd_array[i].fd_client,readfds,fd_array,num_clients);
 		close(fd_array[i].fd_client);
 	}
 	free((*msg).msg_content);
@@ -170,17 +176,19 @@ void routine_server(int * server_sockfd){
 		/* Il y a une activité, on cherche sur quel descripteur grâce à FD_ISSET */
 		for (fd=0; fd<maxfds+1; fd++) {
 			if (FD_ISSET(fd, &testfds)) {
-
-				if (fd == *server_sockfd) { /* Accept des nouvelles connections */
+				/* Accept des nouvelles connections */
+				if (fd == *server_sockfd) {
 					if((client_sockfd = accept(*server_sockfd, (struct sockaddr *)&client_address, (socklen_t *)&addresslen )) < 0 ) { perror("accept"); exit(EXIT_FAILURE); }
 
+					//Si on peut recevoir le client
 					if (num_clients < MAX_CLIENTS) {
-						opt_desc(&client_sockfd, &maxfds, &readfds); //optimisation descripteurs
-
+						//On rajoute le client en optimisant les descripteurs
+						opt_desc(&client_sockfd, &maxfds, &readfds);
+					//Sinon on le refuse
 					} else {
 						printf("[Program] Someone tried to connect, but too many clients online.\n");
 						session_denied(msg, 0);
-						send_msg(msg, &client_sockfd);
+						send_msg(msg, &client_sockfd,&readfds,fd_array,&num_clients);
 						free((*msg).msg_content);
 						close(client_sockfd);
 					} //if num_clients < MAX_CLIENTS
@@ -223,9 +231,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 
 		normal_msg(frame, msg);
 		for (i=0; i<*num_clients ; i++) {
-			if (fd_array[i].fd_client != 0){
-				send_msg(frame, &(fd_array[i].fd_client));
-			}
+			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
 		}
 		free((*frame).msg_content);
 		free(frame);

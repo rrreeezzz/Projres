@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
 	handler_sigint();
 
-    server_sockfd = init_server();
+  server_sockfd = init_server();
 
 	routine_server(server_sockfd);
 

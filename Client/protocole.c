@@ -1,6 +1,6 @@
 #include "protocole.h"
 
-void send_msg(message *segment, int *fd) {
+void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 
 	/*Fonction qui concatène et envois les trames*/
 
@@ -9,9 +9,11 @@ void send_msg(message *segment, int *fd) {
 	char msg[MSG_SIZE];
 
 	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
-
 	//printf("msg envoyé : %s\n", msg); //pour debug
-	write(*fd, msg, strlen(msg)); //avec strlen pas de bug, bizarre... changer avec la bonne taille
+	if (write(*fd, msg, strlen(msg)) <= 0){
+		perror("Write error");
+		exitClient(*fd, readfds, fd_array, num_clients);
+	}
 }
 
 int protocol_parser(char *msg, message *msg_rcv) {
@@ -77,11 +79,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			2** : Processus d'identification
 			*/
 
-			// 200 : SESSION_INITIATE
+			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
+				//On lui demande de se logger
 				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
-					session_accept(msg_send); //on créer le message de session-accept-1
-					send_msg(msg_send,client_sockfd);
+					//On confirme la connection du client
+					session_accept(msg_send); //on crée le message de session-accept-1
+					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
 					free((*msg_send).msg_content);
 				}
 				break;
@@ -89,8 +93,8 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			// 201 : SESSION_ACCEPT
 			case 201:
 				if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
-					session_confirmed(msg_send); //on créer le message de session-accept-2
-					send_msg(msg_send, client_sockfd);
+					session_confirmed(msg_send); //on crée le message de session-accept-2
+					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
 					free((*msg_send).msg_content);
 					client_ready(*client_sockfd, fd_array, num_clients);
 					printf("You are now in communication with : %s\n", (*msg_rcv).msg_content);
@@ -110,13 +114,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				} else {
 					transfer_accept(msg_send, filename);
 				}
-        send_msg(msg_send, client_sockfd);
+        send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
         free((*msg_send).msg_content);
     		break;
 
       // 204 : TRANSFER_ACCEPT
       case 204:
-        prepare_transfer(msg_rcv, *client_sockfd);
+        prepare_transfer(msg_rcv, *client_sockfd,readfds,fd_array,num_clients);
 				break;
 
 
@@ -166,7 +170,6 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 		}
 	}
-
 	free(msg_send);
 	free(msg_rcv);
 }
