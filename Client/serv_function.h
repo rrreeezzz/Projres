@@ -10,11 +10,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <signal.h>
+#include <pthread.h>
 #include "client_function.h"
 #include "protocole.h"
 #include "message.h"
 #include "transfert.h"
-#include <pthread.h>
+#include "message.h"
 
 pthread_t pid_transfer;
 

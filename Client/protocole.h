@@ -13,6 +13,7 @@
 #include "message.h"
 #include "client_function.h"
 #include "transfert.h"
+#include "annuaire.h"
 
 void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern int rcv_protocol_parser(char *msg, message *msg_rcv);

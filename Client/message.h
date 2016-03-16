@@ -16,6 +16,7 @@
 #define MAX_CLIENTS 95
 #define Max(x,y) (x>y ? x:y) //pour optdesc
 #define MAX_SIZE_USERNAME 16
+#define MAX_SIZE_ADRESS 22
 
 char General_Name[MAX_SIZE_USERNAME];
 
@@ -32,6 +33,11 @@ typedef struct {
   char name_client[MAX_SIZE_USERNAME];
   int rdy;
 } client_data;
+
+typedef struct {
+  char username[MAX_SIZE_USERNAME];
+  char adress[MAX_SIZE_ADRESS];
+} annuaireData;
 
 extern void session_initiate(message *segment);
 extern void session_accept(message *segment);

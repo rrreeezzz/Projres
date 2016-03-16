@@ -223,7 +223,11 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	if (strcmp(msg, "/quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
 	} else if (strcmp(msg, "/connect\n")==0){
-		client(maxfds, readfds, num_clients, fd_array);
+		client(maxfds, readfds, num_clients, fd_array, NULL);
+	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
+		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
+	} else if (strcmp(msg, "/add\n") == 0){
+		update_contact();
   } else if (strcmp(msg, "/transfer\n")==0){
         // A faire ...................................
 	} else {
