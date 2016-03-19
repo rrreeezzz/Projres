@@ -20,7 +20,7 @@ int update_contact () {
 
   //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
   if ((offset = search_contact(user->username, contact_file)) == -1) {
-    if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); };
+    if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
     write(contact_file, user, sizeof(annuaireData));
     printf("[PROGRAM] Contact added !\n");
   }
@@ -28,7 +28,7 @@ int update_contact () {
     //seek(contact_file, line*sizeof(annuaireData), SEEK_SET); // A vérifier
     new_file = change_contact_data(contact_file, offset);
     lseek(contact_file, 0, SEEK_END);
-    write(new_file, user, sizeof(annuaireData));
+    if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
     printf("[PROGRAM] Contact updated !\n");
   }
 
@@ -124,8 +124,8 @@ int change_contact_data(int original, off_t delete_line){
   lseek(original, 0, SEEK_SET);
 
   //open new file in write mode
-  new_file = open("temp.txt", O_WRONLY|O_CREAT, 0755);
-  etat = read(original, test, sizeof(annuaireData));
+  if ((new_file = open("temp.txt", O_WRONLY|O_CREAT, 0755)) < 0) {perror("Error while creating temporary file"); exit(EXIT_FAILURE); }
+  if ((etat = read(original, test, sizeof(annuaireData))) < 0) {perror("Error while reading from original contact file"); exit(EXIT_FAILURE); }
 
   while (etat > 0)
   {
