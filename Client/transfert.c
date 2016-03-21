@@ -9,23 +9,17 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     printf("Enter the filename :\n");
     fgets(filename, 256, stdin);
     char *positionEntree = NULL;
-<<<<<<< HEAD
-    positionEntree = strchr(filename, '\n'); // On recherche l'"Entree"
-    *positionEntree = '\0';
-    // mieux gerer les erreurs : if (positionEntree != NULL etc....
-=======
-    positionEntree = strchr(filename, '\n'); // On recherche l'"Entr�e"
-    *positionEntree = '\0';
-    // mieux g�rer les erreurs : if (positionEntree != NULL etc....
->>>>>>> 926b34b57e9cc673f5bbf73904916e581407ca8e
+    if((positionEntree = strchr(filename, '\n')) == NULL) { // On recherche l'"Entree"
+      *positionEntree = '\0';
+    }// mieux gerer les erreurs : if (positionEntree != NULL etc....
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
-        printf("Opening file failed\n");
+        printf("Opening file failed : wrong filename\n");
         return;
     }
     close(fd);
 
-    stat(filename, &statut);
+    if(stat(filename, &statut) < 0) {perror("Error with file opened"); exit(EXIT_FAILURE);}
     taille = (int) statut.st_size;
 
     message *msg = (message *) malloc(sizeof(message));
@@ -35,7 +29,7 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     free(msg);
 }
 
-<<<<<<< HEAD
+
 void parser_transfer(char *msg, char *user, char *filename, int *taille) {
   char * pch;
   char tab[3][strlen(msg)];
@@ -49,14 +43,13 @@ void parser_transfer(char *msg, char *user, char *filename, int *taille) {
   }
 sprintf(tab[0], "%s", tab[0]);
 sprintf(tab[1], "%s", tab[1]);
- /* user = tab[0];*///memcpy(user, tab[0], strlen(tab[0])); 
+ /* user = tab[0];*///memcpy(user, tab[0], strlen(tab[0]));
  /* filename = tab[1];*///memcpy(filename, tab[1], strlen(tab[1]));
 sprintf(user, "%s", tab[0]);
 sprintf(filename, "%s", tab[1]);
   *taille = atoi(tab[2]);
 }
-=======
->>>>>>> 926b34b57e9cc673f5bbf73904916e581407ca8e
+
 
 int ask_transfer(message *msg, char *filename) {
     char user[16];
@@ -102,7 +95,7 @@ void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_d
         return; // faire un transfer_aborted
     }
 
-    //On remplis la structure
+    //On remplit la structure
     data.file_fd = file_fd;
     data.client_sockfd = client_sockfd;
     strcpy(data.filename,filename);
@@ -117,7 +110,7 @@ void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_d
 }
 
 void * file_transfer(void *arg) {
-    //On recupere la structure
+    //On récupère la structure
     paramThread * data = (paramThread*) arg;
     int file_fd;
     int client_sockfd;

@@ -242,11 +242,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	} else if (strcmp(msg, "/add\n") == 0){
 		update_contact();
   } else if (strcmp(msg, "/transfer\n")==0){
-<<<<<<< HEAD
         init_transfer(4, readfds, fd_array, num_clients);
-=======
-        // A faire ...................................
->>>>>>> 926b34b57e9cc673f5bbf73904916e581407ca8e
 	} else {
 		/*Faire une fonction plus poussée pour cette partie.*/
 

@@ -4,7 +4,7 @@ struct hostent * ask_server_adress(int *port){
 
 	struct hostent *hostinfo;
 	char *posPort = NULL;
-	char hostname[256]; //Changer 256 en macros ?
+	char hostname[256]; //Changer 256 en macro ?
 	char temp[256];
 
 	while(strlen(hostname) == 0 || *port == -1){
