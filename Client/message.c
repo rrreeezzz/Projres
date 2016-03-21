@@ -58,7 +58,7 @@ void transfer_initiate(message *segment, char *filename, int taille) {
 	/*Fonction qui permet d'envoyer le message de transfer-initiate*/
 	(*segment).code = 203;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s/%s/%d", General_Name, filename, taille);
+	sprintf((*segment).msg_content, "%s|%s|%d", General_Name, filename, taille);
 }
 
 void transfer_accept(message *segment, char *filename) {

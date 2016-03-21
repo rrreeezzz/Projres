@@ -9,9 +9,15 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     printf("Enter the filename :\n");
     fgets(filename, 256, stdin);
     char *positionEntree = NULL;
+<<<<<<< HEAD
+    positionEntree = strchr(filename, '\n'); // On recherche l'"Entree"
+    *positionEntree = '\0';
+    // mieux gerer les erreurs : if (positionEntree != NULL etc....
+=======
     positionEntree = strchr(filename, '\n'); // On recherche l'"Entr�e"
     *positionEntree = '\0';
     // mieux g�rer les erreurs : if (positionEntree != NULL etc....
+>>>>>>> 926b34b57e9cc673f5bbf73904916e581407ca8e
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         printf("Opening file failed\n");
@@ -29,6 +35,28 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     free(msg);
 }
 
+<<<<<<< HEAD
+void parser_transfer(char *msg, char *user, char *filename, int *taille) {
+  char * pch;
+  char tab[3][strlen(msg)];
+  int i = 0;
+  pch = strtok (msg," |");
+  while (pch != NULL)
+  {
+    sprintf(tab[i], "%s", pch);
+    pch = strtok (NULL, " |");
+    i++;
+  }
+sprintf(tab[0], "%s", tab[0]);
+sprintf(tab[1], "%s", tab[1]);
+ /* user = tab[0];*///memcpy(user, tab[0], strlen(tab[0])); 
+ /* filename = tab[1];*///memcpy(filename, tab[1], strlen(tab[1]));
+sprintf(user, "%s", tab[0]);
+sprintf(filename, "%s", tab[1]);
+  *taille = atoi(tab[2]);
+}
+=======
+>>>>>>> 926b34b57e9cc673f5bbf73904916e581407ca8e
 
 int ask_transfer(message *msg, char *filename) {
     char user[16];
@@ -36,7 +64,8 @@ int ask_transfer(message *msg, char *filename) {
     char res[10];
     int file_fd;
 
-    sscanf(msg->msg_content, "%[^'/']/%[^'/']/%d", user, filename, &taille);
+   parser_transfer(msg->msg_content, user, filename, &taille);
+
     printf("%s wants to transfer a file : %s (%d bytes). Do you want to accept ? Type y or n.", user, filename, taille);
     fgets(res, 4, stdin);
 
@@ -46,13 +75,13 @@ int ask_transfer(message *msg, char *filename) {
             printf("%s already exists, if you continue it will be erased. Do you want to continue ? Type y or n.", filename);
             fgets(res, 4, stdin);
             if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) { // if continue
-                if ((file_fd = open(filename, O_TRUNC | O_WRONLY)) < 0)
+                if ((file_fd = open(filename, O_TRUNC | 0755)) < 0)
                     printf("An error has occurred\n"); // fd < 0
             } else { // if not continue
                 file_fd = -1;
             }
         } else { // if file doesn't exist
-            if ((file_fd = open(filename, O_CREAT | O_WRONLY)) < 0)
+            if ((file_fd = open(filename, O_CREAT | 0755)) < 0)
                 printf("An error has occurred\n"); // fd < 0
         }
 
