@@ -4,7 +4,6 @@ int update_contact () {
 
   /*Permet d'ajouter un contact ou de mettre la base de données a jour.*/
 
-  char contact_in_addr[INET_ADDRSTRLEN];
   off_t offset;
   annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
   int contact_file;
@@ -25,8 +24,8 @@ int update_contact () {
     printf("[PROGRAM] Contact added !\n");
   }
   else {
-    //seek(contact_file, line*sizeof(annuaireData), SEEK_SET); // A vérifier
-    new_file = change_contact_data(contact_file, offset);
+    /* On supprime les anciennes données puis on réécrit les nouvelles */
+    new_file = remove_contact_data(contact_file, offset);
     lseek(contact_file, 0, SEEK_END);
     if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
     printf("[PROGRAM] Contact updated !\n");
@@ -35,6 +34,42 @@ int update_contact () {
   free(user);
   close(contact_file);
   close(new_file);
+  return 0;
+}
+
+int remove_contact () {
+
+  off_t offset;
+  annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
+  int contact_file;
+
+  contact_file = open_directory();
+
+  ask_contact_name(user->username);
+
+  if ((offset = search_contact(user->username, contact_file)) == -1) { perror("Error : contact was not found in contact list"); exit(EXIT_FAILURE); }
+  if (remove_contact_data(contact_file, offset) == -1) {perror("Error while removing contact's data"); return -1; }
+  printf("[PROGRAM] Contact removed !\n");
+
+  free(user);
+  close(contact_file);
+  return 0;
+}
+
+int print_contact_list () {
+
+  annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
+  int contact_file;
+  char buf[sizeof(user)];
+
+  contact_file = open_directory();
+
+  while (read(contact_file, user, sizeof(annuaireData)) > 0) {
+    printf("Username : %s\nAdress : %s\n\n", user->username, user->adress);
+  }
+
+  free(user);
+  close(contact_file);
   return 0;
 }
 
@@ -111,12 +146,12 @@ strcpy(username, buf);
 
 }
 
-int change_contact_data(int original, off_t delete_line){
+int remove_contact_data(int original, off_t delete_line){
 
   /*Fonction qui permet de update les données d'un contact dans contact.txt.*/
 
   int new_file = -1;
-  int offset = 0;
+  off_t offset = 0;
   int etat = 0;
   annuaireData *test = (annuaireData *) malloc(sizeof(annuaireData));
 
@@ -124,8 +159,8 @@ int change_contact_data(int original, off_t delete_line){
   lseek(original, 0, SEEK_SET);
 
   //open new file in write mode
-  if ((new_file = open("temp.txt", O_WRONLY|O_CREAT, 0755)) < 0) {perror("Error while creating temporary file"); exit(EXIT_FAILURE); }
-  if ((etat = read(original, test, sizeof(annuaireData))) < 0) {perror("Error while reading from original contact file"); exit(EXIT_FAILURE); }
+  if ((new_file = open("temp.txt", O_WRONLY|O_CREAT, 0755)) < 0) {perror("Error while creating temporary file"); return -1; }
+  if ((etat = read(original, test, sizeof(annuaireData))) < 0) {perror("Error while reading from original contact file"); return -1; }
 
   while (etat > 0)
   {

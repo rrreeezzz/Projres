@@ -241,6 +241,10 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
 	} else if (strcmp(msg, "/add\n") == 0){
 		update_contact();
+	} else if (strcmp(msg, "/remove\n") == 0){
+		remove_contact();
+	} else if (strcmp(msg, "/contact\n") == 0){
+		print_contact_list();
   } else if (strcmp(msg, "/transfer\n")==0){
         init_transfer(4, readfds, fd_array, num_clients);
 	} else {

@@ -16,10 +16,12 @@
 #define CONTACT "contact.txt"
 
 extern int update_contact();
+extern int remove_contact();
+extern int print_contact_list();
 extern off_t search_contact(char *name, int contact_list);
 extern int open_directory();
 extern void ask_contact_name(char *username);
-extern int change_contact_data(int original, off_t delete_line);
+extern int remove_contact_data(int original, off_t delete_line);
 extern void ask_contact_adress(char * temp);
 extern int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg);
 
