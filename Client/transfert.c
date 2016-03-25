@@ -9,7 +9,7 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     printf("Enter the filename :\n");
     fgets(filename, 256, stdin);
     char *positionEntree = NULL;
-    if((positionEntree = strchr(filename, '\n')) == NULL) { // On recherche l'"Entree"
+    if((positionEntree = strchr(filename, '\n')) != NULL) { // On recherche l'"Entree"
       *positionEntree = '\0';
     }// mieux gerer les erreurs : if (positionEntree != NULL etc....
 
@@ -30,7 +30,7 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
 }
 
 
-void parser_transfer(char *msg, char *user, char *filename, int *taille) {
+void parser_transfer(int mod, char *msg, char *user, char *filename, int *taille) {
   char * pch;
   char tab[3][strlen(msg)];
   int i = 0;
@@ -41,13 +41,13 @@ void parser_transfer(char *msg, char *user, char *filename, int *taille) {
     pch = strtok (NULL, " |");
     i++;
   }
-sprintf(tab[0], "%s", tab[0]);
-sprintf(tab[1], "%s", tab[1]);
- /* user = tab[0];*///memcpy(user, tab[0], strlen(tab[0]));
- /* filename = tab[1];*///memcpy(filename, tab[1], strlen(tab[1]));
-sprintf(user, "%s", tab[0]);
-sprintf(filename, "%s", tab[1]);
-  *taille = atoi(tab[2]);
+  if (mod == 1) {
+	sprintf(user, "%s", tab[0]);
+	sprintf(filename, "%s", tab[1]);
+	*taille = atoi(tab[2]);
+  } else if (mod == 2) {
+	sprintf(filename, "%s", tab[1]);
+ }
 }
 
 
@@ -57,27 +57,28 @@ int ask_transfer(message *msg, char *filename) {
     char res[10];
     int file_fd;
 
-   parser_transfer(msg->msg_content, user, filename, &taille);
+   parser_transfer(1, msg->msg_content, user, filename, &taille);
 
-    printf("%s wants to transfer a file : %s (%d bytes). Do you want to accept ? Type y or n.", user, filename, taille);
+    printf("%s wants to transfer a file : %s (%d bytes). Do you want to accept ? Type y or n.\n", user, filename, taille);
     fgets(res, 4, stdin);
 
     if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) { // if accept
         if ((file_fd = open(filename, O_WRONLY)) > 0) { // if file exists
             close(file_fd);
-            printf("%s already exists, if you continue it will be erased. Do you want to continue ? Type y or n.", filename);
+            printf("%s already exists, if you continue it will be erased. Do you want to continue ? Type y or n.\n", filename);
             fgets(res, 4, stdin);
             if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) { // if continue
-                if ((file_fd = open(filename, O_TRUNC | 0755)) < 0)
+                if ((file_fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0755)) < 0)
                     printf("An error has occurred\n"); // fd < 0
+		printf("Transfer in progress \n\n");
             } else { // if not continue
                 file_fd = -1;
             }
         } else { // if file doesn't exist
-            if ((file_fd = open(filename, O_CREAT | 0755)) < 0)
+            if ((file_fd = open(filename, O_CREAT | O_WRONLY, 0755)) < 0)
                 printf("An error has occurred\n"); // fd < 0
+	    printf("Transfer in progress \n\n");
         }
-
     } else { //if not accept
         file_fd = -1;
     }
@@ -87,9 +88,9 @@ int ask_transfer(message *msg, char *filename) {
 void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
     int file_fd = 0;
     paramThread data;
-
     char filename[256];
-    sscanf(msg->msg_content, "%[^'/']/%s", filename, filename); // on garde que le %s dans filename
+
+    parser_transfer(2, msg->msg_content, NULL, filename, NULL);
     if ((file_fd = open(filename, O_RDONLY)) < 0) {
         printf("Opening file failed\n");
         return; // faire un transfer_aborted
@@ -130,13 +131,17 @@ void * file_transfer(void *arg) {
     fd_array = data->fd_array;
     num_clients = data->num_clients;
 
-	while ((read(file_fd, buffer, WRITE_SIZE) > 0)) {
+	while ((read(file_fd, buffer, 20) > 0)) {
+	// printf("JAI LU : %s\n\n", buffer); // pour debug
         transfer_msg(msg, buffer);
         send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+	usleep(5000);
 	}
-
+	sleep(1); //Au cazouuu
     transfer_end(msg, filename);
     send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
+
+	printf("Transfer of file %s succeed\n", filename); // rajouter le nom à qui on a envoyé
 
     close(file_fd);
     free((*msg).msg_content);

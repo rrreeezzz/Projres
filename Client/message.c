@@ -66,7 +66,7 @@ void transfer_accept(message *segment, char *filename) {
 	/*Fonction qui permet d'envoyer le message de transfer-accept*/
 	(*segment).code = 204;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s/%s", General_Name, filename);
+	sprintf((*segment).msg_content, "%s|%s", General_Name, filename);
 }
 
 void transfer_begin(message *segment, char *filename) {
@@ -74,7 +74,7 @@ void transfer_begin(message *segment, char *filename) {
 	/*Fonction qui permet d'envoyer le message de transfer-accept*/
 	(*segment).code = 205;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s/%s", General_Name, filename);
+	sprintf((*segment).msg_content, "%s|%s", General_Name, filename);
 }
 
 void transfer_refused(message *segment) {
@@ -95,7 +95,7 @@ void transfer_msg(message *segment, char *data) {
 
 void transfer_end(message *segment, char *filename) {
 
-	/*Fonction pour envoyer fin de connection*/
+	/*Fonction pour envoyer fin de transfert*/
 	(*segment).code = 306;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", filename);

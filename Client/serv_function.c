@@ -41,7 +41,7 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	close(fd);
 	FD_CLR(fd, readfds); //on enlève le leaver du tableau de clients
 	//On cherche le FD du client qui se deconnecte
-	for (i = 0; i < (*num_clients) - 1; i++){
+	for (i = 0; i < (*num_clients); i++){
 		index = search_client_array_by_fd(fd, fd_array, num_clients);
 	}
 	//On decale les fd superieur a celui qui se connecte
@@ -49,7 +49,6 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 		fd_array[i] = fd_array[i + 1];
 	}
 	(*num_clients)--;
-
 }
 
 void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
@@ -205,6 +204,7 @@ void routine_server(int * server_sockfd){
 					} else {  /*activité d'un client*/
             	traiterRequete(fd, &readfds, fd_array, &num_clients);
           }//if fd ==
+				/* DEBUG
 				int i;
 				printf("FD_array\n");
 				for (i = 0; i < num_clients; i++) {
@@ -212,6 +212,7 @@ void routine_server(int * server_sockfd){
 
 				}
 				printf("\n");
+				*/
 	    }//if FD_ISSET
 	  }//for
 	}//while

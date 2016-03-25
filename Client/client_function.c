@@ -150,7 +150,7 @@ int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients) {
 /*Fonction qui prend un file descriptor et renvoie l'indice dans fd_array correspondant au client s'il existe*/
 
 	int i;
-	for(i=0; i<*num_clients; i++){
+	for(i=0; i<*(num_clients); i++){
 		if(fd == fd_array[i].fd_client)
 			return i;
 	}

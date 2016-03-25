@@ -38,14 +38,13 @@ int protocol_parser(char *msg, message *msg_rcv) {
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
-  int file_fd;
+  static int file_fd = -1;
   int tab[2];
   char filename[256];
 
-
 	message *msg_send = (message *) malloc(sizeof(message));
 	message *msg_rcv = (message *) malloc(sizeof(message));
-	printf("%s\n",msg );
+	//printf("%s\n",msg );
 
 	if(protocol_parser(msg, msg_rcv) != -1) {
 
@@ -64,7 +63,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 100:
 				if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
 					/*A CHANGER, TEMPORAIRE*/
-					printf("%s : %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+					printf("[%s] %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
 				} else {
 					printf("Client not ready for communication\n");
 				}
@@ -74,7 +73,8 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 102 : données de transfert de fichier
 			case 102:
-        write(file_fd, msg_rcv->msg_content, msg_rcv->length); // gestion erreur ?
+       if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0) printf("lol\n");
+ // gestion erreur ?!!!!!!!!!! a faire
 				break;
 
 			/*
@@ -99,14 +99,14 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
 					free((*msg_send).msg_content);
 					client_ready(*client_sockfd, fd_array, num_clients);
-					printf("You are now in communication with : %s\n", (*msg_rcv).msg_content);
+					printf("You are now in communication with : %s\n\n", (*msg_rcv).msg_content);
 				}
 				break;
 
 			// 202 : SESSION_CONFIRMED
 			case 202:
 				client_ready(*client_sockfd, fd_array, num_clients);
-				printf("You are now in communication with : %s\n", (*msg_rcv).msg_content);
+				printf("You are now in communication with : %s\n\n", (*msg_rcv).msg_content);
 				break;
 
     	// 203 : TRANSFER_INITIATE
@@ -164,8 +164,9 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			//306 : TRANSFER_END
 			case 306:
-				printf("Transfer of file %s succeed", (*msg_rcv).msg_content);
+				printf("Transfer of file %s succeed\n", (*msg_rcv).msg_content);
 				close(file_fd);
+				file_fd = -1;
 				break;
 
 			default:
