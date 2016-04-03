@@ -180,3 +180,15 @@ int search_client_id_by_name(char *user, client_data *fd_array, int *num_clients
 	}
 	return -1;
 }
+
+int search_client_fd_by_name(char *user, client_data *fd_array, int *num_clients) {
+
+	/*Fonction qui prend un username de client et renvoie le fd du client s'il existe*/
+
+	int i;
+	for(i=0; i<*num_clients; i++){
+		if(strcmp(user, fd_array[i].name_client) == 0)
+			return fd_array[i].fd_client;
+	}
+	return -1;
+}

@@ -231,31 +231,83 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	char msg[WRITE_SIZE];
 	char rep_msg[MSG_SIZE];
 	int i;
-	message *frame = (message *) malloc(sizeof(message));
 
 	fgets(msg, WRITE_SIZE, stdin);
-	if (strcmp(msg, "/quit\n")==0) {      // A arranger avec plus de tests : si longueur 4 et quit ou des trucs du genre
+	if (strcmp(msg, "/quit\n")==0) {
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
 	} else if (strcmp(msg, "/connect\n")==0){
 		client(maxfds, readfds, num_clients, fd_array, NULL);
 	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
 		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
+	} else if (strncmp(msg, "/msg", 4)==0) {
+		slash_msg(msg, readfds, fd_array, num_clients);
+	} else if (strncmp(msg, "/all", 4)==0) {
+		slash_all(0, msg, readfds, fd_array, num_clients);
 	} else if (strcmp(msg, "/add\n") == 0){
 		update_contact();
 	} else if (strcmp(msg, "/remove\n") == 0){
 		remove_contact();
 	} else if (strcmp(msg, "/contact\n") == 0){
 		print_contact_list();
-  } else if (strcmp(msg, "/transfer\n")==0){
-        init_transfer(4, readfds, fd_array, num_clients);
+  	} else if (strcmp(msg, "/transfer\n")==0){
+        	init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
 	} else {
-		/*Faire une fonction plus poussée pour cette partie.*/
+		slash_all(1, msg, readfds, fd_array, num_clients);
+	}
+}
 
+void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	char username[16];
+	int fd = -1;
+	char msg[WRITE_SIZE];
+	message *frame = (message *) malloc(sizeof(message));
+	if (strlen(cmd) < 9 || strlen(cmd) > 22) { //10 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 et 22
+		printf("[PROGRAM] Wrong argument : /msg name\n, length of name must be between 3 and 16");
+		free(frame);
+		return;
+	}
+	sscanf(cmd+5, "%s", username);
+	if ((fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+		printf("[PROGRAM] %s not connected\n", username);
+		free(frame);
+		return;
+	}
+	printf("Enter your message :\n");
+	fgets(msg, WRITE_SIZE, stdin);
+	normal_msg(frame, msg);
+	send_msg(frame, &fd, readfds, fd_array, num_clients);
+	free((*frame).msg_content);
+	free(frame);
+}
+
+void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	char msg[WRITE_SIZE];
+	int i;
+	message *frame = (message *) malloc(sizeof(message));
+	if (mod == 0) {
+		if (strcmp(cmd, "/all\n")==0) {
+			printf("Enter your message :\n");
+			fgets(msg, WRITE_SIZE, stdin);
+		} else if (strlen(cmd) > 6) { //6 car strlen("/all \n") = 6 = message vide
+			strcpy(msg, cmd+5);
+		} else {
+			printf("[PROGRAM] Wrong argument : /all + ENTER or /all + your message\n");
+			free(frame);
+			return ;
+		}
 		normal_msg(frame, msg);
 		for (i=0; i<*num_clients ; i++) {
 			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
 		}
-		free((*frame).msg_content);
-		free(frame);
+	} else { //mod = 1
+		normal_msg(frame, cmd);
+		for (i=0; i<*num_clients ; i++) {
+			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+		}
 	}
+	free((*frame).msg_content);
+	free(frame);
 }
+
+
+

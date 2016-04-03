@@ -25,5 +25,6 @@ extern int search_client_id_by_fd(int fd, client_data *fd_array, int *num_client
 extern int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients);
 extern void client_ready(int fd, client_data *fd_array, int *num_clients);
 extern int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_clients);
+extern int search_client_fd_by_name(char *user, client_data *fd_array, int *num_clients);
 
 #endif

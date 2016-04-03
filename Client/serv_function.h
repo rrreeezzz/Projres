@@ -27,5 +27,7 @@ extern void handler_sigint();
 extern int *init_server();
 extern void routine_server(int *server_sockfd);
 extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients);
+extern void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
+extern void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 
 #endif
