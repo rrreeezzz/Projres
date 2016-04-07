@@ -308,6 +308,3 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 	free((*frame).msg_content);
 	free(frame);
 }
-
-
-

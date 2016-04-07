@@ -28,7 +28,7 @@ int protocol_parser(char *msg, message *msg_rcv) {
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
-		memcpy((*msg_rcv).msg_content, data, (*msg_rcv).length);
+		strcpy((*msg_rcv).msg_content, data);
 		return 0;
 	}
 
@@ -111,6 +111,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
     	// 203 : TRANSFER_INITIATE
       case 203:
+				printf("data : %s\n", msg_rcv->msg_content);
         if((file_fd = ask_transfer(msg_rcv, filename)) < 0){
 					transfer_refused(msg_send);
 				} else {
