@@ -123,6 +123,7 @@ int * init_server(){
 		exit(EXIT_FAILURE);
 	}
 
+	// Pour réutiliser le port à la fin du programme
 	if(setsockopt(*server_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0){
 		perror("setsockopt() error: Re-use address");
 		close(*server_sockfd);
@@ -258,24 +259,40 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 
 void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];
-	int fd = -1;
+	int fd[MAX_CLIENTS]={-1};
 	char msg[WRITE_SIZE];
+	int i=5; // 5 car cmd+5 correspond aux arguments (noms d'utilisateurs)
+	int w=0;
+	int cptfd=0;
 	message *frame = (message *) malloc(sizeof(message));
-	if (strlen(cmd) < 9 || strlen(cmd) > 22) { //10 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 et 22
-		printf("[PROGRAM] Wrong argument : /msg name\n, length of name must be between 3 and 16");
+	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
+		printf("[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16\n");
+		free(frame);
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire  l'infini hein
+		printf("[PROGRAM] Argument too long\n");
 		free(frame);
 		return;
 	}
-	sscanf(cmd+5, "%s", username);
-	if ((fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+	
+	w=my_count_word(cmd+i);
+	while(w>0) {
+	sscanf(cmd+i, "%s", username);
+	if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf("[PROGRAM] %s not connected\n", username);
+		printf("[PROGRAM] /msg aborted\n");
 		free(frame);
 		return;
+	}
+	i+=strlen(username);
+	w--;
 	}
 	printf("Enter your message :\n");
 	fgets(msg, WRITE_SIZE, stdin);
 	normal_msg(frame, msg);
-	send_msg(frame, &fd, readfds, fd_array, num_clients);
+	int fds;
+	fds = fd[cptfd];
+	send_msg(frame, &fds, readfds, fd_array, num_clients);
 	free((*frame).msg_content);
 	free(frame);
 }
@@ -307,4 +324,27 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 	}
 	free((*frame).msg_content);
 	free(frame);
+}
+
+int is_sep(char c) {
+  if (c == ' ' || c == '\0' || c == '\t')
+    return (1);
+  return (0);
+}
+ 
+int my_count_word(const char *str) {
+  int   count;
+  int   word;
+ 
+  if (str == NULL)
+    return (0);
+  word = 0;
+  count = 0;
+  while (str[count] != '\0')
+    {
+      if (is_sep(str[count]) && is_sep(str[count + 1]) == 0)
+        ++word;
+      ++count;
+    }
+  return (word);
 }

@@ -29,5 +29,7 @@ extern void routine_server(int *server_sockfd);
 extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients);
 extern void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
+extern int is_sep(char c);
+extern int my_count_word(const char *str);
 
 #endif
