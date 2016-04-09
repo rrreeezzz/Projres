@@ -1,6 +1,6 @@
 #include "client_function.h"
 
-struct hostent * ask_server_adress(int *port, annuaireData *user){
+struct hostent * ask_server_address(int *port, annuaireData *user){
 
 	struct hostent *hostinfo;
 	char *posPort = NULL;
@@ -19,7 +19,7 @@ struct hostent * ask_server_adress(int *port, annuaireData *user){
 				if(*port <= 0 || *port >= 100000)
 				*port = -1;
 			}else if(posPort == NULL || *port == -1){
-				printf("\n-----Please enter correct adress-----\n");
+				printf("\n-----Please enter correct address-----\n");
 				continue;
 			}
 
@@ -30,10 +30,10 @@ struct hostent * ask_server_adress(int *port, annuaireData *user){
 			memset(hostname, 0, sizeof (hostname));
 		}
 	}else{
-		posPort = strchr(user->adress, ':');
+		posPort = strchr(user->address, ':');
 		*port = (int) strtol(posPort+1, NULL, 10);
-		strncpy(temp, user->adress, ((int) strlen(user->adress) - (int) strlen(posPort)));
-		temp[((int) strlen(user->adress) - (int) strlen(posPort))] = '\0';
+		strncpy(temp, user->address, ((int) strlen(user->address) - (int) strlen(posPort)));
+		temp[((int) strlen(user->address) - (int) strlen(posPort))] = '\0';
 
 		if((hostinfo = gethostbyname(temp)) == NULL)
 		memset(hostname, 0, sizeof (hostname));
@@ -47,13 +47,14 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	struct hostent *hostinfo;
 	struct sockaddr_in address;
 	int port = -1;
+	char client_inaddr[INET_ADDRSTRLEN];
 	message *msg = (message *) malloc(sizeof(message));
 
 	if(user != NULL){
-		hostinfo = ask_server_adress(&port, user);
+		hostinfo = ask_server_address(&port, user);
 	}else{
 		printf("\n*** Enter server's address : ***\n");
-		hostinfo = ask_server_adress(&port, NULL);
+		hostinfo = ask_server_address(&port, NULL);
 	}
 
 	printf("\n*** Client program starting (enter \"/quit\" to stop): ***\n");
@@ -69,6 +70,11 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 		perror("Connect");
 		return -1;
 	} //gérer autrement car il ne faut pas quitter si on arrive pas a se co
+
+	/* Ajout de l'adresse socket du client auquel on se connecte à ses données */
+	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
+	memset(fd_array->address_client, '\0', sizeof(fd_array->address_client));
+	strcpy(fd_array->address_client, client_inaddr);
 
 	opt_desc(&sock_host, maxfds, readfds);
 	session_initiate(msg); //génération du message de session-initiate
@@ -191,4 +197,17 @@ int search_client_fd_by_name(char *user, client_data *fd_array, int *num_clients
 			return fd_array[i].fd_client;
 	}
 	return -1;
+}
+
+char * search_client_address_by_name(char *user, client_data *fd_array, int *num_clients) {
+
+	/*Fonction qui prend un username de client et renvoie l'adresse du client s'il existe*/
+
+	int i;
+	for(i=0; i<*num_clients; i++){
+		if(strcmp(user, fd_array[i].name_client) == 0) {
+			return fd_array[i].address_client;
+		}
+	}
+	return NULL;
 }

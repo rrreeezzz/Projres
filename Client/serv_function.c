@@ -159,6 +159,7 @@ void routine_server(int * server_sockfd){
 	client_data fd_array[MAX_CLIENTS]; //tableau de data client
 	fd_set readfds, testfds;
 	int maxfds;
+	char client_inaddr[INET_ADDRSTRLEN];
 	message *msg = (message *) malloc(sizeof(message));
 
 	maxfds = *server_sockfd;
@@ -185,6 +186,11 @@ void routine_server(int * server_sockfd){
 						exit(EXIT_FAILURE);
 					}
 
+					/* Ajout de l'adresse du client qui se connecte à nous à ses données */
+					inet_ntop(AF_INET, &(client_address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
+					memset(fd_array->address_client, '\0', sizeof(fd_array->address_client));
+					strcpy(fd_array->address_client, client_inaddr);
+
 					//Si on peut recevoir le client
 					if (num_clients < MAX_CLIENTS) {
 						//On rajoute le client en optimisant les descripteurs
@@ -198,21 +204,21 @@ void routine_server(int * server_sockfd){
 						close(client_sockfd);
 					} //if num_clients < MAX_CLIENTS
 
-					} else if (fd == 0) {  /*activité sur le clavier*/
+				} else if (fd == 0) {  /*activité sur le clavier*/
 						cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
 
-					} else {  /*activité d'un client*/
+				} else {  /*activité d'un client*/
             	traiterRequete(fd, &readfds, fd_array, &num_clients);
-          }//if fd ==
-				/* DEBUG
-				int i;
-				printf("FD_array\n");
-				for (i = 0; i < num_clients; i++) {
-					printf("pos:%d fd:%d id:%d name:%s rdy:%d\n",i,fd_array[i].fd_client,fd_array[i].id_client,fd_array[i].name_client,fd_array[i].rdy );
+        }//if fd ==
+			/* DEBUG
+			int i;
+			printf("FD_array\n");
+			for (i = 0; i < num_clients; i++) {
+				printf("pos:%d fd:%d id:%d name:%s rdy:%d\n",i,fd_array[i].fd_client,fd_array[i].id_client,fd_array[i].name_client,fd_array[i].rdy );
 
-				}
-				printf("\n");
-				*/
+			}
+			printf("\n");
+			*/
 	    }//if FD_ISSET
 	  }//for
 	}//while
@@ -230,6 +236,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 
 	char msg[WRITE_SIZE];
 	char rep_msg[MSG_SIZE];
+	char * contact;
 	int i;
 
 	fgets(msg, WRITE_SIZE, stdin);
@@ -245,12 +252,16 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		slash_all(0, msg, readfds, fd_array, num_clients);
 	} else if (strcmp(msg, "/add\n") == 0){
 		update_contact();
+	} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
+		add_contact_online(fd_array, num_clients, msg);
 	} else if (strcmp(msg, "/remove\n") == 0){
 		remove_contact();
 	} else if (strcmp(msg, "/contact\n") == 0){
 		print_contact_list();
-  	} else if (strcmp(msg, "/transfer\n")==0){
-        	init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
+	} else if (strcmp(msg, "/who\n") == 0) {
+		print_connected_user(fd_array, num_clients);
+	} else if (strcmp(msg, "/transfer\n")==0){
+    init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
 	} else {
 		slash_all(1, msg, readfds, fd_array, num_clients);
 	}

@@ -17,12 +17,14 @@
 
 extern int update_contact();
 extern int remove_contact();
+extern int add_contact_online(client_data *fd_array, int *num_clients, char * msg);
 extern int print_contact_list();
+extern int print_connected_user(client_data *fd_array, int *num_clients);
 extern off_t search_contact(char *name, int contact_list);
 extern int open_directory();
 extern void ask_contact_name(char *username);
 extern int remove_contact_data(int original, off_t delete_line);
-extern void ask_contact_adress(char * temp);
+extern void ask_contact_address(char * temp);
 extern int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg);
 
 #endif

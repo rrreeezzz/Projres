@@ -13,9 +13,9 @@ int update_contact () {
 
   ask_contact_name(user->username);
 
-  printf("[PROGRAM] Please enter contact adress (\e[3m0.0.0.0:12345\e[0m): \n");
+  printf("[PROGRAM] Please enter contact address (\e[3m0.0.0.0:12345\e[0m): \n");
 
-  ask_contact_adress(user->adress);
+  ask_contact_address(user->address);
 
   //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
   if ((offset = search_contact(user->username, contact_file)) == -1) {
@@ -65,12 +65,75 @@ int print_contact_list () {
   contact_file = open_directory();
 
   while (read(contact_file, user, sizeof(annuaireData)) > 0) {
-    printf("Username : %s\nAdress : %s\n\n", user->username, user->adress);
+    printf("Username : %s\nAddress : %s\n\n", user->username, user->address);
   }
 
   free(user);
   close(contact_file);
   return 0;
+}
+
+int add_contact_online(client_data *fd_array, int *num_clients, char * msg) {
+
+  off_t offset;
+  annuaireData * contact = (annuaireData *) malloc(sizeof(annuaireData));
+  int contact_file;
+  int new_file = -1;
+  char name[MAX_SIZE_USERNAME];
+  char * posSpace = NULL;
+  char * contact_addr;
+
+  if((posSpace = strchr(msg, ' ')) == NULL){
+    printf("[PROGRAM] Error command.");
+    return -1;
+  }
+  if ((strlen(posSpace) < 4) && (strlen(posSpace) > 16)) {perror("[PROGRAM] : Username is wrong"); return -1;}
+  strcpy(name, posSpace+1);
+  name[strlen(name) - 1] = '\0';
+
+  /* Fonction qui ajoute un contact avec qui l'on est déjà connecté */
+  contact_addr = search_client_address_by_name(name, fd_array, num_clients);
+  if (contact_addr == NULL) {
+    printf("This user is not connected, to add him, use /add then enter his name and address\n");
+    return -1;
+  }
+  else {
+
+    contact_file = open_directory();
+
+    strcpy(contact->username, name);
+    strcpy(contact->address, contact_addr);
+
+    //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
+    if ((offset = search_contact(contact->username, contact_file)) == -1) {
+      if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
+      write(contact_file, contact, sizeof(annuaireData));
+      printf("[PROGRAM] Connected contact added !\n");
+    }
+    else {
+      /* On supprime les anciennes données puis on réécrit les nouvelles */
+      new_file = remove_contact_data(contact_file, offset);
+      lseek(contact_file, 0, SEEK_END);
+      if(write(new_file, contact, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
+      printf("[PROGRAM] Connected contact updated !\n");
+    }
+  }
+  close(contact_file);
+  close(new_file);
+  return 0;
+}
+
+int print_connected_user(client_data *fd_array, int *num_clients) {
+
+	/* Fonction qui affiche l'ensemble des clients avec qui l'utilisateur est connecté */
+	int i, j;
+	printf("\n[PROGRAM] : You've connected yourself to the addresses \"0.0.0.0\"\n\n");
+	printf("Username\t\tAddress\t\t\tFD\n\n");
+	for(i=0; i<*num_clients; i++) {
+		printf("%s\t\t\t%s \t\t%i\n", fd_array[i].name_client, fd_array[i].address_client, fd_array[i].fd_client);
+	}
+	printf("\n");
+	return 0;
 }
 
 off_t search_contact(char *name, int contact_list) {
@@ -181,7 +244,7 @@ int remove_contact_data(int original, off_t delete_line){
   return new_file;
 }
 
-void ask_contact_adress(char * temp){
+void ask_contact_address(char * temp){
 
   char *posPort = NULL;
   char hostname[256]; //Changer 256, et surtout dans les fgets car cela peut poser des problèmes de sécurité
@@ -194,7 +257,7 @@ void ask_contact_adress(char * temp){
       if(port <= 0 || port >= 100000)
       port = -1;
     }else if(posPort == NULL || port == -1){
-      printf("-----Please enter correct adress-----\n");
+      printf("-----Please enter correct address-----\n");
       continue;
     }
 
