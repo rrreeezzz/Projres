@@ -84,12 +84,22 @@ printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
 
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
-				//On lui demande de se logger
-				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
-					//On confirme la connection du client
-					session_accept(msg_send); //on crée le message de session-accept-1
-					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-					free((*msg_send).msg_content);
+				if(control_accept(fd_array) == 0) {
+					//On lui demande de se logger
+					if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
+						//On confirme la connection du client
+						session_accept(msg_send); //on crée le message de session-accept-1
+						send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+						free((*msg_send).msg_content);
+					}
+				} else {
+					printf("[PROGRAM] Session not established : you refused the connection with %s.\n", (*msg_rcv).msg_content);
+					session_denied(msg_send, 2);
+					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
+					free((*msg_rcv).msg_content);
+					close(*client_sockfd);
+					FD_CLR(*client_sockfd, readfds);
+					break;
 				}
 				break;
 
@@ -139,33 +149,40 @@ printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
-            // 301 : SESSION_DENIED
+      // 301 : SESSION_DENIED
 			case 301:
 				printf("[%s] Connection denied : you are already in connection.\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
-			// 302 : SESSION_END
+			// 302 : SESSION_DENIED
 			case 302:
-				printf("[%s] End of connexion.\n", (*msg_rcv).msg_content);
+				printf("[%s] Connection denied : the user you tried to connect to refused the connection.\n", (*msg_rcv).msg_content);
+				close(*client_sockfd);
+				FD_CLR(*client_sockfd, readfds);
+				break;
+
+			// 303 : SESSION_END
+			case 303:
+				printf("[%s] End of connection.\n", (*msg_rcv).msg_content);
 				exitClient(*client_sockfd, readfds, fd_array, num_clients);
 				break;
 
-            // 303 : TRANSFER_REFUSED
-			case 303:
+      // 304 : TRANSFER_REFUSED
+			case 304:
 				printf("[%s] Transfer refused.\n", (*msg_rcv).msg_content);
 				break;
 
-			// 304 : TRANSFER_CANCELLED
+			// 305 : TRANSFER_CANCELLED
 			/*le client peut annuler le transfert, donc on stop le thread, {est ce que ça freee et ça close bien ?} */
 			/* mais si le client plante et quitte sans envoyer de TRANSFER_CANCELLED, il se passe quoi pour le thread ??????????????? */
 
-			// 305 : TRASNFER_ABORTED
+			// 306 : TRASNFER_ABORTED
 			/* l'expéditeur a annulé, on ferme fd et on demande si le receveur veut garder le fichier */
 
-			//306 : TRANSFER_END
-			case 306:
+			//307 : TRANSFER_END
+			case 307:
 				printf("Transfer of file %s succeed\n", (*msg_rcv).msg_content);
 				close(file_fd);
 				file_fd = -1;

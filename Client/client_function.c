@@ -113,23 +113,39 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
 	autres clients.*/
 
 	char user[MAX_SIZE_USERNAME];
-    sscanf(msg_rcv->msg_content, "%s", user);
+  sscanf(msg_rcv->msg_content, "%s", user);
 
-    if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
-        fd_array[*num_clients].fd_client=*client_sockfd;
-        fd_array[*num_clients].id_client=*num_clients;
-        fd_array[*num_clients].rdy = 0;
-        strcpy(fd_array[*num_clients].name_client,user);
-				(*num_clients)++;
-        return 0;
-    }else{
-        printf("[PROGRAM] Session denied : %s already connected\n", user);
-        session_denied(msg_send, 1);
-				send_msg(msg_send, client_sockfd,readfds,fd_array,num_clients);
-        close(*client_sockfd);
-        FD_CLR(*client_sockfd, readfds);
-        return -1;
-    }
+  if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
+		fd_array[*num_clients].fd_client=*client_sockfd;
+  	fd_array[*num_clients].id_client=*num_clients;
+  	fd_array[*num_clients].rdy = 0;
+    strcpy(fd_array[*num_clients].name_client,user);
+		(*num_clients)++;
+    return 0;
+  } else {
+    printf("[PROGRAM] Session denied : %s already connected\n", user);
+    session_denied(msg_send, 1);
+		send_msg(msg_send, client_sockfd,readfds,fd_array,num_clients);
+    close(*client_sockfd);
+    FD_CLR(*client_sockfd, readfds);
+    return -1;
+  }
+}
+
+int control_accept(client_data *fd_array) {
+
+	/* Fonction qui permet à un client d'accepter ou pas une connextion d'un utilisateur
+	distant. */
+	char tmpAccept[WRITE_SIZE];
+	char acceptConnection[WRITE_SIZE];
+
+	printf("[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", fd_array->name_client, fd_array->address_client);
+	fgets(tmpAccept, WRITE_SIZE, stdin);
+	strncpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1);
+	// debug printf("\"%s\"", acceptConnection);
+	if(strcmp(acceptConnection, "yes") == 0) return 0;
+	else return -1;
+
 }
 
 void client_ready(int fd, client_data *fd_array, int *num_clients) {

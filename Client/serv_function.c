@@ -206,10 +206,9 @@ void routine_server(int * server_sockfd){
 					} //if num_clients < MAX_CLIENTS
 
 				} else if (fd == 0) {  /*activité sur le clavier*/
-						cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
-
+					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
 				} else {  /*activité d'un client*/
-            	traiterRequete(fd, &readfds, fd_array, &num_clients);
+          traiterRequete(fd, &readfds, fd_array, &num_clients);
         }//if fd ==
 			/* DEBUG
 			int i;
