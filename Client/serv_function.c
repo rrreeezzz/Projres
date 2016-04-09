@@ -206,9 +206,10 @@ void routine_server(int * server_sockfd){
 					} //if num_clients < MAX_CLIENTS
 
 				} else if (fd == 0) {  /*activité sur le clavier*/
-					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
+						cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
+
 				} else {  /*activité d'un client*/
-          traiterRequete(fd, &readfds, fd_array, &num_clients);
+            	traiterRequete(fd, &readfds, fd_array, &num_clients);
         }//if fd ==
 			/* DEBUG
 			int i;
@@ -235,11 +236,9 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	/*Fonction qui gère les données entrées au clavier par l'utilisateur.*/
 
 	char msg[WRITE_SIZE];
-	char rep_msg[MSG_SIZE];
-	char * contact;
-	int i;
 
 	fgets(msg, WRITE_SIZE, stdin);
+
 	if (strcmp(msg, "/quit\n")==0) {
 		quit_server(readfds, fd_array, server_sockfd, num_clients);
 	} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
@@ -248,9 +247,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		client(maxfds, readfds, num_clients, fd_array, NULL);
 	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
 		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
-	}/* else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
-		disconnect_client(maxfds, readfds, num_clients, fd_array, msg);
-	} */else if (strncmp(msg, "/msg", 4)==0) {
+	} else if (strncmp(msg, "/msg", 4)==0) {
 		slash_msg(msg, readfds, fd_array, num_clients);
 	} else if (strncmp(msg, "/all", 4)==0) {
 		slash_all(0, msg, readfds, fd_array, num_clients);
@@ -265,7 +262,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	} else if (strcmp(msg, "/who\n") == 0) {
 		print_connected_user(fd_array, num_clients);
 	} else if (strcmp(msg, "/transfer\n")==0){
-    init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
+    		init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
 	} else {
 		slash_all(1, msg, readfds, fd_array, num_clients);
 	}
@@ -283,13 +280,14 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 		printf("[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16\n");
 		free(frame);
 		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire  l'infini hein
+	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
 		printf("[PROGRAM] Argument too long\n");
 		free(frame);
 		return;
 	}
 
-	w=my_count_word(cmd+i);
+	w=my_count_word(cmd); //compte le nombre d'arg après /msg
+
 	while(w>0) {
 		sscanf(cmd+i, "%s", username);
 		if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
@@ -298,6 +296,7 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 			free(frame);
 			return;
 		}
+		cptfd++;
 		i+=strlen(username);
 		w--;
 	}
@@ -305,8 +304,10 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	fgets(msg, WRITE_SIZE, stdin);
 	normal_msg(frame, msg);
 	int fds;
-	fds = fd[cptfd];
-	send_msg(frame, &fds, readfds, fd_array, num_clients);
+	for(cptfd--;cptfd>=0;cptfd--) {
+		fds = fd[cptfd];
+		send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
+	}
 	free((*frame).msg_content);
 	free(frame);
 }
@@ -367,39 +368,38 @@ int help(char * msg) {
 
 	/*Fonction qui affiche l'aide des fonctions demandées par l'utilisateur.*/
 
-  char * posSpace = NULL;
-  printf("\n\t[PROGRAM]\n\n");
-  if((posSpace = strchr(msg, '\n')) == NULL) {
-    printf("The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\nUse : /help FunctionName\n");
+ 	char * posSpace = NULL;
+	if((posSpace = strchr(msg, '\n')) == NULL) {
+		printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 		return;
-  }
+ 	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-		printf("The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\nUse : /help FunctionName\n");
+		printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 		return;
 	}
 	if (posSpace[0] == ' ') {
-    memmove(posSpace, posSpace+1, strlen(posSpace));
+    		memmove(posSpace, posSpace+1, strlen(posSpace));
 	}
 	if (strcmp(posSpace, "quit\n")==0) {
-		printf("The quit function allows you to quit the chat. It will close all connections.\nUse : \"/quit\"\n");
+		printf("[PROGRAM] The quit function allows you to quit the chat. It will close all connections.\n\t  Use : \"/quit\"\n");
 	} else if (strcmp(posSpace, "connect\n")==0){
-		printf("The connect function allows you to establish a connection with another user.\nUse : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\nUse : \"/connect USERNAME\" to connect to a user you already have in your contact list.\n");
+		printf("[PROGRAM] The connect function allows you to establish a connection with another user.\n\t  Use : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\n\t  OR\n\t  Use : \"/connect USERNAME\" to connect to a user you already have in your contact list.\n");
 	} else if (strcmp(posSpace, "msg\n")==0) {
-    printf("The msg function allows you to send a direct message to other users.\nUse : \"/msg USERNAME ...\" to send a direct message to one or more users.\nThen you will be asked to type your message and press [Enter] to send it.\n");
+    		printf("[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it.\n");
 	} else if (strcmp(posSpace, "all\n")==0) {
-    printf("The all function allows you to send a message to everyone you're connected with.\nUse : \"/all Message Written Here\"\n  OR\nUse : \"/all\", press [Enter], then you will be asked to type your message and press [Enter] again to send it.\n");
+    		printf("[PROGRAM] The all function allows you to send a message to everyone you're connected with.\n\t  Use : \"/all Message Written Here\"\n\t  OR\n\t  Use : \"/all\", press [Enter], then you will be asked to type your message and press [Enter] again to send it.\n");
 	} else if (strcmp(posSpace, "add\n") == 0){
-    printf("The add function allows you to add a user to your contact list or update one who is already in it.\nYou can either use \"/add USERNAME\" to add a user you're connected to\nor \"/add\", press [Enter] and complete his/her name and address.\n");
+   		 printf("[PROGRAM] The add function allows you to add a user to your contact list or update one who is already in it.\n\t  Use : \"/add USERNAME\" to add a user you're connected to\n\t  OR\n\t  Use : \"/add\", press [Enter] and complete his/her name and address.\n");
 	} else if (strcmp(posSpace, "remove\n") == 0){
-    printf("The remove function allows you to remove a user from your contact list.\nUse : \"/remove\"\nYou will be asked to type the contact's username so as to remove its data.\n");
+   		 printf("[PROGRAM] The remove function allows you to remove a user from your contact list.\n\t  Use : \"/remove\"\n\t  You will be asked to type the contact's username so as to remove its data.\n");
 	} else if (strcmp(posSpace, "contact\n") == 0){
-    printf("The contact function allows you to print your contact list.\nUse : \"/contact\"\n");
+   		 printf("[PROGRAM] The contact function allows you to print your contact list.\n\t  Use : \"/contact\"\n");
 	} else if (strcmp(posSpace, "who\n") == 0) {
-    printf("The who function allows you to print every user you are currently connected to.\nUse : \"/who\"\n");
+   		 printf("[PROGRAM] The who function allows you to print every user you are currently connected to.\n\t  Use : \"/who\"\n");
 	} else if (strcmp(posSpace, "transfer\n")==0){
-    printf("The transfer function allows you to transfer text files and binary files.\nUse :\"/transfer\", then type the filename (absolute or relative) and press [Enter].\nThe transfer will start and a message will be displayed upon success or failure.\n");
+   		 printf("[PROGRAM] The transfer function allows you to transfer text files and binary files.\n\t  Use : \"/transfer\", then type the filename (absolute or relative) and press [Enter].\n\t  The transfer will start and a message will be displayed upon success or failure.\n");
 	} else {
-    printf("The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\nUse : /help FunctionName\n");
+   		 printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 	}
 	return;
 }
