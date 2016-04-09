@@ -141,12 +141,38 @@ int control_accept(client_data *fd_array) {
 
 	printf("[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", fd_array->name_client, fd_array->address_client);
 	fgets(tmpAccept, WRITE_SIZE, stdin);
-	strncpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1);
-	// debug printf("\"%s\"", acceptConnection);
+	//printf("\n\"%s\"\n", tmpAccept); //debug
+	*((char *)mempcpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1)) = '\0'; // merci Ulrich Drepper
+	//printf("\n\"%s\"\n", acceptConnection); //debug
 	if(strcmp(acceptConnection, "yes") == 0) return 0;
 	else return -1;
 
 }
+
+/*int disconnect_client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
+
+	char *posSpace = NULL;
+	char name[MAX_SIZE_USERNAME];
+	int i;
+	int fd_client;
+	message *discomsg = (message *) malloc(sizeof(message));
+
+	if((posSpace = strchr(msg, ' ')) == NULL){
+    printf("[PROGRAM] Error command.");
+    return -1;
+  }
+	strcpy(name, posSpace+1);
+	name[strlen(name) - 1] = '\0';
+
+	if((fd_client = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {printf("Client is not connected"); return -1;}
+	session_end(discomsg);
+	send_msg(discomsg, &fd_client, readfds, fd_array, num_clients);
+	close(fd_client);
+	free((*discomsg).msg_content);
+	free(discomsg);
+	return 0;
+
+} */
 
 void client_ready(int fd, client_data *fd_array, int *num_clients) {
 

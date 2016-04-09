@@ -248,7 +248,9 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		client(maxfds, readfds, num_clients, fd_array, NULL);
 	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
 		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
-	} else if (strncmp(msg, "/msg", 4)==0) {
+	}/* else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
+		disconnect_client(maxfds, readfds, num_clients, fd_array, msg);
+	} */else if (strncmp(msg, "/msg", 4)==0) {
 		slash_msg(msg, readfds, fd_array, num_clients);
 	} else if (strncmp(msg, "/all", 4)==0) {
 		slash_all(0, msg, readfds, fd_array, num_clients);

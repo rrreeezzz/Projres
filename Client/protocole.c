@@ -73,9 +73,9 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 102 : données de transfert de fichier
 			case 102:
-printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
-       if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
- // gestion erreur ?!!!!!!!!!! a faire
+				printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
+       	if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
+ 				// gestion erreur ?!!!!!!!!!! a faire
 				break;
 
 			/*
@@ -96,10 +96,9 @@ printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
 					printf("[PROGRAM] Session not established : you refused the connection with %s.\n", (*msg_rcv).msg_content);
 					session_denied(msg_send, 2);
 					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
-					free((*msg_rcv).msg_content);
+					free((*msg_send).msg_content);
 					close(*client_sockfd);
 					FD_CLR(*client_sockfd, readfds);
-					break;
 				}
 				break;
 

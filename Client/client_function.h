@@ -1,6 +1,9 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -21,6 +24,7 @@ extern void viderBuffer();
 extern struct hostent * ask_server_address(int *port, annuaireData *user);
 extern int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, annuaireData *user);
 extern int control_accept(client_data *fd_array);
+extern int disconnect_client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg);
 extern int search_client_id_by_name(char *user, client_data *fd_array, int *num_clients);
 extern int search_client_id_by_fd(int fd, client_data *fd_array, int *num_clients);
 extern int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients);
@@ -29,4 +33,5 @@ extern int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_cli
 extern int search_client_fd_by_name(char *user, client_data *fd_array, int *num_clients);
 extern char * search_client_address_by_name(char *user, client_data *fd_array, int *num_clients);
 
+#endif
 #endif
