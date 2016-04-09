@@ -73,7 +73,8 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 102 : données de transfert de fichier
 			case 102:
-       if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0) printf("lol\n");
+printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
+       if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
  // gestion erreur ?!!!!!!!!!! a faire
 				break;
 
@@ -111,7 +112,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
     	// 203 : TRANSFER_INITIATE
       case 203:
-				printf("data : %s\n", msg_rcv->msg_content);
+				printf("TRANS INIT data : %s\n", msg_rcv->msg_content); // POUR DEBUG
         if((file_fd = ask_transfer(msg_rcv, filename)) < 0){
 					transfer_refused(msg_send);
 				} else {
