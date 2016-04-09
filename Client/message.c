@@ -35,8 +35,8 @@ void session_denied(message *segment, int type) {
     sprintf((*segment).msg_content, "%s", General_Name);
 	} else if (type == 2) {
 		(*segment).code = 302; //connection refused by user
-    sprintf((*segment).msg_content, "%s", General_Name);
 	}
+
 }
 
 void normal_msg(message *segment, char *data) {
