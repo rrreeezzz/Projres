@@ -149,12 +149,12 @@ int control_accept(client_data *fd_array) {
 
 }
 
-/*int disconnect_client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
+int disconnect(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
 
 	char *posSpace = NULL;
 	char name[MAX_SIZE_USERNAME];
 	int i;
-	int fd_client;
+	int client_sockfd;
 	message *discomsg = (message *) malloc(sizeof(message));
 
 	if((posSpace = strchr(msg, ' ')) == NULL){
@@ -164,15 +164,15 @@ int control_accept(client_data *fd_array) {
 	strcpy(name, posSpace+1);
 	name[strlen(name) - 1] = '\0';
 
-	if((fd_client = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {printf("Client is not connected"); return -1;}
+	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {printf("Client is not connected"); return -1;}
 	session_end(discomsg);
-	send_msg(discomsg, &fd_client, readfds, fd_array, num_clients);
-	close(fd_client);
+	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
+	exitClient(client_sockfd, readfds, fd_array, num_clients);
 	free((*discomsg).msg_content);
 	free(discomsg);
 	return 0;
 
-} */
+}
 
 void client_ready(int fd, client_data *fd_array, int *num_clients) {
 
@@ -200,6 +200,18 @@ int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients) {
 	int i;
 	for(i=0; i<*(num_clients); i++){
 		if(fd == fd_array[i].fd_client)
+			return i;
+	}
+	return -1;
+}
+
+int search_client_array_by_name(char *user, client_data *fd_array, int *num_clients) {
+
+/*Fonction qui prend un username de client et renvoie l'indice dans fd_array correspondant au client s'il existe*/
+
+	int i;
+	for(i=0; i<*(num_clients); i++){
+		if(user == fd_array[i].name_client)
 			return i;
 	}
 	return -1;
