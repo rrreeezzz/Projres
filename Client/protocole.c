@@ -8,7 +8,7 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	(*segment).length = strlen((*segment).msg_content);
 	char msg[MSG_SIZE];
 
-	sprintf(msg, "%d/%d/%d/%s/END", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
+	sprintf(msg, "%d/%d/%d/%s", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
 	//printf("msg envoyé : %s\n", msg); //pour debug
 	if (write(*fd, msg, strlen(msg)) <= 0){
 		perror("Write error");
@@ -24,7 +24,7 @@ int protocol_parser(char *msg, message *msg_rcv) {
 	char code[3], length[MSG_SIZE], send_time[MSG_SIZE], data[MSG_SIZE];
 	(*msg_rcv).msg_content = malloc(MSG_SIZE);
 
-	if(sscanf(msg, "%[^'/']/%[^'/']/%[^'/']/%[^'/]/END", code, length, send_time, data) == 4){
+	if(sscanf(msg, "%[^'/']/%[^'/']/%[^'/']/%[^\r]", code, length, send_time, data) == 4){
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
@@ -65,7 +65,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 					/*A CHANGER, TEMPORAIRE*/
 					printf("[%s] %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
 				} else {
-					printf("Client not ready for communication\n");
+					printf("[PROGRAM] %s not ready for communication\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 				}
 				break;
 
@@ -73,9 +73,9 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 102 : données de transfert de fichier
 			case 102:
-				printf("recu : %s\n", msg_rcv->msg_content); // POUR DEBUG
-       	if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
- 				// gestion erreur ?!!!!!!!!!! a faire
+printf("recu %d: %s\n", msg_rcv->length,msg_rcv->msg_content); // POUR DEBUG
+       if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
+ // gestion erreur ?!!!!!!!!!! a faire
 				break;
 
 			/*
@@ -84,21 +84,12 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
-				if(control_accept(fd_array) == 0) {
-					//On lui demande de se logger
-					if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
-						//On confirme la connection du client
-						session_accept(msg_send); //on crée le message de session-accept-1
-						send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-						free((*msg_send).msg_content);
-					}
-				} else {
-					printf("[PROGRAM] Session not established : you refused the connection with %s.\n", (*msg_rcv).msg_content);
-					session_denied(msg_send, 2);
-					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
+				//On lui demande de se logger
+				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
+					//On confirme la connection du client
+					session_accept(msg_send); //on crée le message de session-accept-1
+					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
 					free((*msg_send).msg_content);
-					close(*client_sockfd);
-					FD_CLR(*client_sockfd, readfds);
 				}
 				break;
 
@@ -148,40 +139,33 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
-      // 301 : SESSION_DENIED
+            // 301 : SESSION_DENIED
 			case 301:
 				printf("[%s] Connection denied : you are already in connection.\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
-			// 302 : SESSION_DENIED
+			// 302 : SESSION_END
 			case 302:
-				printf("[%s] Connection denied : the user you tried to connect to refused the connection.\n", (*msg_rcv).msg_content);
-				close(*client_sockfd);
-				FD_CLR(*client_sockfd, readfds);
-				break;
-
-			// 303 : SESSION_END
-			case 303:
-				printf("[%s] End of connection.\n", (*msg_rcv).msg_content);
+				printf("[%s] End of connexion.\n", (*msg_rcv).msg_content);
 				exitClient(*client_sockfd, readfds, fd_array, num_clients);
 				break;
 
-      // 304 : TRANSFER_REFUSED
-			case 304:
+            // 303 : TRANSFER_REFUSED
+			case 303:
 				printf("[%s] Transfer refused.\n", (*msg_rcv).msg_content);
 				break;
 
-			// 305 : TRANSFER_CANCELLED
+			// 304 : TRANSFER_CANCELLED
 			/*le client peut annuler le transfert, donc on stop le thread, {est ce que ça freee et ça close bien ?} */
 			/* mais si le client plante et quitte sans envoyer de TRANSFER_CANCELLED, il se passe quoi pour le thread ??????????????? */
 
-			// 306 : TRASNFER_ABORTED
+			// 305 : TRASNFER_ABORTED
 			/* l'expéditeur a annulé, on ferme fd et on demande si le receveur veut garder le fichier */
 
-			//307 : TRANSFER_END
-			case 307:
+			//306 : TRANSFER_END
+			case 306:
 				printf("Transfer of file %s succeed\n", (*msg_rcv).msg_content);
 				close(file_fd);
 				file_fd = -1;
