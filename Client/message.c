@@ -36,7 +36,7 @@ void session_denied(message *segment, int type) {
 	} else if (type == 2) {
 		(*segment).code = 302; //connection refused by user
 	}
-
+	
 }
 
 void normal_msg(message *segment, char *data) {
