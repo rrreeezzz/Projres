@@ -37,7 +37,7 @@ void connect_mysql(){ //si ne se connecte pas, c'est ce fichier qui gère l'erre
   if (mysql_real_connect(db, "localhost", admin, pswd, NULL, 0, NULL, 0) == NULL) //pour l'instant en clair, mais créer fichier de configuration
   error_mysql(db);
 
-  if (mysql_query(db, "USE chat")) //retourne 0 si succes, on utilise la database chat existe
+  if (mysql_query(db, "USE pswd")) //retourne 0 si succes, on utilise la database chat existe
   error_mysql();
 
   fclose(file);

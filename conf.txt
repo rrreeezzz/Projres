@@ -2,12 +2,5 @@
 user:root
 password:test49
 
----Protocols---
-Port: 40000
-
---Security--
-Salt: qoQyEmMwLFgUcKgL3hUX
-
---General--
-MaxUsers: 100
-MaxUsersInGroup: 10
+--SERVEUR--
+port:40000
