@@ -73,8 +73,8 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	/* Ajout de l'adresse socket du client auquel on se connecte à ses données */
 	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
-	memset(fd_array->address_client, '\0', sizeof(fd_array->address_client));
-	strcpy(fd_array->address_client, client_inaddr);
+	memset(fd_array[*num_clients].address_client, '\0', sizeof(fd_array->address_client));
+	strcpy(fd_array[*num_clients].address_client, client_inaddr);
 
 	opt_desc(&sock_host, maxfds, readfds);
 	session_initiate(msg); //génération du message de session-initiate
@@ -116,10 +116,11 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
   sscanf(msg_rcv->msg_content, "%s", user);
 
   if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
-		fd_array[*num_clients].fd_client=*client_sockfd;
-  	fd_array[*num_clients].id_client=*num_clients;
+		fd_array[*num_clients].fd_client = *client_sockfd;
+  	fd_array[*num_clients].id_client = *num_clients;
   	fd_array[*num_clients].rdy = 0;
-    strcpy(fd_array[*num_clients].name_client,user);
+    strcpy(fd_array[*num_clients].name_client, user);
+		//strcpy(fd_array[*num_clients].address_client, fd_array->address_client);
 		(*num_clients)++;
     return 0;
   } else {
@@ -132,24 +133,24 @@ int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client
   }
 }
 
-int control_accept(client_data *fd_array) {
+int control_accept(message *msg_rcv, client_data *fd_array, int *num_clients) {
 
 	/* Fonction qui permet à un client d'accepter ou pas une connextion d'un utilisateur
 	distant. */
 	char tmpAccept[WRITE_SIZE];
 	char acceptConnection[WRITE_SIZE];
 
-	printf("[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", fd_array->name_client, fd_array->address_client);
+	printf("\n[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", (*msg_rcv).msg_content, fd_array[*num_clients].address_client);
 	fgets(tmpAccept, WRITE_SIZE, stdin);
 	//printf("\n\"%s\"\n", tmpAccept); //debug
-	*((char *)mempcpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1)) = '\0'; // merci Ulrich Drepper
+	*((char *)mempcpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1)) = '\0'; // Pour retirer le \n proprement : merci Ulrich Drepper
 	//printf("\n\"%s\"\n", acceptConnection); //debug
 	if(strcmp(acceptConnection, "yes") == 0) return 0;
 	else return -1;
 
 }
 
-int disconnect(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
+int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
 
 	char *posSpace = NULL;
 	char name[MAX_SIZE_USERNAME];
@@ -164,10 +165,15 @@ int disconnect(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_a
 	strcpy(name, posSpace+1);
 	name[strlen(name) - 1] = '\0';
 
-	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {printf("Client is not connected"); return -1;}
+	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {
+		printf("Client is not connected\n");
+		return -1;
+	}
+
 	session_end(discomsg);
 	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
 	exitClient(client_sockfd, readfds, fd_array, num_clients);
+	printf("[%s] End of connection.\n", name);
 	free((*discomsg).msg_content);
 	free(discomsg);
 	return 0;

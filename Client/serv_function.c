@@ -188,11 +188,6 @@ void routine_server(int * server_sockfd){
 						exit(EXIT_FAILURE);
 					}
 
-					/* Ajout de l'adresse du client qui se connecte à nous à ses données */
-					inet_ntop(AF_INET, &(client_address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
-					memset(fd_array->address_client, '\0', sizeof(fd_array->address_client));
-					strcpy(fd_array->address_client, client_inaddr);
-
 					//Si on peut recevoir le client
 					if (num_clients < MAX_CLIENTS) {
 						//On rajoute le client en optimisant les descripteurs
@@ -205,6 +200,11 @@ void routine_server(int * server_sockfd){
 						free((*msg).msg_content);
 						close(client_sockfd);
 					} //if num_clients < MAX_CLIENTS
+
+					/* Ajout de l'adresse du client qui se connecte à nous à ses données */
+					inet_ntop(AF_INET, &(client_address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
+					memset(fd_array[num_clients].address_client, '\0', sizeof(fd_array->address_client));
+					strcpy(fd_array[num_clients].address_client, client_inaddr);
 
 				} else if (fd == 0) {  /*activité sur le clavier*/
 					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
@@ -236,6 +236,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	/*Fonction qui gère les données entrées au clavier par l'utilisateur.*/
 
 	char msg[WRITE_SIZE];
+	int countdisc;
 
 	fgets(msg, WRITE_SIZE, stdin);
 
@@ -266,7 +267,11 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	} else if (strcmp(msg, "/transfer\n")==0){
     init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
 	} else {
-		slash_all(1, msg, readfds, fd_array, num_clients);
+		if(*num_clients > 0) {
+			slash_all(1, msg, readfds, fd_array, num_clients);
+		} else {
+			if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+		}
 	}
 }
 
@@ -372,11 +377,11 @@ int help(char * msg) {
 
  	char * posSpace = NULL;
 	if((posSpace = strchr(msg, '\n')) == NULL) {
-		printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
+		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 		return;
  	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-		printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
+		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 		return;
 	}
 	if (posSpace[0] == ' ') {

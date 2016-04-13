@@ -85,12 +85,12 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
-			if(control_accept(fd_array) == 0) {
+			if(control_accept(msg_rcv, fd_array, num_clients) == 0) {
 				//On lui demande de se logger
 				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
 					//On confirme la connection du client
 					session_accept(msg_send); //on crée le message de session-accept-1
-					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
 					free((*msg_send).msg_content);
 				}
 			} else {
@@ -107,7 +107,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 201:
 				if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
 					session_confirmed(msg_send); //on crée le message de session-accept-2
-					send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
 					free((*msg_send).msg_content);
 					client_ready(*client_sockfd, fd_array, num_clients);
 					printf("You are now in communication with : %s\n\n", (*msg_rcv).msg_content);
