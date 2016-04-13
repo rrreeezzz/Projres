@@ -3,13 +3,13 @@
 
 int main(int argc, char *argv[]) {
 
-	int * server_sockfd;
+	int server_sockfd;
 
-	time_server();
+	//time_server();
 
-	handler_sigint();
+	//handler_sigint();
 
-	connect_mysql();
+	connect_mysql(); //initialisation base de données
 
   server_sockfd = init_server();
 
