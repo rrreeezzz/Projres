@@ -38,3 +38,19 @@ int protocol_parser(char *msg, message *msg_rcv) {
 
 	return -1;
 }
+
+void send_msg(message *segment, struct sockaddr remote_addr) {
+
+	/*Fonction qui concatène et envois les trames*/
+
+	(*segment).temps = time(NULL);
+	(*segment).length = strlen((*segment).msg_content);
+	char msg[MSG_SIZE];
+
+	sprintf(msg, "%d/%d/%d/%s", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
+	//printf("msg envoyé : %s\n", msg); //pour debug
+
+	if (sendto(server_sockfd, msg, MSG_SIZE, 0, &remote_addr, sizeof(remote_addr)) <= 0){
+		perror("Sendto error.");
+	}
+}

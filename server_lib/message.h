@@ -11,14 +11,12 @@
 #include <netdb.h>
 #include <time.h>
 
-#define WRITE_SIZE 100
-#define MSG_SIZE WRITE_SIZE+25
+#include "db.h"
+#include "utilities.h"
 
-typedef struct {
-  int code;
-  int length;
-  char *msg_content;
-  time_t temps; //temps en secondes depuis le 1er janvier 1970
-} message;
+extern void im_on(message *segment);
+extern void already_exist(message *segment);
+extern void send_ip(message *rcv, message *segment);
+extern void no_exist(message *segment);
 
 #endif

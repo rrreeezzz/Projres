@@ -1,6 +1,6 @@
 #include "server_function.h"
 
-void quit_server(int server_sockfd){
+void quit_server(){
 	close(server_sockfd);
 	exit_mysql();
 	exit(0);
@@ -23,7 +23,7 @@ void handler_sigint(){
 
 }
 
-int init_server(){
+void init_server(){
 
 	struct sockaddr_in server_address;
 	int addresslen = sizeof(struct sockaddr_in);
@@ -48,16 +48,14 @@ int init_server(){
 	//if (getsockname(server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("Getsockname error."); exit(EXIT_FAILURE); }
 
 	printf("\n*** Connections available on port : %d ***\n", ntohs(server_address.sin_port));
-
-	return server_sockfd;
 }
 
-void routine_server(int server_sockfd){
+void routine_server(){
 
 	int on = 1;
 	char buffer[INFO_SIZE];
 	struct sockaddr remote_addr;
-	fd_set readfds;
+	fd_set readfds, tempfds;
 	int fd;
 	int maxfds;
 
@@ -68,48 +66,47 @@ void routine_server(int server_sockfd){
 
 	while(on){
 
+		tempfds = readfds;
+
 		printf("\e[1;33m[SERVER]\e[0m Waiting request...\n");
 
-		if(select(maxfds+1, &readfds, NULL, NULL, NULL) < 0) {
+		if(select(maxfds+1, &tempfds, NULL, NULL, NULL) < 0) {
 			perror("Select error.");
 			exit(EXIT_FAILURE);
 		}
 
 		for(fd=0; fd<maxfds+1; fd++){
 
-			if(FD_ISSET(fd, &readfds)){
+			if(FD_ISSET(fd, &tempfds)){
 
 				if(fd == server_sockfd){
-					if(recvfrom(server_sockfd, buffer, INFO_SIZE, 0, &remote_addr,(socklen_t *) sizeof(remote_addr)) <= 0) //si on a rien lu, on retourne au while
-					continue;
-					else
-					traiter_requete(server_sockfd, buffer, remote_addr);
+					if(recvfrom(server_sockfd, buffer, INFO_SIZE, 0, &remote_addr,(socklen_t *) sizeof(remote_addr)) > 0) //si on a rien lu, on retourne au while
+						traiter_requete(buffer, remote_addr);
 
-					if(fd == 0){
-						host_cmde(server_sockfd);
-					}
-				}//if server_sockfd
-			}
+				}if(fd == 0){
+					host_cmde();
+				}
+			} //if fd_isset
 		} // for
 	} // while
 
-
 }
 
-void host_cmde(int server_sockfd){
+void host_cmde(){
 
 	/* Fonction qui gère les commandes de l'admin du serveur.*/
 
 	char commande[INFO_SIZE];
 
 	fgets(commande, INFO_SIZE, stdin);
+	//printf("commande : %s\n", commande);
 	if(strncmp(commande, "/quit", 5) == 0)
-	quit_server(server_sockfd);
+	quit_server();
 	else
-	printf("\e[1;33m[SERVER]\e[0m Commande inconnue.");
+	printf("\e[1;33m[SERVER]\e[0m Commande inconnue\n.");
 }
 
-void traiter_requete(int server_sockfd, char *buffer, struct sockaddr remote_addr){
+void traiter_requete(char *buffer, struct sockaddr remote_addr){
 
 	message *msg_rcv = (message *) malloc(sizeof(message));
 	message *msg_send = (message *) malloc(sizeof(message));
@@ -126,8 +123,29 @@ void traiter_requete(int server_sockfd, char *buffer, struct sockaddr remote_add
 			/* Discussion avec le serveur annuaire: 4XX */
 
 			case 400: //Pour savoir si le serveur est ON
-				//strcpy(msg, "")
-				//sendto(server_sockfd, )
+				if(add_user_mysql((*msg_rcv).msg_content) < 0){
+					/*Si le pseudo est déjà pris*/
+					already_exist(msg_send);
+					send_msg(msg_send, remote_addr);
+					free((*msg_send).msg_content);
+					break;
+				}
+				im_on(msg_send);
+				send_msg(msg_send, remote_addr);
+				free((*msg_send).msg_content);
+				break;
+
+			case 402: //Pour savoir si untel est en ligne, on renvoi son IP si oui.
+				if(exist_user_mysql((*msg_rcv).msg_content)){
+					send_ip(msg_rcv, msg_send);
+					send_msg(msg_send, remote_addr);
+					free((*msg_send).msg_content);
+					break;
+				}
+				no_exist(msg_send);
+				send_msg(msg_send, remote_addr);
+				free((*msg_send).msg_content);
+				break;
 
 			default:
 			break;
@@ -135,4 +153,4 @@ void traiter_requete(int server_sockfd, char *buffer, struct sockaddr remote_add
 	}
 	free(msg_send);
 	free(msg_rcv);
-	}
+}
