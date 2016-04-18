@@ -378,11 +378,11 @@ int help(char * msg) {
  	char * posSpace = NULL;
 	if((posSpace = strchr(msg, '\n')) == NULL) {
 		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
-		return;
+		return 0;
  	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
 		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
-		return;
+		return 0;
 	}
 	if (posSpace[0] == ' ') {
     		memmove(posSpace, posSpace+1, strlen(posSpace));
@@ -408,5 +408,5 @@ int help(char * msg) {
 	} else {
    		 printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
 	}
-	return;
+	return 0;
 }

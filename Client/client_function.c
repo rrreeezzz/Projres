@@ -142,10 +142,7 @@ int control_accept(message *msg_rcv, client_data *fd_array, int *num_clients) {
 
 	printf("\n[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", (*msg_rcv).msg_content, fd_array[*num_clients].address_client);
 	fgets(tmpAccept, WRITE_SIZE, stdin);
-	//printf("\n\"%s\"\n", tmpAccept); //debug
-	*((char *)mempcpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1)) = '\0'; // Pour retirer le \n proprement : merci Ulrich Drepper
-	//printf("\n\"%s\"\n", acceptConnection); //debug
-	if(strcmp(acceptConnection, "yes") == 0) return 0;
+	if(strcmp(tmpAccept, "yes\n") == 0) return 0;
 	else return -1;
 
 }
