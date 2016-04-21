@@ -49,7 +49,7 @@ extern void session_end(message *segment);
 void transfer_accept(message *segment, char *filename);
 void transfer_refused(message *segment);
 void transfer_initiate(message *segment, char *filename, int taille);
-void transfer_msg(message *segment, char *data);
+void transfer_msg(message *segment, char *data, int n);
 void transfer_end(message *segment, char *filename);
 
 #endif

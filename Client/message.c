@@ -6,6 +6,7 @@ void session_initiate(message *segment) {
 	(*segment).code = 200;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void session_accept(message *segment) {
@@ -14,6 +15,7 @@ void session_accept(message *segment) {
 	(*segment).code = 201;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void session_confirmed(message *segment) {
@@ -22,6 +24,7 @@ void session_confirmed(message *segment) {
 	(*segment).code = 202;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void session_denied(message *segment, int type) {
@@ -30,11 +33,14 @@ void session_denied(message *segment, int type) {
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	if (type == 0) {
 		(*segment).code = 300; //too many clients online
-	}	else if (type == 1) {
+		(*segment).length = 0;
+	} else if (type == 1) {
 		(*segment).code = 301; //user already connected
-    sprintf((*segment).msg_content, "%s", General_Name);
+    		sprintf((*segment).msg_content, "%s", General_Name);
+		(*segment).length = strlen((*segment).msg_content);
 	} else if (type == 2) {
 		(*segment).code = 302; //connection refused by user
+		(*segment).length = 0;
 	}
 	
 }
@@ -53,6 +59,7 @@ void session_end(message *segment) {
 	(*segment).code = 303;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 
@@ -63,6 +70,7 @@ void transfer_initiate(message *segment, char *filename, int taille) {
 	(*segment).code = 203;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s|%s|%d", General_Name, filename, taille);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void transfer_accept(message *segment, char *filename) {
@@ -71,6 +79,7 @@ void transfer_accept(message *segment, char *filename) {
 	(*segment).code = 204;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s|%s", General_Name, filename);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void transfer_begin(message *segment, char *filename) {
@@ -79,6 +88,7 @@ void transfer_begin(message *segment, char *filename) {
 	(*segment).code = 205;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s|%s", General_Name, filename);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void transfer_refused(message *segment) {
@@ -87,14 +97,16 @@ void transfer_refused(message *segment) {
 	(*segment).code = 304;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
 }
 
-void transfer_msg(message *segment, char *data) {
+void transfer_msg(message *segment, char *data, int n) {
 
 	/*Fonction qui permet d'envoyer un message*/
 	(*segment).code = 102;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s", data);
+	memcpy((*segment).msg_content, data, n);
+	(*segment).length = n;
 }
 
 void transfer_end(message *segment, char *filename) {
@@ -103,4 +115,5 @@ void transfer_end(message *segment, char *filename) {
 	(*segment).code = 307;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", filename);
+	(*segment).length = strlen((*segment).msg_content);
 }

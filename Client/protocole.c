@@ -5,31 +5,36 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	/*Fonction qui concatène et envois les trames*/
 
 	(*segment).temps = time(NULL);
-	(*segment).length = strlen((*segment).msg_content);
 	char msg[MSG_SIZE];
 
-	sprintf(msg, "%d/%d/%d/%s", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
+	sprintf(msg, "%d/%d/%d/", (*segment).code, (*segment).length, (int) (*segment).temps);
 	//printf("msg envoyé : %s\n", msg); //pour debug
+	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
 
-	if (write(*fd, msg, strlen(msg)) <= 0){
+	if (write(*fd, msg, MSG_SIZE) <= 0) {
 		perror("Write error");
 		exitClient(*fd, readfds, fd_array, num_clients);
 	}
 }
+
 
 int protocol_parser(char *msg, message *msg_rcv) {
 
 	/*Fonction qui se charge de séparer les différents champs de la trame reçu*/
 
 	char * sep = NULL;
-	char code[3], length[MSG_SIZE], send_time[MSG_SIZE], data[MSG_SIZE];
-	(*msg_rcv).msg_content = malloc(MSG_SIZE);
+	char code[3], length[WRITE_SIZE], send_time[WRITE_SIZE];
+	(*msg_rcv).msg_content = malloc(WRITE_SIZE);
 
-	if(sscanf(msg, "%[^'/']/%[^'/']/%[^'/']/%[^\r]", code, length, send_time, data) == 4){
+	if(sscanf(msg, "%[^/]/%[^/]/%[^/]/", code, length, send_time) == 3){
 		(*msg_rcv).code = atoi(code);
 		(*msg_rcv).length = atoi(length);
 		(*msg_rcv).temps = (time_t) atoi(send_time);
-		strcpy((*msg_rcv).msg_content, data);
+		sep=strchr(msg,'/'); //
+		sep=strchr(sep+1,'/'); //
+		sep=strchr(sep+1,'/'); // Pour se mettre après le dernier / pour memcpy le content
+		memcpy((*msg_rcv).msg_content, sep+1, WRITE_SIZE); //50
+
 		return 0;
 	}
 
@@ -74,7 +79,6 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
             // 102 : données de transfert de fichier
 			case 102:
-				printf("recu %d: %s\n", msg_rcv->length,msg_rcv->msg_content); // POUR DEBUG
        	if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
  				// gestion erreur ?!!!!!!!!!! a faire
 				break;

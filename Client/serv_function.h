@@ -31,6 +31,6 @@ extern void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *nu
 extern void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern int is_sep(char c);
 extern int my_count_word(const char *str);
-extern int help(char * msg);
+extern void help(char * msg);
 
 #endif

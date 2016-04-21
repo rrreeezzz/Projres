@@ -1,6 +1,6 @@
 #include "transfert.h"
 
-void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+void init_transfer(int client_fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
   int fd = 0;
   char filename[256];
   int taille;
@@ -24,7 +24,7 @@ void init_transfer(int client_sockfd, fd_set *readfds, client_data *fd_array, in
 
   message *msg = (message *) malloc(sizeof(message));
   transfer_initiate(msg, filename, taille);
-  send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+  send_msg(msg, &client_fd,readfds,fd_array,num_clients);
   free((*msg).msg_content);
   free(msg);
 }
@@ -116,7 +116,7 @@ void * file_transfer(void *arg) {
   int file_fd;
   int client_sockfd;
   char filename[256];
-  char buffer[50];
+  char buffer[WRITE_SIZE];  //50
   fd_set *readfds;
   client_data *fd_array;
   int *num_clients;
@@ -131,14 +131,17 @@ void * file_transfer(void *arg) {
   fd_array = data->fd_array;
   num_clients = data->num_clients;
   int n=0;
-  while ((n=read(file_fd, buffer, (sizeof buffer)-1))> 0) {
-	  buffer[n]='\0';
-    printf("JAI LU %d: %s\n\n", (int) strlen(buffer) ,buffer); // pour debug
-    transfer_msg(msg, buffer);
-    send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
-    usleep(5000);
+  char buf[5];
+
+  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { //50
+   	transfer_msg(msg, buffer, n);
+   	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+   	memset(buffer, '\0', WRITE_SIZE);  //50
+   	//usleep(100);
+	
   }
-  sleep(1); //Au cazouuu
+
+  usleep(100); //Au cazouuu
   transfer_end(msg, filename);
   send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
