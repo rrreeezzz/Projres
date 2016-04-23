@@ -42,6 +42,7 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	if (fd==userInterface_fd){
 		//On avertis l'utilisateur
 		printf(BLUE"["GREEN"UI"BLUE"] End of connection."RESET"\n");
+		//On remet a 0 le fd de l'interface
 		userInterface_fd=-1;
 	} else {
 		//On avertis l'utilisateur
@@ -228,6 +229,12 @@ void routine_server(int * server_sockfd){
 					//Sinon on le refuse
 					} else {
 						printf(BLUE"[Program] Someone tried to connect, but too many clients online."RESET"\n");
+
+						//on avertis l'ui si elle est connectee
+						if (userInterface_fd > 0 ) {
+							sendUiMsg("TOOMANYCLIENTS\n",&readfds,fd_array,&num_clients);
+						}
+
 						session_denied(msg, 0);
 						send_msg(msg, &client_sockfd,&readfds,fd_array,&num_clients);
 						free((*msg).msg_content);
@@ -244,7 +251,6 @@ void routine_server(int * server_sockfd){
 				} else if (fd == 0 || fd == userInterface_fd) {  /*activité sur le clavier*/
 					cmde_host(fd,&readfds, server_sockfd, &maxfds, fd_array, &num_clients, &waitlist);
 				} else {  /*activité d'un client*/
-					printf("%d\n",userInterface_fd);
           traiterRequete(fd, &readfds, fd_array, &num_clients, &waitlist);
         }//if fd ==
 			/* DEBUG
@@ -366,7 +372,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strcmp(msg, "/contact\n") == 0){
 			print_contact_list();
 		} else if (strcmp(msg, "/who\n") == 0) {
-			print_connected_user(fd_array, num_clients);
+			print_connected_user(readfds,fd_array, num_clients);
 		} else if (strncmp(msg, "/transfer", 9)==0){
 			slash_transfer(msg, readfds, fd_array, num_clients);
 		} else if (strcmp(msg, "/online\n")==0){

@@ -170,14 +170,30 @@ int add_contact_online(client_data *fd_array, annuaireData * contact, int *num_c
   return 0;
 }
 
-int print_connected_user(client_data *fd_array, int *num_clients) {
+int print_connected_user(fd_set *readfds,client_data *fd_array, int *num_clients) {
 
 	/* Fonction qui affiche l'ensemble des clients avec qui l'utilisateur est connecté */
 	int i, j;
 	printf("\n"BLUE"[PROGRAM] : You've connected yourself to the addresses \"0.0.0.0\""RESET"\n\n");
 	printf(BLUE"Username\t\tAddress\t\t\tFD\n\n");
+
+  //on avertis l'ui si elle est connectee
+  if (userInterface_fd > 0) {
+    char content[MSG_SIZE];
+    sprintf(content,"CONTACTLIST %d\n",*num_clients-1);
+    sendUiMsg(content,readfds,fd_array,num_clients);
+  }
+
 	for(i=0; i<*num_clients; i++) {
 		printf(RED"%s\t\t\t%s \t\t%i\n", fd_array[i].name_client, fd_array[i].address_client, fd_array[i].fd_client);
+
+    //on avertis l'ui si elle est connectee
+  	if (userInterface_fd > 0 && fd_array[i].fd_client != userInterface_fd) {
+  		char content[MSG_SIZE];
+  		sprintf(content,"CONTACT %s\n",fd_array[i].name_client);
+  		sendUiMsg(content,readfds,fd_array,num_clients);
+  	}
+
 	}
 	printf(RESET"\n");
 	return 0;

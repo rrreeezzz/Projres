@@ -178,7 +178,6 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 303 : SESSION_END
 			case 303:
-			printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", (*msg_rcv).msg_content);
 			exitClient(*client_sockfd, readfds, fd_array, num_clients);
 			break;
 
