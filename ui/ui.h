@@ -51,4 +51,4 @@ clientData clientsArray[MAXCONTACTS];
 #include <unistd.h>
 #include "tabManagement.c"
 #include "dialog.c"
-#include "connect.c"
+#include "communication.c"
