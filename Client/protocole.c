@@ -17,6 +17,14 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	}
 }
 
+void sendUiMsg(char * content, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	message *msg = (message *) malloc(sizeof(message));
+	normal_msg(msg,content);
+	send_msg(msg, &userInterface_fd ,readfds,fd_array,num_clients);
+	free((*msg).msg_content);
+	free(msg);
+}
+
 
 int protocol_parser(char *msg, message *msg_rcv) {
 

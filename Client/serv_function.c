@@ -48,6 +48,8 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 		sprintf(content,"DISCONNECTCONFIRM %s \n",fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
 		normal_msg(msg,content);
 		send_msg(msg, &userInterface_fd ,readfds,fd_array,num_clients);
+		free((*msg).msg_content);
+		free(msg);
 	}
 
 	int i;
@@ -300,8 +302,6 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 
 			// 303 : SESSION_END
 			case 303:
-				//On affiche
-				printf(BLUE"["GREEN"UI"BLUE"] End of connection."RESET"\n");
 				//On enleve le fd
 				exitClient(userInterface_fd, readfds, fd_array, num_clients);
 				//On reset le fd de l'interface
@@ -403,14 +403,17 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	int w=0;
 	int cptfd=0;
 	message *frame = (message *) malloc(sizeof(message));
+
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
 		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
 		free(frame);
 		return;
+
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		free(frame);
 		return;
+
 	}
 
 	w=my_count_word(cmd); //compte le nombre d'arg après /msg
@@ -435,6 +438,14 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 		fds = fd[cptfd];
 		send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
 	}
+
+	//on avertis l'ui si elle est connectee
+	if (userInterface_fd > 0 ) {
+		char content[MSG_SIZE];
+		sprintf(content,"MESSAGECONFIRM %s %s\n",username,msg);
+		sendUiMsg(content,readfds,fd_array,num_clients);
+	}
+
 	free((*frame).msg_content);
 	free(frame);
 }
