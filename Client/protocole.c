@@ -77,7 +77,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 100:
 			if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
 				/*A CHANGER, TEMPORAIRE*/
-				printf("[%s] %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+				printf(BLUE"["RED"%s"BLUE"] %s"RESET, fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+				//on avertis l'ui si elle est connectee
+				if (userInterface_fd > 0 ) {
+					char content[MSG_SIZE];
+					sprintf(content,"MSGRECV %s %s\n",fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+					sendUiMsg(content,readfds,fd_array,num_clients);
+				}
 			} else {
 				printf("[PROGRAM] %s not ready for communication\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			}
