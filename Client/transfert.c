@@ -120,6 +120,7 @@ void * file_transfer(void *arg) {
   fd_set *readfds;
   client_data *fd_array;
   int *num_clients;
+  int n=0;
 
   message *msg = (message *) malloc(sizeof(message));
 
@@ -127,25 +128,24 @@ void * file_transfer(void *arg) {
   file_fd = data->file_fd;
   client_sockfd = data->client_sockfd;
   strcpy(filename,data->filename);
+  strcat(filename, "\0");
   readfds = data->readfds;
   fd_array = data->fd_array;
   num_clients = data->num_clients;
-  int n=0;
-  char buf[5];
 
   while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { //50
    	transfer_msg(msg, buffer, n);
    	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
    	memset(buffer, '\0', WRITE_SIZE);  //50
    	//usleep(100);
-	
+
   }
 
   usleep(100); //Au cazouuu
   transfer_end(msg, filename);
   send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
-  printf("Transfer of file %s succeed\n", filename); // rajouter le nom à qui on a envoyé
+  printf(BLUE"Transfer of file "RED"%s "BLUE"succeed"RESET"\n", filename); // rajouter le nom à qui on a envoyé
 
   close(file_fd);
   free((*msg).msg_content);

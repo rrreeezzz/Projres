@@ -114,8 +114,8 @@ int remove_contact (char *msg) {
     return -1;
   }
 
-  if ((offset = search_contact(user->username, contact_file)) == -1) { printf("Error : contact was not found in contact list"); return -1; }
-  if (remove_contact_data(contact_file, offset) == -1) { printf("Error while removing contact's data"); return -1; }
+  if ((offset = search_contact(user->username, contact_file)) == -1) { printf(BLUE"[PROGRAM] Error : contact was not found in contact list"RESET"\n"); return -1; }
+  if (remove_contact_data(contact_file, offset) == -1) { printf(BLUE"[PROGRAM] Error while removing contact's data"RESET"\n"); return -1; }
   printf(BLUE"[PROGRAM] Contact removed !"RESET"\n");
 
   free(user);
