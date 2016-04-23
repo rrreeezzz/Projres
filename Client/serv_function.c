@@ -407,11 +407,23 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
 		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
 		free(frame);
+
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
+		}
+
 		return;
 
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		free(frame);
+
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
+		}
+
 		return;
 
 	}
@@ -424,6 +436,12 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 			printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
 			printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
 			free(frame);
+
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
+			}
+
 			return;
 		}
 		cptfd++;
@@ -459,24 +477,55 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 	if (mod == 0) {
 		if (strcmp(cmd, "/all\n")==0) {
 			printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
+
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("ALLMSGERROR Command Error\n",readfds,fd_array,num_clients);
+			}
+
 			return ;
+
 		} else if (strlen(cmd) > 6) { //6 car strlen("/all \n") = 6 = message vide
 			strcpy(msg, cmd+5);
 		} else {
 			printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
+
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("ALLMSGERROR Command Error\n",readfds,fd_array,num_clients);
+			}
+
 			free(frame);
 			return ;
+
 		}
 		normal_msg(frame, msg);
 		for (i=0; i<*num_clients ; i++) {
-			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			if (fd_array[i].fd_client != userInterface_fd){
+				send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			}
+		}
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			char message[MSG_SIZE];
+			sprintf(message,"ALLMSGCONFIRM %s \n",msg);
+			sendUiMsg(message,readfds,fd_array,num_clients);
 		}
 	} else { //mod = 1
 		normal_msg(frame, cmd);
 		for (i=0; i<*num_clients ; i++) {
-			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			if (fd_array[i].fd_client != userInterface_fd){
+				send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			}
+		}
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			char message[MSG_SIZE];
+			sprintf(message,"ALLMSGCONFIRM %s \n",cmd);
+			sendUiMsg(message,readfds,fd_array,num_clients);
 		}
 	}
+
 	free((*frame).msg_content);
 	free(frame);
 }
