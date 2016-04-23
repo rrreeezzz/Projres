@@ -89,7 +89,11 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
-			printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+			if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
+				printf(BLUE"\n[PROGRAM] An user interface at the adress "RED"%s"BLUE" is trying to establish a connection with you. It can controls the program if you accept. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+			} else {
+				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+			}
 			strcpy(fd_array[*num_clients+(*waitlist).nb_connect].name_client, (*msg_rcv).msg_content);
 			break;
 
@@ -101,14 +105,24 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
 				free((*msg_send).msg_content);
 				client_ready(*client_sockfd, fd_array, num_clients);
-				printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+				if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
+					printf(BLUE "An user interface is now connected, you will see all activities from it.\n\n");
+					userInterface_fd=*client_sockfd;
+				} else {
+					printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+				}
 			}
 			break;
 
 			// 202 : SESSION_CONFIRMED
 			case 202:
 			client_ready(*client_sockfd, fd_array, num_clients);
-			printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+			if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
+				printf(BLUE "An user interface is now connected, you will see all activities from it.\n\n");
+				userInterface_fd=*client_sockfd;
+			} else {
+				printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+			}
 			break;
 
     	// 203 : TRANSFER_INITIATE

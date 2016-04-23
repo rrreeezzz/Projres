@@ -116,6 +116,9 @@ int * init_server(){
 	int addresslen = sizeof(struct sockaddr_in);
 	int * server_sockfd = (int *) malloc(sizeof(int));
 
+	//Pas d'interface utilisateur au debut
+	int userInterface_fd = -1;
+
 	printf(BLUE"\n*** Server program starting (enter \"/quit\" to stop) ***"RESET"\n");
 	*server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (*server_sockfd < 0){
@@ -212,9 +215,10 @@ void routine_server(int * server_sockfd){
 					strcpy(fd_array[num_clients+waitlist.nb_connect].address_client, client_inaddr);
 					waitlist.waiting[waitlist.nb_connect]=client_sockfd;
 					fd_array[num_clients+waitlist.nb_connect].fd_client = client_sockfd;
-				} else if (fd == 0) {  /*activité sur le clavier*/
-					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients, &waitlist);
+				} else if (fd == 0 || fd == userInterface_fd) {  /*activité sur le clavier*/
+					cmde_host(fd,&readfds, server_sockfd, &maxfds, fd_array, &num_clients, &waitlist);
 				} else {  /*activité d'un client*/
+					printf("%d\n",userInterface_fd);
           traiterRequete(fd, &readfds, fd_array, &num_clients, &waitlist);
         }//if fd ==
 			/* DEBUG
@@ -237,7 +241,7 @@ void routine_server(int * server_sockfd){
   free(server_sockfd);
 }
 
-void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist){
+void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist){
 
 	/*Fonction qui gère les données entrées au clavier par l'utilisateur.*/
 
@@ -245,10 +249,68 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	int countdisc;
 	int ch;
 
-	fgets(msg, WRITE_SIZE, stdin);
+	if (fd == 0){
+		fgets(msg, WRITE_SIZE, stdin);
+	} else { //Si le message viens de l'ui
+
+		char buffer[MSG_SIZE];
+
+		//On lis le message, sinon on quitte la connection en resettant le fd de l'interface
+		if ( read(fd, buffer, MSG_SIZE) < 0 ){
+			exitClient(fd, readfds, fd_array, num_clients);
+			userInterface_fd=-1;
+			return ;
+		}
+
+		message *msg_rcv = (message *) malloc(sizeof(message));
+
+		printf("%s\n", buffer );
+
+		//On parse le message
+		if(protocol_parser(buffer, msg_rcv) == -1){
+			free(msg_rcv);
+			printf(GREEN"Error parsing the message\n"RESET);
+			return ;
+		}
+
+		//protocole de communication avec l'application, on reimplente uniquement les fonctions basiques
+		switch((*msg_rcv).code) {
+
+			// 100 : Basic command
+			case 100:
+				printf(BLUE"["GREEN"UI"BLUE"] %s "RESET"\n", (*msg_rcv).msg_content);
+				memcpy(msg,(*msg_rcv).msg_content,WRITE_SIZE);
+				break;
+
+			// 303 : SESSION_END
+			case 303:
+				//On affiche
+				printf(BLUE"["RED"UI"BLUE"] End of connection."RESET"\n");
+				//On enleve le fd
+				exitClient(userInterface_fd, readfds, fd_array, num_clients);
+				//On reset le fd de l'interface
+				userInterface_fd=-1;
+				//On libere le message
+				free(msg_rcv);
+				free(msg_rcv->msg_content);
+				//On ne traite pas la requete
+				return ;
+
+			//Sinon on ne traite pas la commande
+			default:
+				free(msg_rcv);
+				free(msg_rcv->msg_content);
+				return ;
+
+		}
+		free(msg_rcv->msg_content);
+		free(msg_rcv);
+	}
+
+	printf(CYAN"%s\n"RESET,msg );
 
 	if(NULL == strchr(msg, '\n')){
-		printf("[PROGRAM] : Message too long, max is %d characteres.\n", WRITE_SIZE);
+		printf("[PROGRAM] : Message too long, max is %d caracters.\n", WRITE_SIZE);
 		while((ch = getchar()) != '\n'){
 			if(ch < 0)
 				perror("Erreur taille message");

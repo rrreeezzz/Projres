@@ -181,7 +181,8 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
   free((*msg_send).msg_content);
   close(client_sockfd);
   FD_CLR(client_sockfd, readfds);
-
+	
+	return 0;
 }
 
 int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, char *msg, waitList *waitlist) {
@@ -203,8 +204,8 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
     send_msg(msg_send, &client_sockfd, readfds, fd_array, num_clients);
     free((*msg_send).msg_content);
 		free(msg_send);
-		return 0;
   }
+	return 0;
 }
 
 int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {

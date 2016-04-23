@@ -19,6 +19,8 @@
 #include "utilities.h"
 
 pthread_t pid_transfer;
+extern int userInterface_fd;
+extern int generalPort;
 
 extern void ask_name();
 extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);
@@ -27,12 +29,15 @@ extern void quit_server(fd_set *readfds, client_data *fd_array, int *server_sock
 extern void handler_sigint();
 extern int *init_server();
 extern void routine_server(int *server_sockfd);
-extern void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist);
+extern void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist);
 extern void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern int is_sep(char c);
 extern int my_count_word(const char *str);
 extern void help(char * msg);
+extern int protocol_parser(char *msg, message *msg_rcv);
+extern int connect_serv();
+extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 
 #endif
