@@ -1,11 +1,15 @@
 #include "annuaire.h"
 
-int add_contact (client_data *fd_array, int *num_clients, char * msg) {
+int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char * msg) {
 
   /*Permet d'ajouter un contact ou de mettre la base de données a jour.*/
 
   if(strlen(msg) > MAX_SIZE_CONTACT) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
@@ -25,6 +29,10 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
   /* Init structure user */
   if((posSpace = strchr(msg, ' ')) == NULL) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 	strcpy(data, posSpace+1);
@@ -39,6 +47,10 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
   /* Vérification de la syntaxe de la commande */
   if(!isalpha(contact_data[0][0]) || strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME || !isdigit(contact_data[1][0]) || strlen(contact_data[1]) > MAX_SIZE_ADDRESS) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
@@ -50,6 +62,10 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
   }
   if (port == -1) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
   sprintf(user->username, "%s", contact_data[0]);
@@ -60,6 +76,10 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
   if (contact_addr != NULL) {
     if (add_contact_online(fd_array, user, num_clients, msg) != 0) {
       printf(BLUE"[PROGRAM] Error while adding online contact."RESET"\n");
+      //on avertis l'ui si elle est connectee
+      if (userInterface_fd > 0) {
+        sendUiMsg("ADDCONTACTERROR Error while adding online contact.\n",readfds,fd_array,num_clients);
+      }
     }
     return 0;
   }
@@ -71,6 +91,13 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
       if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
       write(contact_file, user, sizeof(annuaireData));
       printf(BLUE"[PROGRAM] Contact added !"RESET"\n");
+
+      //on avertis l'ui si elle est connectee
+      if (userInterface_fd > 0) {
+        char content[MSG_SIZE];
+        sprintf(content,"ADDCONTACTCONFIRM %s\n",user->username);
+        sendUiMsg(content,readfds,fd_array,num_clients);
+      }
     }
     else {
       /* On supprime les anciennes données puis on réécrit les nouvelles */
@@ -78,6 +105,13 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
       lseek(contact_file, 0, SEEK_END);
       if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
       printf(BLUE"[PROGRAM] Contact updated !"RESET"\n");
+
+      //on avertis l'ui si elle est connectee
+      if (userInterface_fd > 0) {
+        char content[MSG_SIZE];
+        sprintf(content,"UPDATECONTACTCONFIRM %s\n",user->username);
+        sendUiMsg(content,readfds,fd_array,num_clients);
+      }
     }
 
     free(user);
@@ -91,7 +125,7 @@ int remove_contact (fd_set *readfds,client_data *fd_array, int *num_clients,char
 
   if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/remove " = 8
     printf(BLUE"[PROGRAM] Command too long, please use \"/remove username\"."RESET"\n");
-    
+
     //on avertis l'ui si elle est connectee
     if (userInterface_fd > 0) {
       sendUiMsg("REMOVECONTACTERROR Command too long.\n",readfds,fd_array,num_clients);

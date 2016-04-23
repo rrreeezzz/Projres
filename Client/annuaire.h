@@ -17,7 +17,7 @@
 
 #define CONTACT "contact.txt"
 
-extern int add_contact(client_data *fd_array, int *num_clients, char * msg);
+int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char * msg);
 extern int add_contact_online(client_data *fd_array, annuaireData * contact, int *num_clients, char * msg);
 extern int remove_contact (fd_set *readfds,client_data *fd_array, int *num_clients,char *msg);
 extern int print_contact_list (fd_set *readfds,client_data *fd_array, int *num_clients);
