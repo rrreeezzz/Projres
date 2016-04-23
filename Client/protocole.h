@@ -14,9 +14,10 @@
 #include "client_function.h"
 #include "transfert.h"
 #include "annuaire.h"
+#include "utilities.h"
 
 void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern int rcv_protocol_parser(char *msg, message *msg_rcv);
-extern void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds);
+extern void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 
 #endif

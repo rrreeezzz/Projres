@@ -35,8 +35,9 @@ void session_denied(message *segment, int type) {
     sprintf((*segment).msg_content, "%s", General_Name);
 	} else if (type == 2) {
 		(*segment).code = 302; //connection refused by user
+		sprintf((*segment).msg_content, "PROGRAM");
 	}
-	
+
 }
 
 void normal_msg(message *segment, char *data) {
@@ -55,7 +56,13 @@ void session_end(message *segment) {
 	sprintf((*segment).msg_content, "%s", General_Name);
 }
 
+void session_aborted(message *segment) {
 
+	/*Fonction pour envoyer fin de connection*/
+	(*segment).code = 304;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
+}
 
 void transfer_initiate(message *segment, char *filename, int taille) {
 
@@ -84,7 +91,7 @@ void transfer_begin(message *segment, char *filename) {
 void transfer_refused(message *segment) {
 
 	/*Fonction qui permet d'envoyer le message de transfer-refused*/
-	(*segment).code = 304;
+	(*segment).code = 305;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
 }
@@ -100,7 +107,7 @@ void transfer_msg(message *segment, char *data) {
 void transfer_end(message *segment, char *filename) {
 
 	/*Fonction pour envoyer fin de transfert*/
-	(*segment).code = 307;
+	(*segment).code = 308;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", filename);
 }

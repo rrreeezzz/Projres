@@ -10,7 +10,7 @@ client: message.h message.c protocole.h protocole.c client.c client_function.h c
 	gcc -c annuaire.c
 	gcc -c client.c
 	gcc -c transfert.c
-	gcc -Wall -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o ${CFLAGS}
+	gcc -Wall -g -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o ${CFLAGS}
 
 clean:
 	rm -rf *.o

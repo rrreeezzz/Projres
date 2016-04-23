@@ -9,7 +9,7 @@ void ask_name(){
 	char msg[100];
 	int result;
 
-	printf("Please enter your name: \n");
+	printf(BLUE"Please enter your name: "RESET"\n");
 	do{
 		memset (user, '\0', sizeof(user));//réinitialisation chaine
 		if ((result = read(0, user, WRITE_SIZE)) <= 0){
@@ -17,17 +17,17 @@ void ask_name(){
 			exit(EXIT_FAILURE);
 			break;
 		}else if(result > 16){ //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
-		sprintf(msg, "Username too long, please enter another: \n");
+		sprintf(msg, BLUE"Username too long, please enter another: "RESET"\n");
 		write(0,msg, strlen(msg));
 	}else if(result < 4){
-		sprintf(msg, "Username too short, please enter another: \n");
+		sprintf(msg, BLUE"Username too short, please enter another: "RESET"\n");
 		write(0,msg, strlen(msg));
 	}
 }while(result > 16 || result < 4);
 user[strlen(user)-1] = '\0';
 strcpy(General_Name,user);
 
-printf("Your name is: %s\n",General_Name);
+printf(BLUE"Your name is: "RED"%s"RESET"\n",General_Name);
 
 }
 
@@ -45,7 +45,7 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 		index = search_client_array_by_fd(fd, fd_array, num_clients);
 	}
 	//On decale les fd superieur a celui qui se connecte
-	for (i=index; i < (*num_clients) - 1; i++){
+	for (i=index; i < (*num_clients) ; i++){
 		fd_array[i] = fd_array[i + 1];
 	}
 	(*num_clients)--;
@@ -53,7 +53,7 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 
 void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int *num_clients){
 
-	/*Fonction qui envois le message de déconnexion quand on tape /quit,
+	/*Fonction qui envoie le message de déconnexion quand on tape /quit,
 	a tous les clients.*/
 
 	int i;
@@ -67,11 +67,11 @@ void quit_server(fd_set *readfds, client_data *fd_array, int *server_sockfd, int
 	free((*msg).msg_content);
 	free(msg);
 	close(*server_sockfd);
-	printf("[Program] Goodbye !\n");
+	printf(BLUE"[Program] Goodbye !"RESET"\n");
 	*server_sockfd = -1; //On place a -1 pour sortir de la boucle de routine_server.
 }
 
-void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_clients, waitList *waitlist) {
 
 	/*Fonction qui lit les messages en attentes sur le file descriptor*/
 
@@ -82,7 +82,7 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 
 	if ((result = read(fd, msg, MSG_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
 		//printf("msg recu : %s\n", msg); //pour debug
-		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds);
+		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds, waitlist);
 	} else {
 		exitClient(fd, readfds, fd_array, num_clients);
 	} //if read
@@ -116,7 +116,7 @@ int * init_server(){
 	int addresslen = sizeof(struct sockaddr_in);
 	int * server_sockfd = (int *) malloc(sizeof(int));
 
-	printf("\n*** Server program starting (enter \"/quit\" to stop) ***\n");
+	printf(BLUE"\n*** Server program starting (enter \"/quit\" to stop) ***"RESET"\n");
 	*server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (*server_sockfd < 0){
 		perror("socket server");
@@ -143,7 +143,7 @@ int * init_server(){
 	if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
 	if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
 
-	printf("\n*** Connections available on port : %d ***\n", ntohs(server_address.sin_port));
+	printf(BLUE"\n*** Connections available on port : "RED"%d"BLUE" ***"RESET"\n", ntohs(server_address.sin_port));
 
 	return server_sockfd;
 }
@@ -162,6 +162,10 @@ void routine_server(int * server_sockfd){
 	int maxfds;
 	char client_inaddr[INET_ADDRSTRLEN];
 	message *msg = (message *) malloc(sizeof(message));
+
+	/* Initialisation de la file d'attente */
+	waitList waitlist;
+	waitlist.nb_connect = 0;
 
 	maxfds = *server_sockfd;
 	if(listen(*server_sockfd, 1) < 0) { perror("listen"); exit(EXIT_FAILURE); } // mettre plus que 1 utile ???
@@ -194,22 +198,24 @@ void routine_server(int * server_sockfd){
 						opt_desc(&client_sockfd, &maxfds, &readfds);
 					//Sinon on le refuse
 					} else {
-						printf("[Program] Someone tried to connect, but too many clients online.\n");
+						printf(BLUE"[Program] Someone tried to connect, but too many clients online."RESET"\n");
 						session_denied(msg, 0);
 						send_msg(msg, &client_sockfd,&readfds,fd_array,&num_clients);
 						free((*msg).msg_content);
 						close(client_sockfd);
 					} //if num_clients < MAX_CLIENTS
 
-					/* Ajout de l'adresse du client qui se connecte à nous à ses données */
+					/* Ajout de l'adresse et de la socket du client qui se connecte à nous à ses données pré-enregistrées */
+					(waitlist.nb_connect)++;
 					inet_ntop(AF_INET, &(client_address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
-					memset(fd_array[num_clients].address_client, '\0', sizeof(fd_array->address_client));
-					strcpy(fd_array[num_clients].address_client, client_inaddr);
-
+					memset(fd_array[num_clients+waitlist.nb_connect].address_client, '\0', sizeof(fd_array->address_client));
+					strcpy(fd_array[num_clients+waitlist.nb_connect].address_client, client_inaddr);
+					waitlist.waiting[waitlist.nb_connect]=client_sockfd;
+					fd_array[num_clients+waitlist.nb_connect].fd_client = client_sockfd;
 				} else if (fd == 0) {  /*activité sur le clavier*/
-					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients);
+					cmde_host(&readfds, server_sockfd, &maxfds, fd_array, &num_clients, &waitlist);
 				} else {  /*activité d'un client*/
-          traiterRequete(fd, &readfds, fd_array, &num_clients);
+          traiterRequete(fd, &readfds, fd_array, &num_clients, &waitlist);
         }//if fd ==
 			/* DEBUG
 			int i;
@@ -231,7 +237,7 @@ void routine_server(int * server_sockfd){
   free(server_sockfd);
 }
 
-void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients){
+void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist){
 
 	/*Fonction qui gère les données entrées au clavier par l'utilisateur.*/
 
@@ -245,20 +251,24 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 	} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
 		help(msg);
 	} else if (strcmp(msg, "/connect\n")==0){
-		client(maxfds, readfds, num_clients, fd_array, NULL);
+		client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
 	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
-		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
+		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
+	} else if (strncmp(msg, "/accept", 7)==0){ // /accept fd
+		connect_accept(fd_array, num_clients, readfds, msg, waitlist);
+	} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse fd
+		connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
 	} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
 		disconnect(maxfds, readfds, num_clients, fd_array, msg);
 	} else if (strncmp(msg, "/msg", 4)==0) {
 		slash_msg(msg, readfds, fd_array, num_clients);
 	} else if (strncmp(msg, "/all", 4)==0) {
 		slash_all(0, msg, readfds, fd_array, num_clients);
-	} else if (strcmp(msg, "/add\n") == 0){
+	} else if (strcmp(msg, "/add\n") == 0){  // /add user address:port
 		update_contact();
-	} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
+	} else if (strncmp(msg, "/add", 4) == 0){ // /add user
 		add_contact_online(fd_array, num_clients, msg);
-	} else if (strcmp(msg, "/remove\n") == 0){
+	} else if (strcmp(msg, "/remove\n") == 0){ // /remove user
 		remove_contact();
 	} else if (strcmp(msg, "/contact\n") == 0){
 		print_contact_list();
@@ -270,7 +280,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		if(*num_clients > 0) {
 			slash_all(1, msg, readfds, fd_array, num_clients);
 		} else {
-			if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			if(countdisc < 10) { printf(BLUE"[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works."RESET"\n"); countdisc++;}
 		}
 	}
 }
@@ -284,11 +294,11 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	int cptfd=0;
 	message *frame = (message *) malloc(sizeof(message));
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf("[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16\n");
+		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
 		free(frame);
 		return;
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
-		printf("[PROGRAM] Argument too long\n");
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		free(frame);
 		return;
 	}
@@ -298,8 +308,8 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	while(w>0) {
 		sscanf(cmd+i, "%s", username);
 		if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
-			printf("[PROGRAM] %s not connected\n", username);
-			printf("[PROGRAM] /msg aborted\n");
+			printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
+			printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
 			free(frame);
 			return;
 		}
@@ -307,7 +317,7 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 		i+=strlen(username);
 		w--;
 	}
-	printf("Enter your message :\n");
+	printf(BLUE"Enter your message :"RESET"\n");
 	fgets(msg, WRITE_SIZE, stdin);
 	normal_msg(frame, msg);
 	int fds;
@@ -325,12 +335,12 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 	message *frame = (message *) malloc(sizeof(message));
 	if (mod == 0) {
 		if (strcmp(cmd, "/all\n")==0) {
-			printf("Enter your message :\n");
+			printf(BLUE"Enter your message :"RESET"\n");
 			fgets(msg, WRITE_SIZE, stdin);
 		} else if (strlen(cmd) > 6) { //6 car strlen("/all \n") = 6 = message vide
 			strcpy(msg, cmd+5);
 		} else {
-			printf("[PROGRAM] Wrong argument : /all + ENTER or /all + your message\n");
+			printf(BLUE"[PROGRAM] Wrong argument : /all + ENTER or /all + your message"RESET"\n");
 			free(frame);
 			return ;
 		}
@@ -377,36 +387,36 @@ int help(char * msg) {
 
  	char * posSpace = NULL;
 	if((posSpace = strchr(msg, '\n')) == NULL) {
-		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
 		return;
  	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-		printf("[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
 		return;
 	}
 	if (posSpace[0] == ' ') {
     		memmove(posSpace, posSpace+1, strlen(posSpace));
 	}
 	if (strcmp(posSpace, "quit\n")==0) {
-		printf("[PROGRAM] The quit function allows you to quit the chat. It will close all connections.\n\t  Use : \"/quit\"\n");
+		printf(BLUE"\n[PROGRAM] The quit function allows you to quit the chat. It will close all connections.\n\t  Use : \"/quit\""RESET"\n");
 	} else if (strcmp(posSpace, "connect\n")==0){
-		printf("[PROGRAM] The connect function allows you to establish a connection with another user.\n\t  Use : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\n\t  OR\n\t  Use : \"/connect USERNAME\" to connect to a user you already have in your contact list.\n");
+		printf(BLUE"\n[PROGRAM] The connect function allows you to establish a connection with another user.\n\t  Use : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\n\t  OR\n\t  Use : \"/connect USERNAME\" to connect to a user you already have in your contact list."RESET"\n");
 	} else if (strcmp(posSpace, "msg\n")==0) {
-    		printf("[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it.\n");
+    		printf(BLUE"\n[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it."RESET"\n");
 	} else if (strcmp(posSpace, "all\n")==0) {
-    		printf("[PROGRAM] The all function allows you to send a message to everyone you're connected with.\n\t  Use : \"/all Message Written Here\"\n\t  OR\n\t  Use : \"/all\", press [Enter], then you will be asked to type your message and press [Enter] again to send it.\n");
+    		printf(BLUE"\n[PROGRAM] The all function allows you to send a message to everyone you're connected with.\n\t  Use : \"/all Message Written Here\"\n\t  OR\n\t  Use : \"/all\", press [Enter], then you will be asked to type your message and press [Enter] again to send it."RESET"\n");
 	} else if (strcmp(posSpace, "add\n") == 0){
-   		 printf("[PROGRAM] The add function allows you to add a user to your contact list or update one who is already in it.\n\t  Use : \"/add USERNAME\" to add a user you're connected to\n\t  OR\n\t  Use : \"/add\", press [Enter] and complete his/her name and address.\n");
+   		 printf(BLUE"\n[PROGRAM] The add function allows you to add a user to your contact list or update one who is already in it.\n\t  Use : \"/add USERNAME\" to add a user you're connected to\n\t  OR\n\t  Use : \"/add\", press [Enter] and complete his/her name and address."RESET"\n");
 	} else if (strcmp(posSpace, "remove\n") == 0){
-   		 printf("[PROGRAM] The remove function allows you to remove a user from your contact list.\n\t  Use : \"/remove\"\n\t  You will be asked to type the contact's username so as to remove its data.\n");
+   		 printf(BLUE"\n[PROGRAM] The remove function allows you to remove a user from your contact list.\n\t  Use : \"/remove\"\n\t  You will be asked to type the contact's username so as to remove its data."RESET"\n");
 	} else if (strcmp(posSpace, "contact\n") == 0){
-   		 printf("[PROGRAM] The contact function allows you to print your contact list.\n\t  Use : \"/contact\"\n");
+   		 printf(BLUE"\n[PROGRAM] The contact function allows you to print your contact list.\n\t  Use : \"/contact\""RESET"\n");
 	} else if (strcmp(posSpace, "who\n") == 0) {
-   		 printf("[PROGRAM] The who function allows you to print every user you are currently connected to.\n\t  Use : \"/who\"\n");
+   		 printf(BLUE"\n[PROGRAM] The who function allows you to print every user you are currently connected to.\n\t  Use : \"/who\""RESET"\n");
 	} else if (strcmp(posSpace, "transfer\n")==0){
-   		 printf("[PROGRAM] The transfer function allows you to transfer text files and binary files.\n\t  Use : \"/transfer\", then type the filename (absolute or relative) and press [Enter].\n\t  The transfer will start and a message will be displayed upon success or failure.\n");
+   		 printf(BLUE"\n[PROGRAM] The transfer function allows you to transfer text files and binary files.\n\t  Use : \"/transfer\", then type the filename (absolute or relative) and press [Enter].\n\t  The transfer will start and a message will be displayed upon success or failure."RESET"\n");
 	} else {
-   		 printf("[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName\n");
+   		 printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
 	}
 	return;
 }

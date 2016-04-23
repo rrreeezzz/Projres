@@ -9,8 +9,7 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	char msg[MSG_SIZE];
 
 	sprintf(msg, "%d/%d/%d/%s", (*segment).code, (*segment).length, (int) (*segment).temps, (*segment).msg_content);
-	//printf("msg envoyé : %s\n", msg); //pour debug
-
+	printf("msg envoyé : %s\n", msg); //pour debug
 	if (write(*fd, msg, strlen(msg)) <= 0){
 		perror("Write error");
 		exitClient(*fd, readfds, fd_array, num_clients);
@@ -36,7 +35,7 @@ int protocol_parser(char *msg, message *msg_rcv) {
 	return -1;
 }
 
-void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
+void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
   static int file_fd = -1;
@@ -66,7 +65,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 					/*A CHANGER, TEMPORAIRE*/
 					printf("[%s] %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
 				} else {
-					printf("[PROGRAM] %s not ready for communication\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
+					printf(BLUE"[PROGRAM] "RED"%s"BLUE" not ready for communication"RESET"\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 				}
 				break;
 
@@ -85,39 +84,26 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
-			if(control_accept(msg_rcv, fd_array, num_clients) == 0) {
-				//On lui demande de se logger
-				if (login_client(msg_rcv, msg_send,client_sockfd, fd_array, num_clients, readfds) != -1) {
-					//On confirme la connection du client
-					session_accept(msg_send); //on crée le message de session-accept-1
-					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
-					free((*msg_send).msg_content);
-				}
-			} else {
-				printf("[PROGRAM] Session not established : you refused the connection with %s.\n", (*msg_rcv).msg_content);
-				session_denied(msg_send, 2);
-				send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
-				free((*msg_send).msg_content);
-				close(*client_sockfd);
-				FD_CLR(*client_sockfd, readfds);
-			}
+				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+				strcpy(fd_array[*num_clients+(*waitlist).nb_connect].name_client, (*msg_rcv).msg_content);
 				break;
 
 			// 201 : SESSION_ACCEPT
 			case 201:
-				if (login_client(msg_rcv, msg_send, client_sockfd, fd_array, num_clients, readfds) != -1) {
+				strcpy(fd_array[*num_clients+(*waitlist).nb_connect].name_client, (*msg_rcv).msg_content);
+				if (login_client(msg_send, client_sockfd, fd_array, num_clients, readfds, waitlist) != -1) {
 					session_confirmed(msg_send); //on crée le message de session-accept-2
 					send_msg(msg_send, client_sockfd, readfds, fd_array, num_clients);
 					free((*msg_send).msg_content);
 					client_ready(*client_sockfd, fd_array, num_clients);
-					printf("You are now in communication with : %s\n\n", (*msg_rcv).msg_content);
+					printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
 				}
 				break;
 
 			// 202 : SESSION_CONFIRMED
 			case 202:
 				client_ready(*client_sockfd, fd_array, num_clients);
-				printf("You are now in communication with : %s\n\n", (*msg_rcv).msg_content);
+				printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
 				break;
 
     	// 203 : TRANSFER_INITIATE
@@ -144,46 +130,64 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 300 : SESSION_DENIED
 			case 300:
-				printf("[%s] Connection denied : too many client online.\n", (*msg_rcv).msg_content);
+				printf(BLUE"["RED"%s"BLUE"] Connection denied : too many client online."RESET"\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
       // 301 : SESSION_DENIED
 			case 301:
-				printf("[%s] Connection denied : you are already in connection.\n", (*msg_rcv).msg_content);
+				printf(BLUE"["RED"%s"BLUE"] Connection denied : you are already in connection."RESET"\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
 			// 302 : SESSION_DENIED
 			case 302:
-				printf("[%s] Connection denied : the user you tried to connect to refused the connection.\n", (*msg_rcv).msg_content);
+				printf(BLUE"[%s] Connection denied : the user you tried to connect to refused the connection."RESET"\n", (*msg_rcv).msg_content);
 				close(*client_sockfd);
 				FD_CLR(*client_sockfd, readfds);
 				break;
 
 			// 303 : SESSION_END
 			case 303:
-				printf("[%s] End of connection.\n", (*msg_rcv).msg_content);
+				printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", (*msg_rcv).msg_content);
 				exitClient(*client_sockfd, readfds, fd_array, num_clients);
 				break;
 
-	    // 304 : TRANSFER_REFUSED
+			// 304 : SESSION_ABORTED
 			case 304:
-				printf("[%s] Transfer refused.\n", (*msg_rcv).msg_content);
+				printf(BLUE"["RED"%s"BLUE"] User aborted the connection."RESET"\n", (*msg_rcv).msg_content);
+				close(*client_sockfd);
+				FD_CLR(*client_sockfd, readfds);
+				//Quelque chose à enlever ? exitClient(*client_sockfd, readfds, fd_array, num_clients);
 				break;
 
-			// 305 : TRANSFER_CANCELLED
+	    // 305 : TRANSFER_REFUSED
+			case 305:
+				printf(BLUE"["RED"%s"BLUE"] Transfer refused."RESET"\n", (*msg_rcv).msg_content);
+				break;
+
+			// 306 : TRANSFER_CANCELLED
 			/*le client peut annuler le transfert, donc on stop le thread, {est ce que ça freee et ça close bien ?} */
 			/* mais si le client plante et quitte sans envoyer de TRANSFER_CANCELLED, il se passe quoi pour le thread ??????????????? */
 
-			// 306 : TRASNFER_ABORTED
+			// 307 : TRASNFER_ABORTED
+			/*case 307:
+				printf("[%s] Transfer aborted.\n", (*msg_rcv).msg_content);
+				printf("[PROGRAM] Do you still want to keep the file ? Type y or n\n");
+				fgets(res, 4, stdin);
+				if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) {
+					break;
+				}
+				else {
+
+				}*/
 			/* l'expéditeur a annulé, on ferme fd et on demande si le receveur veut garder le fichier */
 
-			//307 : TRANSFER_END
-			case 307:
-				printf("Transfer of file %s succeed\n", (*msg_rcv).msg_content);
+			//308 : TRANSFER_END
+			case 308:
+				printf(BLUE"Transfer of file "RED"%s"BLUE" succeed"RESET"\n", (*msg_rcv).msg_content);
 				close(file_fd);
 				file_fd = -1;
 				break;
@@ -192,6 +196,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 		}
 	}
+	free(msg_rcv->msg_content);
 	free(msg_send);
 	free(msg_rcv);
 }

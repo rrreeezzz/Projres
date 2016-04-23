@@ -33,7 +33,13 @@ typedef struct {
   char name_client[MAX_SIZE_USERNAME];
   char address_client[INET_ADDRSTRLEN];
   int rdy;
+  message *msg_rcv;
 } client_data;
+
+typedef struct {
+  int nb_connect;
+  int waiting[MAX_CLIENTS];
+} waitList;
 
 typedef struct {
   char username[MAX_SIZE_USERNAME];
@@ -46,6 +52,7 @@ extern void session_confirmed(message *segment);
 extern void session_denied(message *segment, int type);
 extern void normal_msg(message *segment, char * data);
 extern void session_end(message *segment);
+extern void session_aborted(message *segment);
 void transfer_accept(message *segment, char *filename);
 void transfer_refused(message *segment);
 void transfer_initiate(message *segment, char *filename, int taille);

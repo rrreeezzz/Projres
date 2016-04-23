@@ -12,6 +12,7 @@
 #include <string.h>
 #include "client_function.h"
 #include "message.h"
+#include "utilities.h"
 
 #define CONTACT "contact.txt"
 
@@ -25,6 +26,6 @@ extern int open_directory();
 extern void ask_contact_name(char *username);
 extern int remove_contact_data(int original, off_t delete_line);
 extern void ask_contact_address(char * temp);
-extern int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg);
+extern int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg, waitList *waitlist);
 
 #endif

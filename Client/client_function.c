@@ -19,7 +19,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				if(*port <= 0 || *port >= 100000)
 				*port = -1;
 			}else if(posPort == NULL || *port == -1){
-				printf("\n-----Please enter correct address-----\n");
+				printf(BLUE"\n-----Please enter correct address-----"RESET"\n");
 				continue;
 			}
 
@@ -42,7 +42,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 	return hostinfo;
 }
 
-int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, annuaireData *user){
+int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, annuaireData *user, waitList *waitlist){
 	int sock_host;
 	struct hostent *hostinfo;
 	struct sockaddr_in address;
@@ -50,14 +50,20 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	char client_inaddr[INET_ADDRSTRLEN];
 	message *msg = (message *) malloc(sizeof(message));
 
+	//Si on ne peut pas recevoir le client
+	if (*num_clients >= MAX_CLIENTS) {
+		printf(BLUE"[Program] You tried to connect to someone, but you are already connected to too many clients."RESET"\n");
+		return -1;
+	}
+
 	if(user != NULL){
 		hostinfo = ask_server_address(&port, user);
 	}else{
-		printf("\n*** Enter server's address : ***\n");
+		printf(BLUE"\n*** Enter server's address : ***"RESET"\n");
 		hostinfo = ask_server_address(&port, NULL);
 	}
 
-	printf("\n*** Client program starting (enter \"/quit\" to stop): ***\n");
+	printf(BLUE"\n*** Client program starting (enter \"/quit\" to stop): ***"RESET"\n");
 
 	sock_host = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -71,14 +77,17 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 		return -1;
 	} //gérer autrement car il ne faut pas quitter si on arrive pas a se co
 
-	/* Ajout de l'adresse socket du client auquel on se connecte à ses données */
-	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
-	memset(fd_array[*num_clients].address_client, '\0', sizeof(fd_array->address_client));
-	strcpy(fd_array[*num_clients].address_client, client_inaddr);
-
 	opt_desc(&sock_host, maxfds, readfds);
 	session_initiate(msg); //génération du message de session-initiate
 	send_msg(msg,&sock_host,readfds,fd_array,num_clients);
+
+	((*waitlist).nb_connect)++;
+	/* Ajout de l'adresse socket du client auquel on se connecte à ses données */
+	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
+	memset(fd_array[*num_clients+(*waitlist).nb_connect].address_client, '\0', sizeof(fd_array->address_client));
+	strcpy(fd_array[*num_clients+(*waitlist).nb_connect].address_client, client_inaddr);
+	fd_array[*num_clients+(*waitlist).nb_connect].fd_client = sock_host;
+	(*waitlist).waiting[(*waitlist).nb_connect]=sock_host;
 
 	free((*msg).msg_content);
 	free(msg);
@@ -106,48 +115,96 @@ void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds){
 
 }
 
-int login_client(message *msg_rcv, message *msg_send, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds) {
+int login_client(message *msg_send, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist) {
 
 	/*Fonction qui permet a un client de se connecter, ses paramètres sont enregistré dans
 	une structure client_data puis ajouté a fd_array, qui contient les infos sur tous les
 	autres clients.*/
 
-	char user[MAX_SIZE_USERNAME];
-  sscanf(msg_rcv->msg_content, "%s", user);
+	int i;
+	int client_id;
+	int waiting_ind, waiting_arr;
 
-  if (search_client_id_by_name(user, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
+	waiting_ind = search_client_waiting_array_by_fd(*client_sockfd, fd_array, num_clients, *waitlist);
+	waiting_arr = search_waiting_array_by_fd(*client_sockfd, *waitlist);
+
+  if (search_client_id_by_name(fd_array[*num_clients+(*waitlist).nb_connect].name_client, fd_array, num_clients) == -1) { //si on a pas de conversation déjà commencée avec le client
+		/* Enregistrement des paramètres */
 		fd_array[*num_clients].fd_client = *client_sockfd;
   	fd_array[*num_clients].id_client = *num_clients;
   	fd_array[*num_clients].rdy = 0;
-    strcpy(fd_array[*num_clients].name_client, user);
-		//strcpy(fd_array[*num_clients].address_client, fd_array->address_client);
+    strcpy(fd_array[*num_clients].name_client, fd_array[waiting_ind].name_client);
+		strcpy(fd_array[*num_clients].address_client, fd_array[waiting_ind].address_client);
+		/* Suppression des paramètres pré-enregistrés si les index sont différents */
+		if(waiting_ind == *num_clients+(*waitlist).nb_connect) {
+			memset(fd_array[waiting_ind].address_client, '\0', sizeof(fd_array->address_client));
+			memset(fd_array[waiting_ind].name_client, '\0', sizeof(fd_array->name_client));
+			fd_array[waiting_ind].fd_client = 0;
+		}
+		/* Modification des compteurs */
 		(*num_clients)++;
+		((*waitlist).nb_connect)--;
     return 0;
+
   } else {
-    printf("[PROGRAM] Session denied : %s already connected\n", user);
+    printf(BLUE"[PROGRAM] Session denied : "RED"%s"BLUE" already connected"RESET"\n", fd_array[waiting_ind].name_client);
     session_denied(msg_send, 1);
 		send_msg(msg_send, client_sockfd,readfds,fd_array,num_clients);
+		/* Suppression des paramètres pré-enregistrés si les index sont différents */
+		memset(fd_array[waiting_ind].address_client, '\0', sizeof(fd_array->address_client));
+		memset(fd_array[waiting_ind].name_client, '\0', sizeof(fd_array->name_client));
+		fd_array[waiting_ind].fd_client = 0;
     close(*client_sockfd);
     FD_CLR(*client_sockfd, readfds);
+		((*waitlist).nb_connect)--;
+		(*waitlist).waiting[waiting_arr]=0;
     return -1;
+
   }
 }
 
-int control_accept(message *msg_rcv, client_data *fd_array, int *num_clients) {
+int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, char *msg, waitList *waitlist) {
 
-	/* Fonction qui permet à un client d'accepter ou pas une connextion d'un utilisateur
-	distant. */
-	char tmpAccept[WRITE_SIZE];
-	char acceptConnection[WRITE_SIZE];
+	/* Fonction qui permet à un client de refuser une connextion d'un utilisateur distant. */
+	message *msg_send = (message *) malloc(sizeof(message));
+	int client_sockfd;
+	char *posSpace = NULL;
 
-	printf("\n[PROGRAM] %s : %s is trying to establish a connection with you. Do you accept ? Type without caps \"yes\" to accept or \"no\" to refuse.\n", (*msg_rcv).msg_content, fd_array[*num_clients].address_client);
-	fgets(tmpAccept, WRITE_SIZE, stdin);
-	//printf("\n\"%s\"\n", tmpAccept); //debug
-	*((char *)mempcpy(acceptConnection, tmpAccept, strlen(tmpAccept)-1)) = '\0'; // Pour retirer le \n proprement : merci Ulrich Drepper
-	//printf("\n\"%s\"\n", acceptConnection); //debug
-	if(strcmp(acceptConnection, "yes") == 0) return 0;
-	else return -1;
+	if((client_sockfd = atoi(strchr(msg, ' '))) == 0){
+		printf(BLUE"[PROGRAM] Error command."RESET"\n");
+		return -1;
+	}
 
+	printf(BLUE"[PROGRAM] Session not established : you refused the connection with "RED"%s."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].msg_rcv->msg_content);
+  session_denied(msg_send, 2);
+  send_msg(msg_send, &client_sockfd, readfds, fd_array, num_clients);
+  free((*msg_send).msg_content);
+  close(client_sockfd);
+  FD_CLR(client_sockfd, readfds);
+
+}
+
+int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, char *msg, waitList *waitlist) {
+
+	/* Fonction qui permet à un client d'accepter une connextion d'un utilisateur distant. */
+	message *msg_send = (message *) malloc(sizeof(message));
+	int client_sockfd;
+	char *posSpace = NULL;
+
+	if((client_sockfd = atoi(strchr(msg, ' '))) == 0){
+		printf(BLUE"[PROGRAM] Error command."RESET"\n");
+		return -1;
+	}
+
+	//On lui demande de se logger
+  if (login_client(msg_send, &client_sockfd, fd_array, num_clients, readfds, waitlist) != -1) {
+    //On confirme la connection du client
+    session_accept(msg_send); //on crée le message de session-accept-1
+    send_msg(msg_send, &client_sockfd, readfds, fd_array, num_clients);
+    free((*msg_send).msg_content);
+		free(msg_send);
+		return 0;
+  }
 }
 
 int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg) {
@@ -159,21 +216,21 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
 	message *discomsg = (message *) malloc(sizeof(message));
 
 	if((posSpace = strchr(msg, ' ')) == NULL){
-    printf("[PROGRAM] Error command.");
+    printf(BLUE"[PROGRAM] Error command."RESET"\n");
     return -1;
   }
 	strcpy(name, posSpace+1);
 	name[strlen(name) - 1] = '\0';
 
 	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {
-		printf("Client is not connected\n");
+		printf(BLUE"Client is not connected"RESET"\n");
 		return -1;
 	}
 
 	session_end(discomsg);
 	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
 	exitClient(client_sockfd, readfds, fd_array, num_clients);
-	printf("[%s] End of connection.\n", name);
+	printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", name);
 	free((*discomsg).msg_content);
 	free(discomsg);
 	return 0;
@@ -204,8 +261,35 @@ int search_client_array_by_fd(int fd, client_data *fd_array, int *num_clients) {
 /*Fonction qui prend un file descriptor et renvoie l'indice dans fd_array correspondant au client s'il existe*/
 
 	int i;
-	for(i=0; i<*(num_clients); i++){
+	for(i=0; i < *num_clients; i++){
 		if(fd == fd_array[i].fd_client)
+			return i;
+	}
+	return -1;
+}
+
+int search_client_waiting_array_by_fd(int fd, client_data *fd_array, int *num_clients, waitList waitlist) {
+
+/*Fonction qui prend un file descriptor et renvoie l'indice dans fd_array correspondant au client en attente s'il existe*/
+
+	int i;
+	for(i=0; i <= *num_clients+waitlist.nb_connect; i++){
+		printf("i:%i\tfd:%i\n", i, fd_array[i].fd_client);
+		printf("i+1:%i\tfd:%i\n", i+1, fd_array[i+1].fd_client);
+
+		if(fd == fd_array[i].fd_client)
+			return i;
+	}
+	return -1;
+}
+
+int search_waiting_array_by_fd(int fd, waitList waitlist) {
+
+/*Fonction qui prend un file descriptor et renvoie l'indice dans waitlist correspondant au client en attente s'il existe*/
+
+	int i;
+	for(i=0; i < waitlist.nb_connect; i++){
+		if(fd == waitlist.waiting[i])
 			return i;
 	}
 	return -1;
@@ -241,6 +325,7 @@ int search_client_id_by_name(char *user, client_data *fd_array, int *num_clients
 
 	int i;
 	for(i=0; i<*num_clients; i++){
+		printf("i : %i\tName : %s\n", i, fd_array[i].name_client);
 		if(strcmp(user, fd_array[i].name_client) == 0)
 			return fd_array[i].id_client;
 	}

@@ -13,7 +13,7 @@ int update_contact () {
 
   ask_contact_name(user->username);
 
-  printf("[PROGRAM] Please enter contact address (\e[3m0.0.0.0:12345\e[0m): \n");
+  printf(BLUE"[PROGRAM] Please enter contact address ("IBLUE"0.0.0.0:12345"BLUE"): "RESET"\n");
 
   ask_contact_address(user->address);
 
@@ -21,14 +21,14 @@ int update_contact () {
   if ((offset = search_contact(user->username, contact_file)) == -1) {
     if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
     write(contact_file, user, sizeof(annuaireData));
-    printf("[PROGRAM] Contact added !\n");
+    printf(BLUE"[PROGRAM] Contact added !"RESET"\n");
   }
   else {
     /* On supprime les anciennes données puis on réécrit les nouvelles */
     new_file = remove_contact_data(contact_file, offset);
     lseek(contact_file, 0, SEEK_END);
     if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
-    printf("[PROGRAM] Contact updated !\n");
+    printf(BLUE"[PROGRAM] Contact updated !"RESET"\n");
   }
 
   free(user);
@@ -49,7 +49,7 @@ int remove_contact () {
 
   if ((offset = search_contact(user->username, contact_file)) == -1) { perror("Error : contact was not found in contact list"); exit(EXIT_FAILURE); }
   if (remove_contact_data(contact_file, offset) == -1) {perror("Error while removing contact's data"); return -1; }
-  printf("[PROGRAM] Contact removed !\n");
+  printf(BLUE"[PROGRAM] Contact removed !"RESET"\n");
 
   free(user);
   close(contact_file);
@@ -65,7 +65,9 @@ int print_contact_list () {
   contact_file = open_directory();
 
   while (read(contact_file, user, sizeof(annuaireData)) > 0) {
-    printf("Username : %s\nAddress : %s\n\n", user->username, user->address);
+    if(user->username[0] != '\n') {
+      printf(BLUE"Username : %s\nAddress : %s"RESET"\n\n", user->username, user->address);
+    }
   }
 
   free(user);
@@ -84,7 +86,7 @@ int add_contact_online(client_data *fd_array, int *num_clients, char * msg) {
   char * contact_addr;
 
   if((posSpace = strchr(msg, ' ')) == NULL){
-    printf("[PROGRAM] Error command.");
+    printf(BLUE"[PROGRAM] Error command."RESET"\n");
     return -1;
   }
   if ((strlen(posSpace) < 4) && (strlen(posSpace) > 16)) {perror("[PROGRAM] : Username is wrong"); return -1;}
@@ -94,7 +96,7 @@ int add_contact_online(client_data *fd_array, int *num_clients, char * msg) {
   /* Fonction qui ajoute un contact avec qui l'on est déjà connecté */
   contact_addr = search_client_address_by_name(name, fd_array, num_clients);
   if (contact_addr == NULL) {
-    printf("This user is not connected, to add him, use /add then enter his name and address\n");
+    printf(BLUE"[PROGRAM] This user is not connected, to add him, use /add then enter his name and address"RESET"\n");
     return -1;
   }
   else {
@@ -108,14 +110,14 @@ int add_contact_online(client_data *fd_array, int *num_clients, char * msg) {
     if ((offset = search_contact(contact->username, contact_file)) == -1) {
       if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
       write(contact_file, contact, sizeof(annuaireData));
-      printf("[PROGRAM] Connected contact added !\n");
+      printf(BLUE"[PROGRAM] Connected contact added !"RESET"\n");
     }
     else {
       /* On supprime les anciennes données puis on réécrit les nouvelles */
       new_file = remove_contact_data(contact_file, offset);
       lseek(contact_file, 0, SEEK_END);
       if(write(new_file, contact, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
-      printf("[PROGRAM] Connected contact updated !\n");
+      printf(BLUE"[PROGRAM] Connected contact updated !"RESET"\n");
     }
   }
   close(contact_file);
@@ -127,12 +129,12 @@ int print_connected_user(client_data *fd_array, int *num_clients) {
 
 	/* Fonction qui affiche l'ensemble des clients avec qui l'utilisateur est connecté */
 	int i, j;
-	printf("\n[PROGRAM] : You've connected yourself to the addresses \"0.0.0.0\"\n\n");
-	printf("Username\t\tAddress\t\t\tFD\n\n");
+	printf("\n"BLUE"[PROGRAM] : You've connected yourself to the addresses \"0.0.0.0\""RESET"\n\n");
+	printf(BLUE"Username\t\tAddress\t\t\tFD\n\n");
 	for(i=0; i<*num_clients; i++) {
-		printf("%s\t\t\t%s \t\t%i\n", fd_array[i].name_client, fd_array[i].address_client, fd_array[i].fd_client);
+		printf(RED"%s\t\t\t%s \t\t%i\n", fd_array[i].name_client, fd_array[i].address_client, fd_array[i].fd_client);
 	}
-	printf("\n");
+	printf(RESET"\n");
 	return 0;
 }
 
@@ -166,7 +168,7 @@ off_t search_contact(char *name, int contact_list) {
 int open_directory() {
   int fd;
   if (access(CONTACT, F_OK) == -1) {
-    printf("[PROGRAM] Contact file does not exist : creating file...\n");
+    printf(BLUE"[PROGRAM] Contact file does not exist : creating file...\n");
     if ((fd = open(CONTACT, O_RDWR|O_CREAT, 0755)) < 0 ) {
       perror("[PROGRAM] Error while creating contact file\n");
     };
@@ -188,7 +190,7 @@ void ask_contact_name(char *username){
   int result;
   char buf[MAX_SIZE_USERNAME];
 
-  printf("[PROGRAM] Please enter contact name: \n");
+  printf(BLUE"[PROGRAM] Please enter contact name: "RESET"\n");
   do{
     memset (buf, '\0', sizeof(buf));//réinitialisation chaine
     if ((result = read(0, buf, WRITE_SIZE)) <= 0){
@@ -196,10 +198,10 @@ void ask_contact_name(char *username){
       exit(EXIT_FAILURE);
       break;
     }else if(result > 16){ //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
-    sprintf(msg, "[PROGRAM] Username too long, please enter another: \n");
+    sprintf(msg, BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
     write(0,msg, strlen(msg));
   }else if(result < 4){
-    sprintf(msg, "[PROGRAM] Username too short, please enter another: \n");
+    sprintf(msg, BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
     write(0,msg, strlen(msg));
   }
 }while(result > 16 || result < 4);
@@ -257,7 +259,7 @@ void ask_contact_address(char * temp){
       if(port <= 0 || port >= 100000)
       port = -1;
     }else if(posPort == NULL || port == -1){
-      printf("-----Please enter correct address-----\n");
+      printf(BLUE"-----Please enter correct address-----"RESET"\n");
       continue;
     }
 
@@ -267,7 +269,7 @@ void ask_contact_address(char * temp){
   }
 }
 
-int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg){
+int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array, char *msg, waitList *waitlist){
 
   int contact_file;
   char *posSpace = NULL;
@@ -276,7 +278,7 @@ int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_da
   annuaireData *test = (annuaireData *) malloc(sizeof(annuaireData));
 
   if((posSpace = strchr(msg, ' ')) == NULL){
-    printf("[PROGRAM] Error command.");
+    printf(BLUE"[PROGRAM] Error command."RESET"\n");
     return -1;
   }
 
@@ -286,14 +288,14 @@ int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_da
   contact_file = open_directory();
 
   if((offset = search_contact(name, contact_file)) == -1){
-    printf("[PROGRAM] Contact doesn't exist. Please add it with /add command.\n");
+    printf(BLUE"[PROGRAM] Contact doesn't exist. Please add it with /add command."RESET"\n");
     return -1;
   }
 
   lseek(contact_file, offset, SEEK_SET);
   read(contact_file, test, sizeof(annuaireData));
 
-  client(maxfds, readfds, num_clients, fd_array, test);
+  client(maxfds, readfds, num_clients, fd_array, test, waitlist);
 
   free(test);
   close(contact_file);
