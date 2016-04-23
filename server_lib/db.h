@@ -24,6 +24,7 @@ extern int add_user_mysql(char *data);
 extern void ip_user_mysql(char *name, char *ip);
 extern int last_id_mysql();
 extern struct tm * time_server();
+extern int del_user_mysql(char *data);
 
 /*Variable globale pour la database*/
 MYSQL *db;

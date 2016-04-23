@@ -75,10 +75,10 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 
 	/*Fonction qui lit les messages en attentes sur le file descriptor*/
 
-	char msg[WRITE_SIZE];
+	char msg[MSG_SIZE];
 	int  result;
 
-	memset(msg, '\0', WRITE_SIZE);
+	memset(msg, '\0', MSG_SIZE);
 
 	if ((result = read(fd, msg, MSG_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
 		//printf("msg recu : %s\n", msg); //pour debug
@@ -243,46 +243,78 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 
 	char msg[WRITE_SIZE];
 	int countdisc;
+	int ch;
 
 	fgets(msg, WRITE_SIZE, stdin);
 
-	if (strcmp(msg, "/quit\n")==0) {
-		quit_server(readfds, fd_array, server_sockfd, num_clients);
-	} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
-		help(msg);
-	} else if (strcmp(msg, "/connect\n")==0){
-		client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
-	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
-		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
-	} else if (strncmp(msg, "/accept", 7)==0){ // /accept fd
-		connect_accept(fd_array, num_clients, readfds, msg, waitlist);
-	} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse fd
-		connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
-	} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
-		disconnect(maxfds, readfds, num_clients, fd_array, msg);
-	} else if (strncmp(msg, "/msg", 4)==0) {
-		slash_msg(msg, readfds, fd_array, num_clients);
-	} else if (strncmp(msg, "/all", 4)==0) {
-		slash_all(0, msg, readfds, fd_array, num_clients);
-	} else if (strcmp(msg, "/add\n") == 0){  // /add user address:port
-		update_contact();
-	} else if (strncmp(msg, "/add", 4) == 0){ // /add user
-		add_contact_online(fd_array, num_clients, msg);
-	} else if (strcmp(msg, "/remove\n") == 0){ // /remove user
-		remove_contact();
-	} else if (strcmp(msg, "/contact\n") == 0){
-		print_contact_list();
-	} else if (strcmp(msg, "/who\n") == 0) {
-		print_connected_user(fd_array, num_clients);
-	} else if (strcmp(msg, "/transfer\n")==0){
-    init_transfer(4, readfds, fd_array, num_clients); // changer le 4 avec le fd du mec
-	} else {
-		if(*num_clients > 0) {
-			slash_all(1, msg, readfds, fd_array, num_clients);
+	if(NULL == strchr(msg, '\n')){
+		printf("[PROGRAM] : Message too long, max is %d characteres.\n", WRITE_SIZE);
+		while((ch = getchar()) != '\n'){
+			if(ch < 0)
+				perror("Erreur taille message");
+		}
+	}else{
+
+		if (strcmp(msg, "/quit\n")==0) {
+			quit_server(readfds, fd_array, server_sockfd, num_clients);
+		} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
+			help(msg);
+		} else if (strcmp(msg, "/connect\n")==0){
+			client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
+		} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
+			connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
+		} else if (strncmp(msg, "/accept", 7)==0){ // /accept fd
+			connect_accept(fd_array, num_clients, readfds, msg, waitlist);
+		} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse fd
+			connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
+		} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
+			disconnect(maxfds, readfds, num_clients, fd_array, msg);
+		} else if (strncmp(msg, "/msg", 4)==0) {
+			slash_msg(msg, readfds, fd_array, num_clients);
+		} else if (strncmp(msg, "/all", 4)==0) {
+			slash_all(0, msg, readfds, fd_array, num_clients);
+		} else if (strcmp(msg, "/add\n") == 0){
+			update_contact();
+		} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
+			add_contact_online(fd_array, num_clients, msg);
+		} else if (strcmp(msg, "/remove\n") == 0){
+			remove_contact();
+		} else if (strcmp(msg, "/contact\n") == 0){
+			print_contact_list();
+		} else if (strcmp(msg, "/who\n") == 0) {
+			print_connected_user(fd_array, num_clients);
+		} else if (strncmp(msg, "/transfer", 9)==0){
+			slash_transfer(msg, readfds, fd_array, num_clients);
+		} else if (strcmp(msg, "/online\n")==0){
+			connect_serv();
+		} else if (strncmp(msg, "/search", 7)==0){
+			search_serv(msg, fd_array, num_clients, readfds);
 		} else {
-			if(countdisc < 10) { printf(BLUE"[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works."RESET"\n"); countdisc++;}
+			if(*num_clients > 0) {
+				slash_all(1, msg, readfds, fd_array, num_clients);
+			} else {
+				if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			}
 		}
 	}
+}
+void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	char username[16];
+	int client_fd = 0;
+	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
+		printf("[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16\n");
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
+		printf("[PROGRAM] Argument too long\n");
+		return;
+	}
+	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
+	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+		printf("[PROGRAM] %s not connected\n", username);
+		printf("[PROGRAM] /msg aborted\n");
+		return;
+	}
+	init_transfer(client_fd, readfds, fd_array, num_clients);
 }
 
 void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
@@ -381,7 +413,7 @@ int my_count_word(const char *str) {
   return (word);
 }
 
-int help(char * msg) {
+void help(char * msg) {
 
 	/*Fonction qui affiche l'aide des fonctions demandées par l'utilisateur.*/
 
@@ -418,5 +450,4 @@ int help(char * msg) {
 	} else {
    		 printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
 	}
-	return;
 }

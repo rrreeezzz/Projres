@@ -11,7 +11,7 @@
 #include <netdb.h>
 #include <time.h>
 
-#define WRITE_SIZE 100
+#define WRITE_SIZE 1000
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_CLIENTS 95
 #define Max(x,y) (x>y ? x:y) //pour optdesc
@@ -56,7 +56,7 @@ extern void session_aborted(message *segment);
 void transfer_accept(message *segment, char *filename);
 void transfer_refused(message *segment);
 void transfer_initiate(message *segment, char *filename, int taille);
-void transfer_msg(message *segment, char *data);
+void transfer_msg(message *segment, char *data, int n);
 void transfer_end(message *segment, char *filename);
 
 #endif

@@ -300,4 +300,5 @@ int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_da
   free(test);
   close(contact_file);
 
+  return 0;
 }

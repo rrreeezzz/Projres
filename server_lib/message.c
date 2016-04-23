@@ -13,7 +13,7 @@ void im_on(message *segment) {
 void already_exist(message *segment){
 
 	/*Fonction qui permet au serveur de répondre au 400, pour lui dire qu'il y a déjà qqun
-	avec ce pseudo. */
+	avec ce pseudo. Pas necessaire si on part du principe qu'il ne peut y avoir qu'un pseudo.*/
 
 	(*segment).code = 410;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);

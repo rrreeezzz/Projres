@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <signal.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #include "db.h"
 #include "utilities.h"
@@ -18,11 +19,13 @@
 
 #define INFO_SIZE 256
 
+int server_sockfd;
+
 extern void quit_server();
 extern void handler_sigint();
 extern void init_server();
 extern void routine_server();
 extern void host_cmde();
-extern void traiter_requete(char *buffer, struct sockaddr remote_addr);
+extern void traiter_requete(char *buffer, int client_sockfd);
 
 #endif
