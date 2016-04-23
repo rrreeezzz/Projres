@@ -21,6 +21,6 @@
 int online;
 
 extern int connect_serv();
-extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds);
+extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 
 #endif

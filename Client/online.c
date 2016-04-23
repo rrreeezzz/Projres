@@ -34,20 +34,20 @@ int connect_serv(){
 
   sprintf(temp, "FROM:%s IP:%s", General_Name, inet_ntoa(((struct sockaddr_in *) &my_ip.ifr_addr)->sin_addr));
   /*BUG TIME(NULL) A CORRIGER*/
-  sprintf(msg, "400/11111111/%d/%s/END", strlen(temp), temp);
+  sprintf(msg, "400/11111111/%zd/%s/END", strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
     perror("Erreur write serveur annuaire");
     return -1;
   }
 
-  printf("[PROGRAM] : You'r IP has been send.\n");
+  printf("[PROGRAM] : Your IP has been send.\n");
   close(online);
   close(fd_tmp);
   return 0;
 }
 
-int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds){
+int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist){
 
   online = 0;
 
@@ -83,7 +83,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
 
   sprintf(temp, "%s", name);
   /*BUG TIME(NULL) A CORRIGER*/
-  sprintf(msg, "402/11111111/%d/%s/END", strlen(temp), temp);
+  sprintf(msg, "402/11111111/%zd/%s/END", strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
     perror("Erreur write serveur annuaire");
@@ -97,7 +97,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
     return -1;
   }
 
-  rechercheProtocol(msg, &online, fd_array, num_clients, readfds);
+  rechercheProtocol(msg, &online, fd_array, num_clients, readfds, waitlist);
   close(online);
   return 0;
 }

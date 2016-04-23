@@ -288,7 +288,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		} else if (strcmp(msg, "/online\n")==0){
 			connect_serv();
 		} else if (strncmp(msg, "/search", 7)==0){
-			search_serv(msg, fd_array, num_clients, readfds);
+			search_serv(msg, fd_array, num_clients, readfds, waitlist);
 		} else {
 			if(*num_clients > 0) {
 				slash_all(1, msg, readfds, fd_array, num_clients);
@@ -298,6 +298,7 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 		}
 	}
 }
+
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];
 	int client_fd = 0;
