@@ -237,44 +237,53 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 
 	char msg[WRITE_SIZE];
 	int countdisc;
+	int ch;
 
 	fgets(msg, WRITE_SIZE, stdin);
+	if(NULL == strchr(msg, '\n')){
+		printf("[PROGRAM] : Message too long, max is %d characteres.\n", WRITE_SIZE);
+		while((ch = getchar()) != '\n'){
+			if(ch < 0)
+				perror("Erreur taille message");
+		}
+	}else{
 
-	if (strcmp(msg, "/quit\n")==0) {
-		quit_server(readfds, fd_array, server_sockfd, num_clients);
-	} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
-		help(msg);
-	} else if (strcmp(msg, "/connect\n")==0){
-		client(maxfds, readfds, num_clients, fd_array, NULL);
-	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
-		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
-	} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
-		disconnect(maxfds, readfds, num_clients, fd_array, msg);
-	} else if (strncmp(msg, "/msg", 4)==0) {
-		slash_msg(msg, readfds, fd_array, num_clients);
-	} else if (strncmp(msg, "/all", 4)==0) {
-		slash_all(0, msg, readfds, fd_array, num_clients);
-	} else if (strcmp(msg, "/add\n") == 0){
-		update_contact();
-	} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
-		add_contact_online(fd_array, num_clients, msg);
-	} else if (strcmp(msg, "/remove\n") == 0){
-		remove_contact();
-	} else if (strcmp(msg, "/contact\n") == 0){
-		print_contact_list();
-	} else if (strcmp(msg, "/who\n") == 0) {
-		print_connected_user(fd_array, num_clients);
-	} else if (strncmp(msg, "/transfer", 9)==0){
-    slash_transfer(msg, readfds, fd_array, num_clients);
-	} else if (strcmp(msg, "/online\n")==0){
-		connect_serv();
-	} else if (strncmp(msg, "/search", 7)==0){
-		search_serv(msg, fd_array, num_clients, readfds);
-	} else {
-		if(*num_clients > 0) {
-			slash_all(1, msg, readfds, fd_array, num_clients);
+		if (strcmp(msg, "/quit\n")==0) {
+			quit_server(readfds, fd_array, server_sockfd, num_clients);
+		} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
+			help(msg);
+		} else if (strcmp(msg, "/connect\n")==0){
+			client(maxfds, readfds, num_clients, fd_array, NULL);
+		} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
+			connect_to_contact(maxfds, readfds, num_clients, fd_array, msg);
+		} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
+			disconnect(maxfds, readfds, num_clients, fd_array, msg);
+		} else if (strncmp(msg, "/msg", 4)==0) {
+			slash_msg(msg, readfds, fd_array, num_clients);
+		} else if (strncmp(msg, "/all", 4)==0) {
+			slash_all(0, msg, readfds, fd_array, num_clients);
+		} else if (strcmp(msg, "/add\n") == 0){
+			update_contact();
+		} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
+			add_contact_online(fd_array, num_clients, msg);
+		} else if (strcmp(msg, "/remove\n") == 0){
+			remove_contact();
+		} else if (strcmp(msg, "/contact\n") == 0){
+			print_contact_list();
+		} else if (strcmp(msg, "/who\n") == 0) {
+			print_connected_user(fd_array, num_clients);
+		} else if (strncmp(msg, "/transfer", 9)==0){
+			slash_transfer(msg, readfds, fd_array, num_clients);
+		} else if (strcmp(msg, "/online\n")==0){
+			connect_serv();
+		} else if (strncmp(msg, "/search", 7)==0){
+			search_serv(msg, fd_array, num_clients, readfds);
 		} else {
-			if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			if(*num_clients > 0) {
+				slash_all(1, msg, readfds, fd_array, num_clients);
+			} else {
+				if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			}
 		}
 	}
 }

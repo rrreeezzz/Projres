@@ -24,7 +24,7 @@ int connect_serv(){
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror("Connect");
+    perror("Erreur de connection, le serveur ne semble pas être en ligne");
     return -1;
   } //gérer autrement car il ne faut pas quitter si on arrive pas a se co
   /*A mettre si pas de serveur hebergé ?*/

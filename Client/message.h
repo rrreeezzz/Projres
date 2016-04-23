@@ -11,7 +11,7 @@
 #include <netdb.h>
 #include <time.h>
 
-#define WRITE_SIZE 100
+#define WRITE_SIZE 1000
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_CLIENTS 95
 #define Max(x,y) (x>y ? x:y) //pour optdesc

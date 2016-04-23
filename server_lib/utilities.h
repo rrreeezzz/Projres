@@ -14,7 +14,7 @@
 #include <time.h>
 
 #define MAX_SIZE_PARAMETER 70
-#define WRITE_SIZE 100
+#define WRITE_SIZE 1000
 #define MSG_SIZE WRITE_SIZE+25
 
 typedef struct {
