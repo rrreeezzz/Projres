@@ -6,28 +6,29 @@ void ask_name(){
 	d'autentification plus complexe.*/
 
 	char user[WRITE_SIZE]; //laisser a write size pour que ce soit cohérent avec le read
-	char msg[100];
 	int result;
 
-	printf(BLUE"Please enter your name: "RESET"\n");
-	do{
+	printf(BLUE"[PROGRAM] Please enter your name: "RESET"\n");
+	do {
 		memset (user, '\0', sizeof(user));//réinitialisation chaine
 		if ((result = read(0, user, WRITE_SIZE)) <= 0){
 			perror("Name read error.");
 			exit(EXIT_FAILURE);
 			break;
-		}else if(result > 16){ //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
-		sprintf(msg, BLUE"Username too long, please enter another: "RESET"\n");
-		write(0,msg, strlen(msg));
-	}else if(result < 4){
-		sprintf(msg, BLUE"Username too short, please enter another: "RESET"\n");
-		write(0,msg, strlen(msg));
-	}
-}while(result > 16 || result < 4);
-user[strlen(user)-1] = '\0';
-strcpy(General_Name,user);
+		} else if(result > 16) { //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
+			printf(BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
+		} else if(result < 4) {
+			printf(BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
+		}
+		if (strchr(user, ' ') != NULL) {
+			printf(BLUE"[PROGRAM] You can't have a space in your username, please enter another : "RESET"\n");
+		}
+	} while(result > 16 || result < 4 || strchr(user, ' ') != NULL);
 
-printf(BLUE"Your name is: "RED"%s"RESET"\n",General_Name);
+	user[strlen(user)-1] = '\0';
+	strcpy(General_Name, user);
+
+	printf(BLUE"Your name is: "RED"%s"RESET"\n", General_Name);
 
 }
 
