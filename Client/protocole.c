@@ -107,6 +107,14 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				printf(BLUE"\n[PROGRAM] A user interface at the adress "RED"%s"BLUE" is trying to establish a connection with you. It can control the program if you accept. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
 			} else {
 				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+
+				//on avertis l'ui si elle est connectee
+				if (userInterface_fd > 0 ) {
+					char content[MSG_SIZE];
+					sprintf(content,"CONNECTIONASK %s %s\n",(*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client);
+					sendUiMsg(content,readfds,fd_array,num_clients);
+				}
+
 			}
 			strcpy(fd_array[*num_clients+(*waitlist).nb_connect].name_client, (*msg_rcv).msg_content);
 			break;
@@ -124,6 +132,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 					userInterface_fd=*client_sockfd;
 				} else {
 					printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+
+					//on avertis l'ui si elle est connectee
+					if (userInterface_fd > 0 ) {
+						char content[MSG_SIZE];
+						sprintf(content,"CONNECTIONCONFIRM %s\n",(*msg_rcv).msg_content);
+						sendUiMsg(content,readfds,fd_array,num_clients);
+					}
 				}
 			}
 			break;
@@ -136,6 +151,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				userInterface_fd=*client_sockfd;
 			} else {
 				printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
+
+				//on avertis l'ui si elle est connectee
+				if (userInterface_fd > 0 ) {
+					char content[MSG_SIZE];
+					sprintf(content,"CONNECTIONCONFIRM %s\n",(*msg_rcv).msg_content);
+					sendUiMsg(content,readfds,fd_array,num_clients);
+				}
 			}
 			break;
 
