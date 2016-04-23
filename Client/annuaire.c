@@ -123,7 +123,7 @@ int remove_contact (char *msg) {
   return 0;
 }
 
-int print_contact_list () {
+int print_contact_list (fd_set *readfds,client_data *fd_array, int *num_clients) {
 
   annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
   int contact_file;
@@ -131,9 +131,38 @@ int print_contact_list () {
 
   contact_file = open_directory();
 
+  //on envoie la tete de la commande si l'ui est connectee
+  if (userInterface_fd > 0) {
+    int nbContacts = 0;
+    char content[MSG_SIZE];
+
+    //On compte le nombre de contacts en parcourant une 1ere fois
+    while (read(contact_file, user, sizeof(annuaireData)) > 0) {
+      if(user->username[0] != '\n') {
+        nbContacts += 1 ;
+      }
+    }
+
+    //On envoie le nombre de contacts
+    sprintf(content,"CONTACTLIST %d\n",nbContacts);
+    sendUiMsg(content,readfds,fd_array,num_clients);
+
+    //On reset le fichier
+    close(contact_file);
+    contact_file = open_directory();
+  }
+
   while (read(contact_file, user, sizeof(annuaireData)) > 0) {
     if(user->username[0] != '\n') {
       printf(BLUE"Username : %s\nAddress : %s"RESET"\n\n", user->username, user->address);
+
+      //on avertis l'ui si elle est connectee
+    	if (userInterface_fd > 0) {
+    		char content[MSG_SIZE];
+    		sprintf(content,"CONTACT %s\n",user->username);
+    		sendUiMsg(content,readfds,fd_array,num_clients);
+    	}
+
     }
   }
 
@@ -180,7 +209,7 @@ int print_connected_user(fd_set *readfds,client_data *fd_array, int *num_clients
   //on avertis l'ui si elle est connectee
   if (userInterface_fd > 0) {
     char content[MSG_SIZE];
-    sprintf(content,"CONTACTLIST %d\n",*num_clients-1);
+    sprintf(content,"WHOISCONNECTED %d\n",*num_clients-1);
     sendUiMsg(content,readfds,fd_array,num_clients);
   }
 
@@ -190,7 +219,7 @@ int print_connected_user(fd_set *readfds,client_data *fd_array, int *num_clients
     //on avertis l'ui si elle est connectee
   	if (userInterface_fd > 0 && fd_array[i].fd_client != userInterface_fd) {
   		char content[MSG_SIZE];
-  		sprintf(content,"CONTACT %s\n",fd_array[i].name_client);
+  		sprintf(content,"CONNECTED %s\n",fd_array[i].name_client);
   		sendUiMsg(content,readfds,fd_array,num_clients);
   	}
 

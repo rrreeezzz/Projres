@@ -370,7 +370,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strncmp(msg, "/remove", 7) == 0){
 			remove_contact(msg);
 		} else if (strcmp(msg, "/contact\n") == 0){
-			print_contact_list();
+			print_contact_list(readfds,fd_array, num_clients);
 		} else if (strcmp(msg, "/who\n") == 0) {
 			print_connected_user(readfds,fd_array, num_clients);
 		} else if (strncmp(msg, "/transfer", 9)==0){
