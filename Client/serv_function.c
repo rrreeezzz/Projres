@@ -37,8 +37,16 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	/*Permet d'enlever les données d'un client du tableau fd_array quand
 	celui-i se déconnecte ou subit une déconnexion.*/
 
-	//On avertis l'utilisateur
-	printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
+
+	//On gere le cas ou c'est l'interface de deconnecte
+	if (fd==userInterface_fd){
+		//On avertis l'utilisateur
+		printf(BLUE"["GREEN"UI"BLUE"] End of connection."RESET"\n");
+		userInterface_fd=-1;
+	} else {
+		//On avertis l'utilisateur
+		printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
+	}
 
 	//on avertis l'ui si elle est connectee
 	if (userInterface_fd > 0) {
@@ -302,20 +310,19 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 
 			// 303 : SESSION_END
 			case 303:
-				//On enleve le fd
+				//On deconnecte l'utilisateur
 				exitClient(userInterface_fd, readfds, fd_array, num_clients);
-				//On reset le fd de l'interface
-				userInterface_fd=-1;
+
+				//On execute default
+
+			//On ne traite pas la commande
+			default:
+
 				//On libere le message
 				free(msg_rcv);
 				free(msg_rcv->msg_content);
-				//On ne traite pas la requete
-				return ;
 
-			//Sinon on ne traite pas la commande
-			default:
-				free(msg_rcv);
-				free(msg_rcv->msg_content);
+				//On sors de la fonction
 				return ;
 
 		}
