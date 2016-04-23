@@ -85,6 +85,7 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 		//printf("msg recu : %s\n", msg); //pour debug
 		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds, waitlist);
 	} else {
+		printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
 		exitClient(fd, readfds, fd_array, num_clients);
 	} //if read
 
