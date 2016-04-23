@@ -21,6 +21,7 @@
 pthread_t pid_transfer;
 extern int userInterface_fd;
 extern int generalPort;
+extern int userInterface_fd;
 
 extern void ask_name();
 extern void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients);

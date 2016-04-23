@@ -37,14 +37,29 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 	/*Permet d'enlever les données d'un client du tableau fd_array quand
 	celui-i se déconnecte ou subit une déconnexion.*/
 
+	//On avertis l'utilisateur
+	printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
+
+	//on avertis l'ui si elle est connectee
+	if (userInterface_fd > 0) {
+		message *msg = (message *) malloc(sizeof(message));
+		char content[MSG_SIZE];
+		printf("%s\n",fd_array[fd].name_client);
+		sprintf(content,"DISCONNECTCONFIRM %s \n",fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
+		normal_msg(msg,content);
+		send_msg(msg, &userInterface_fd ,readfds,fd_array,num_clients);
+	}
+
 	int i;
 	int index;
 	close(fd);
+
 	FD_CLR(fd, readfds); //on enlève le leaver du tableau de clients
 	//On cherche le FD du client qui se deconnecte
 	for (i = 0; i < (*num_clients); i++){
 		index = search_client_array_by_fd(fd, fd_array, num_clients);
 	}
+
 	//On decale les fd superieur a celui qui se connecte
 	for (i=index; i < (*num_clients) ; i++){
 		fd_array[i] = fd_array[i + 1];
@@ -85,7 +100,6 @@ void traiterRequete(int fd, fd_set *readfds, client_data *fd_array, int *num_cli
 		//printf("msg recu : %s\n", msg); //pour debug
 		rechercheProtocol(msg, &fd, fd_array, num_clients, readfds, waitlist);
 	} else {
-		printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
 		exitClient(fd, readfds, fd_array, num_clients);
 	} //if read
 
@@ -287,7 +301,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			// 303 : SESSION_END
 			case 303:
 				//On affiche
-				printf(BLUE"["RED"UI"BLUE"] End of connection."RESET"\n");
+				printf(BLUE"["GREEN"UI"BLUE"] End of connection."RESET"\n");
 				//On enleve le fd
 				exitClient(userInterface_fd, readfds, fd_array, num_clients);
 				//On reset le fd de l'interface

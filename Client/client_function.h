@@ -19,6 +19,8 @@
 #include "annuaire.h"
 #include "utilities.h"
 
+extern int userInterface_fd;
+
 extern void opt_desc(int *client_sockfd, int *maxfds, fd_set *readfds);
 extern int login_client(message *msg_send, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 extern void viderBuffer();
