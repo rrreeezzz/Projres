@@ -1,54 +1,121 @@
 #include "annuaire.h"
 
-int update_contact () {
+int add_contact (client_data *fd_array, int *num_clients, char * msg) {
 
   /*Permet d'ajouter un contact ou de mettre la base de données a jour.*/
+
+  if(strlen(msg) > MAX_SIZE_CONTACT) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
+  }
 
   off_t offset;
   annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
   int contact_file;
   int new_file = -1;
+  char *pch;
+  char *posSpace = NULL;
+  char *posPort = NULL;
+  char *contact_addr = NULL;
+  char contact_data[2][strlen(msg)];
+  char data[MAX_SIZE_CONTACT];
+  int port = -1;
+  int i = 0;
 
-  contact_file = open_directory();
-
-  ask_contact_name(user->username);
-
-  printf(BLUE"[PROGRAM] Please enter contact address ("IBLUE"0.0.0.0:12345"BLUE"): "RESET"\n");
-
-  ask_contact_address(user->address);
-
-  //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
-  if ((offset = search_contact(user->username, contact_file)) == -1) {
-    if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
-    write(contact_file, user, sizeof(annuaireData));
-    printf(BLUE"[PROGRAM] Contact added !"RESET"\n");
+  /* Init structure user */
+  if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
   }
-  else {
-    /* On supprime les anciennes données puis on réécrit les nouvelles */
-    new_file = remove_contact_data(contact_file, offset);
-    lseek(contact_file, 0, SEEK_END);
-    if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
-    printf(BLUE"[PROGRAM] Contact updated !"RESET"\n");
+	strcpy(data, posSpace+1);
+	data[strlen(data) - 1] = '\0';
+
+  pch = strtok (data," ");
+  while (pch != NULL) {
+    sprintf(contact_data[i], "%s", pch);
+    pch = strtok (NULL, " ");
+    i++;
+  }
+  /* Vérification de la syntaxe de la commande */
+  if(!isalpha(contact_data[0][0]) || strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME || !isdigit(contact_data[1][0]) || strlen(contact_data[1]) > MAX_SIZE_ADDRESS) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
   }
 
-  free(user);
-  close(contact_file);
-  close(new_file);
-  return 0;
+  if((posPort = strchr(contact_data[1], ':')) != NULL) {
+    port = (int) strtol(posPort+1, NULL, 10);
+    if(port <= 0 || port >= 65536) {
+      port = -1;
+    }
+  }
+  if (port == -1) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
+  }
+  sprintf(user->username, "%s", contact_data[0]);
+  sprintf(user->address, "%s", contact_data[1]);
+
+  /* On cherche si l'utilisateur est en ligne, sinon on vérifie s'il existe dans le fichier. */
+  contact_addr = search_client_address_by_name(user->username, fd_array, num_clients);
+  if (contact_addr != NULL) {
+    if (add_contact_online(fd_array, user, num_clients, msg) != 0) {
+      printf(BLUE"[PROGRAM] Error while adding online contact."RESET"\n");
+    }
+    return 0;
+  }
+  else { // Contact n'est pas en ligne
+    contact_file = open_directory();
+
+    /* On cherche si le contact existe dans le fichier, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie. */
+    if ((offset = search_contact(user->username, contact_file)) == -1) {
+      if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
+      write(contact_file, user, sizeof(annuaireData));
+      printf(BLUE"[PROGRAM] Contact added !"RESET"\n");
+    }
+    else {
+      /* On supprime les anciennes données puis on réécrit les nouvelles */
+      new_file = remove_contact_data(contact_file, offset);
+      lseek(contact_file, 0, SEEK_END);
+      if(write(new_file, user, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
+      printf(BLUE"[PROGRAM] Contact updated !"RESET"\n");
+    }
+
+    free(user);
+    close(contact_file);
+    close(new_file);
+    return 0;
+  }
 }
 
-int remove_contact () {
+int remove_contact (char *msg) {
+
+  if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/remove " = 8
+    printf(BLUE"[PROGRAM] Command too long, please use \"/remove username\"."RESET"\n");
+    return -1;
+  }
 
   off_t offset;
   annuaireData * user = (annuaireData *) malloc(sizeof(annuaireData));
   int contact_file;
+  char *posSpace = NULL;
 
   contact_file = open_directory();
 
-  ask_contact_name(user->username);
+  /* Init structure user */
+  if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/remove username\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
+  }
+	strcpy(user->username, posSpace+1);
+	user->username[strlen(user->username) - 1] = '\0';
+  /* Vérification de la syntaxe de la commande */
+  if(!isalpha(user->username[0]) || strlen(user->username) < MIN_SIZE_USERNAME || strlen (user->username) > MAX_SIZE_USERNAME) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/remove username\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    return -1;
+  }
 
-  if ((offset = search_contact(user->username, contact_file)) == -1) { perror("Error : contact was not found in contact list"); exit(EXIT_FAILURE); }
-  if (remove_contact_data(contact_file, offset) == -1) {perror("Error while removing contact's data"); return -1; }
+  if ((offset = search_contact(user->username, contact_file)) == -1) { printf("Error : contact was not found in contact list"); return -1; }
+  if (remove_contact_data(contact_file, offset) == -1) { printf("Error while removing contact's data"); return -1; }
   printf(BLUE"[PROGRAM] Contact removed !"RESET"\n");
 
   free(user);
@@ -75,51 +142,29 @@ int print_contact_list () {
   return 0;
 }
 
-int add_contact_online(client_data *fd_array, int *num_clients, char * msg) {
+int add_contact_online(client_data *fd_array, annuaireData * contact, int *num_clients, char * msg) {
 
   off_t offset;
-  annuaireData * contact = (annuaireData *) malloc(sizeof(annuaireData));
   int contact_file;
   int new_file = -1;
-  char name[MAX_SIZE_USERNAME];
-  char * posSpace = NULL;
-  char * contact_addr;
 
-  if((posSpace = strchr(msg, ' ')) == NULL){
-    printf(BLUE"[PROGRAM] Error command."RESET"\n");
-    return -1;
-  }
-  if ((strlen(posSpace) < 4) && (strlen(posSpace) > 16)) {perror("[PROGRAM] : Username is wrong"); return -1;}
-  strcpy(name, posSpace+1);
-  name[strlen(name) - 1] = '\0';
+  contact_file = open_directory();
 
-  /* Fonction qui ajoute un contact avec qui l'on est déjà connecté */
-  contact_addr = search_client_address_by_name(name, fd_array, num_clients);
-  if (contact_addr == NULL) {
-    printf(BLUE"[PROGRAM] This user is not connected, to add him, use /add then enter his name and address"RESET"\n");
-    return -1;
+  //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
+  if ((offset = search_contact(contact->username, contact_file)) == -1) {
+    if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); return -1; }
+    write(contact_file, contact, sizeof(annuaireData));
+    printf(BLUE"[PROGRAM] Connected contact added !"RESET"\n");
   }
   else {
-
-    contact_file = open_directory();
-
-    strcpy(contact->username, name);
-    strcpy(contact->address, contact_addr);
-
-    //On cherche si le contact existe, si ce n'est pas le cas on vérifie si le fichier est vide ou pas, puis on le créé, sinon on le modifie.
-    if ((offset = search_contact(contact->username, contact_file)) == -1) {
-      if(lseek(contact_file, 0, SEEK_END) < 0) {perror("[PROGRAM] Error while seeking end of contact file : file does not exist ?"); exit(EXIT_FAILURE); }
-      write(contact_file, contact, sizeof(annuaireData));
-      printf(BLUE"[PROGRAM] Connected contact added !"RESET"\n");
-    }
-    else {
-      /* On supprime les anciennes données puis on réécrit les nouvelles */
-      new_file = remove_contact_data(contact_file, offset);
-      lseek(contact_file, 0, SEEK_END);
-      if(write(new_file, contact, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); exit(EXIT_FAILURE);}
-      printf(BLUE"[PROGRAM] Connected contact updated !"RESET"\n");
-    }
+    /* On supprime les anciennes données puis on réécrit les nouvelles */
+    new_file = remove_contact_data(contact_file, offset);
+    lseek(contact_file, 0, SEEK_END);
+    if(write(new_file, contact, sizeof(annuaireData)) < 0) {perror("[PROGRAM] Error while writing contact update"); return -1;}
+    printf(BLUE"[PROGRAM] Connected contact updated !"RESET"\n");
   }
+
+  free(contact);
   close(contact_file);
   close(new_file);
   return 0;

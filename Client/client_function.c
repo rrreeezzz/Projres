@@ -170,7 +170,12 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 	int client_sockfd;
 	char *posSpace = NULL;
 
-	if((client_sockfd = atoi(strchr(msg, ' '))) == 0){
+	if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/accept fd\" as described previously."RESET"\n");
+    return -1;
+  }
+
+	if((client_sockfd = atoi(posSpace)) == 0){
 		printf(BLUE"[PROGRAM] Error command."RESET"\n");
 		return -1;
 	}
@@ -191,7 +196,12 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 	int client_sockfd;
 	char *posSpace = NULL;
 
-	if((client_sockfd = atoi(strchr(msg, ' '))) == 0){
+	if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/accept fd\" as described previously."RESET"\n");
+    return -1;
+  }
+
+	if((client_sockfd = atoi(posSpace)) == 0){
 		printf(BLUE"[PROGRAM] Error command."RESET"\n");
 		return -1;
 	}
@@ -274,9 +284,6 @@ int search_client_waiting_array_by_fd(int fd, client_data *fd_array, int *num_cl
 
 	int i;
 	for(i=0; i <= *num_clients+waitlist.nb_connect; i++){
-		printf("i:%i\tfd:%i\n", i, fd_array[i].fd_client);
-		printf("i+1:%i\tfd:%i\n", i+1, fd_array[i+1].fd_client);
-
 		if(fd == fd_array[i].fd_client)
 			return i;
 	}

@@ -273,12 +273,10 @@ void cmde_host(fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd
 			slash_msg(msg, readfds, fd_array, num_clients);
 		} else if (strncmp(msg, "/all", 4)==0) {
 			slash_all(0, msg, readfds, fd_array, num_clients);
-		} else if (strcmp(msg, "/add\n") == 0){
-			update_contact();
-		} else if (strncmp(msg, "/add", 4) == 0){ //cas où on met un contact après
-			add_contact_online(fd_array, num_clients, msg);
-		} else if (strcmp(msg, "/remove\n") == 0){
-			remove_contact();
+		} else if (strncmp(msg, "/add", 4) == 0){ // /add username address:port ou /add username (online)
+			add_contact(fd_array, num_clients, msg);
+		} else if (strncmp(msg, "/remove", 7) == 0){
+			remove_contact(msg);
 		} else if (strcmp(msg, "/contact\n") == 0){
 			print_contact_list();
 		} else if (strcmp(msg, "/who\n") == 0) {

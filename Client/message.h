@@ -15,8 +15,10 @@
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_CLIENTS 95
 #define Max(x,y) (x>y ? x:y) //pour optdesc
+#define MIN_SIZE_USERNAME 4
 #define MAX_SIZE_USERNAME 16
 #define MAX_SIZE_ADDRESS 22
+#define MAX_SIZE_CONTACT (MAX_SIZE_ADDRESS+MAX_SIZE_USERNAME+6)
 
 char General_Name[MAX_SIZE_USERNAME];
 
