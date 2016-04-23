@@ -87,10 +87,15 @@ int add_contact (client_data *fd_array, int *num_clients, char * msg) {
   }
 }
 
-int remove_contact (char *msg) {
+int remove_contact (fd_set *readfds,client_data *fd_array, int *num_clients,char *msg) {
 
   if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/remove " = 8
     printf(BLUE"[PROGRAM] Command too long, please use \"/remove username\"."RESET"\n");
+    
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("REMOVECONTACTERROR Command too long.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
@@ -104,6 +109,10 @@ int remove_contact (char *msg) {
   /* Init structure user */
   if((posSpace = strchr(msg, ' ')) == NULL) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/remove username\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("REMOVECONTACTERROR Command error.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 	strcpy(user->username, posSpace+1);
@@ -111,11 +120,23 @@ int remove_contact (char *msg) {
   /* Vérification de la syntaxe de la commande */
   if(!isalpha(user->username[0]) || strlen(user->username) < MIN_SIZE_USERNAME || strlen (user->username) > MAX_SIZE_USERNAME) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/remove username\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("REMOVECONTACTERROR Command error.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
   if ((offset = search_contact(user->username, contact_file)) == -1) { printf(BLUE"[PROGRAM] Error : contact was not found in contact list"RESET"\n"); return -1; }
   if (remove_contact_data(contact_file, offset) == -1) { printf(BLUE"[PROGRAM] Error while removing contact's data"RESET"\n"); return -1; }
+
+  //on avertis l'ui si elle est connectee
+  if (userInterface_fd > 0) {
+    char content[MSG_SIZE];
+    sprintf(content,"REMOVECONTACTCONFIRM %s\n",user->username);
+    sendUiMsg(content,readfds,fd_array,num_clients);
+  }
+
   printf(BLUE"[PROGRAM] Contact removed !"RESET"\n");
 
   free(user);

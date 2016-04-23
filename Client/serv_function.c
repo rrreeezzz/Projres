@@ -368,7 +368,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strncmp(msg, "/add", 4) == 0){ // /add username address:port ou /add username (online)
 			add_contact(fd_array, num_clients, msg);
 		} else if (strncmp(msg, "/remove", 7) == 0){
-			remove_contact(msg);
+			remove_contact(readfds,fd_array, num_clients,msg);
 		} else if (strcmp(msg, "/contact\n") == 0){
 			print_contact_list(readfds,fd_array, num_clients);
 		} else if (strcmp(msg, "/who\n") == 0) {
