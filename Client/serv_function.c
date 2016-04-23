@@ -307,15 +307,16 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		free(msg_rcv);
 	}
 
-	printf(CYAN"%s\n"RESET,msg );
+	//printf(CYAN"%s\n"RESET,msg );
 
 	if(NULL == strchr(msg, '\n')){
 		printf("[PROGRAM] : Message too long, max is %d caracters.\n", WRITE_SIZE);
 		while((ch = getchar()) != '\n'){
-			if(ch < 0)
+			if(ch < 0) {
 				perror("Erreur taille message");
+			}
 		}
-	}else{
+	} else {
 
 		if (strcmp(msg, "/quit\n")==0) {
 			quit_server(readfds, fd_array, server_sockfd, num_clients);
@@ -426,14 +427,16 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 	char msg[WRITE_SIZE];
 	int i;
 	message *frame = (message *) malloc(sizeof(message));
+	char *posSpace = NULL;
+
 	if (mod == 0) {
 		if (strcmp(cmd, "/all\n")==0) {
-			printf(BLUE"Enter your message :"RESET"\n");
-			fgets(msg, WRITE_SIZE, stdin);
+			printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
+			return ;
 		} else if (strlen(cmd) > 6) { //6 car strlen("/all \n") = 6 = message vide
 			strcpy(msg, cmd+5);
 		} else {
-			printf(BLUE"[PROGRAM] Wrong argument : /all + ENTER or /all + your message"RESET"\n");
+			printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
 			free(frame);
 			return ;
 		}
