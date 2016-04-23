@@ -303,16 +303,16 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 	char username[16];
 	int client_fd = 0;
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf("[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16\n");
+		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
 		return;
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
-		printf("[PROGRAM] Argument too long\n");
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		return;
 	}
 	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
-		printf("[PROGRAM] %s not connected\n", username);
-		printf("[PROGRAM] /msg aborted\n");
+		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
+		printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
 		return;
 	}
 	init_transfer(client_fd, readfds, fd_array, num_clients);

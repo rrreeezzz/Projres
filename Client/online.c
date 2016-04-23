@@ -26,11 +26,11 @@ int connect_serv(){
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
     perror("Erreur de connection, le serveur ne semble pas être en ligne");
     return -1;
-  } //gérer autrement car il ne faut pas quitter si on arrive pas a se co
+  } //gérer autrement car il ne fau"t pas quitter si on arrive pas a se co
   /*A mettre si pas de serveur hebergé ?*/
 
-  printf("[PROGRAM] : Your ip is %s \n", inet_ntoa(((struct sockaddr_in *) &my_ip.ifr_addr)->sin_addr));
-  printf("[PROGRAM] : Server ip is %s \n", inet_ntoa(info_online.sin_addr));
+  printf(BLUE"[PROGRAM] : Your ip is "RED"%s "RESET"\n", inet_ntoa(((struct sockaddr_in *) &my_ip.ifr_addr)->sin_addr));
+  printf(BLUE"[PROGRAM] : Server ip is "RED"%s "RESET"\n", inet_ntoa(info_online.sin_addr));
 
   sprintf(temp, "FROM:%s IP:%s", General_Name, inet_ntoa(((struct sockaddr_in *) &my_ip.ifr_addr)->sin_addr));
   /*BUG TIME(NULL) A CORRIGER*/
@@ -41,7 +41,7 @@ int connect_serv(){
     return -1;
   }
 
-  printf("[PROGRAM] : Your IP has been send.\n");
+  printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n");
   close(online);
   close(fd_tmp);
   return 0;
@@ -79,7 +79,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   } //gérer autrement car il ne faut pas quitter si on arrive pas a se co
   /*A mettre si pas de serveur hebergé ?*/
 
-  printf("[PROGRAM] : Server ip is %s \n", inet_ntoa(info_online.sin_addr));
+  printf(BLUE"[PROGRAM] : Server ip is "RED"%s "RESET"\n", inet_ntoa(info_online.sin_addr));
 
   sprintf(temp, "%s", name);
   /*BUG TIME(NULL) A CORRIGER*/
