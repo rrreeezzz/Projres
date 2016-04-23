@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
 
 	ask_name();
 
-	handler_sigint();
+	//handler_sigint();
 
   server_sockfd = init_server();
 
