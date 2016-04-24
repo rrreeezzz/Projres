@@ -23,7 +23,7 @@ int protocol_parser(char *msg, message *msg_rcv) {
 }
 
 //Protocole minimal
-void rechercheProtocol(char *msg) {
+int rechercheProtocol(char *msg) {
 	message *msg_rcv = (message *) malloc(sizeof(message));
 
 	if(protocol_parser(msg, msg_rcv) != -1) {
@@ -39,13 +39,14 @@ void rechercheProtocol(char *msg) {
 				close(fdClientPrincipal);
 				free(msg_rcv->msg_content);
 				free(msg_rcv);
-				exit(EXIT_SUCCESS);
+				return 1; //deconnection normale
 				break;
 
 			default:
 				break;
-		}
+		} 
 	}
 	free(msg_rcv->msg_content);
 	free(msg_rcv);
+  return 0;
 }

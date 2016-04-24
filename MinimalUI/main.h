@@ -20,6 +20,7 @@ char General_Name[MAX_SIZE_USERNAME];
 char adresseClientPrincipal[16];
 int portClientPrincipal;
 int fdClientPrincipal;
+fd_set readfds;
 
 typedef struct {
   int code;
@@ -27,12 +28,3 @@ typedef struct {
   char *msg_content;
   time_t temps; //temps en secondes depuis le 1er janvier 1970
 } message;
-
-typedef struct {
-  int fd_client;
-  char id_client;
-  char name_client[MAX_SIZE_USERNAME];
-  char address_client[INET_ADDRSTRLEN];
-  int rdy;
-  message *msg_rcv;
-} client_data;
