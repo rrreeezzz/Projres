@@ -40,7 +40,7 @@ int connectClient(){
 
   sock_host = socket(AF_INET, SOCK_STREAM, 0);
 
-  address.sin_addr.s_addr = inet_addr(adressClientPrincipal);
+  address.sin_addr.s_addr = inet_addr(adresseClientPrincipal);
   address.sin_family = AF_INET;
   address.sin_port = htons(portClientPrincipal);
 

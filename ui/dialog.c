@@ -99,9 +99,9 @@ void connect_client(GtkWindow *parent){
       //Si valide on applique une action
       if (validorquit == 1){
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(buttonAddr))){
-          memcpy(adressClientPrincipal,DEFAULTADRESS,strlen(DEFAULTADRESS));
+          memcpy(adresseClientPrincipal,DEFAULTADRESS,strlen(DEFAULTADRESS));
         } else {
-          memcpy (adressClientPrincipal,gtk_entry_get_text(GTK_ENTRY(entryAdress)),strlen(gtk_entry_get_text(GTK_ENTRY(entryAdress))));
+          memcpy (adresseClientPrincipal,gtk_entry_get_text(GTK_ENTRY(entryAdress)),strlen(gtk_entry_get_text(GTK_ENTRY(entryAdress))));
         }
 
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(buttonPort))){
@@ -112,14 +112,14 @@ void connect_client(GtkWindow *parent){
       }
       break;
     case 0:
-      memcpy(adressClientPrincipal,DEFAULTADRESS,strlen(DEFAULTADRESS));
+      memcpy(adresseClientPrincipal,DEFAULTADRESS,strlen(DEFAULTADRESS));
       portClientPrincipal = DEFAULTPORT;
     default:
         validorquit = 1;
         break;
     }
     printf("Connection à %s:%d\n",
-      adressClientPrincipal,
+      adresseClientPrincipal,
       portClientPrincipal
     );
     //Si on arrive pas a se connecter
