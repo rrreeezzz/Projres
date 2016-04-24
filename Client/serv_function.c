@@ -422,16 +422,21 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 }
 
 void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
-	char username[16];
-	int fd[MAX_CLIENTS]={-1};
+
+	char data[WRITE_SIZE+MAX_SIZE_USERNAME];
+	char username[MAX_SIZE_USERNAME];
 	char msg[WRITE_SIZE];
-	int i=5; // 5 car cmd+5 correspond aux arguments (noms d'utilisateurs)
-	int w=0;
-	int cptfd=0;
+	char msgtmp[WRITE_SIZE];
+	char contact_data[WRITE_SIZE/2][strlen(cmd)];
+	char *posSpace = NULL;
+	char *pch;
+	int i=0;
+	int client_sockfd;
+
 	message *frame = (message *) malloc(sizeof(message));
 
-	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+	if (strlen(cmd) < 10) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
+		printf(BLUE"[PROGRAM] Wrong arguments. Please use \"/msg username message\", length of name must be between 3 and 16"RESET"\n");
 		free(frame);
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
@@ -439,43 +444,61 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 		}
 		return;
 	} else if (strlen(cmd) > WRITE_SIZE) { //on évite qu'il puisse écrire à l'infini
-		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+		printf(BLUE"[PROGRAM] Message too long"RESET"\n");
 		free(frame);
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
-			sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
+			sendUiMsg("MESSAGEERROR Message too long\n",readfds,fd_array,num_clients);
 		}
 		return;
-
+	}
+	if((posSpace = strchr(cmd, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\" as described previously."RESET"\n");
+    return;
+  }
+	if(strcpy(data, posSpace+1) == NULL) {
+		printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\" as described previously."RESET"\n");
+		return;
 	}
 
-	w=my_count_word(cmd); //compte le nombre d'arg après /msg
+	if ((pch = strtok (data, " ")) != NULL) {
+		strcpy(contact_data[0], pch);
+	}
+	pch = strtok (NULL, " ");
+  while (pch != NULL) {
+		sprintf(msgtmp, "%s ", pch);
+    strcat(contact_data[1], msgtmp);
+    pch = strtok (NULL, " ");
+  }
 
-	while(w>0) {
-		sscanf(cmd+i, "%s", username);
-		if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
-			printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
-			printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
-			free(frame);
-			//on avertis l'ui si elle est connectee
-			if (userInterface_fd > 0 ) {
-				sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
-			}
-			return;
+	/* Vérification de la syntaxe de la commande */
+  if(!isalpha(contact_data[0][0]) || strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
+    }
+    return;
+  }
+	strcpy(username, contact_data[0]);
+	strcpy(msg, contact_data[1]);
+	msg[strlen(msg)-1] = '\0';
+	/* On réinitialise le tableau pour les prochains messages */
+	memset(contact_data[1], '\0', sizeof(contact_data[1]));
+
+
+	if ((client_sockfd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+		printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
+		free(frame);
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
 		}
-		cptfd++;
-		i+=strlen(username);
-		w--;
-	}
-	printf(BLUE"Enter your message :"RESET"\n");
-	fgets(msg, WRITE_SIZE, stdin);
-	normal_msg(frame, msg);
-	int fds;
-	for(cptfd--;cptfd>=0;cptfd--) {
-		fds = fd[cptfd];
-		send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
+		return;
 	}
 
+	normal_msg(frame, msg);
+	send_msg(frame, &client_sockfd, readfds, fd_array, num_clients);
 	//on avertis l'ui si elle est connectee
 	if (userInterface_fd > 0 ) {
 		char content[MSG_SIZE];

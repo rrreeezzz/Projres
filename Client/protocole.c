@@ -10,7 +10,7 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	sprintf(msg, "%d/%d/%d/", (*segment).code, (*segment).length, (int) (*segment).temps);
 	//printf("msg envoyé : %s\n", msg); //pour debug
 	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
-
+	
 	if (write(*fd, msg, MSG_SIZE) <= 0) {
 		perror("Write error");
 		exitClient(*fd, readfds, fd_array, num_clients);

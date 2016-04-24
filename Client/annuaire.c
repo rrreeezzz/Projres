@@ -40,7 +40,7 @@ int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char 
 
   pch = strtok (data," ");
   while (pch != NULL) {
-    sprintf(contact_data[i], "%s", pch);
+    strcpy(contact_data[i], pch);
     pch = strtok (NULL, " ");
     i++;
   }

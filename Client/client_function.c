@@ -74,13 +74,14 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 		hostinfo = ask_server_address(&port, NULL);
 	}
 
-	printf(BLUE"\n*** Client program starting (enter \"/quit\" to stop): ***"RESET"\n");
 
 	sock_host = socket(AF_INET, SOCK_STREAM, 0);
 
 	address.sin_addr = *(struct in_addr *)*hostinfo -> h_addr_list;
 	address.sin_family = AF_INET;
 	address.sin_port = htons(port);
+	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
+	printf(BLUE"\n*** Attempt to connect with "RED"%s:%i"BLUE" (enter \"/quit\" to stop): ***"RESET"\n\n", client_inaddr, port);
 
 	/* Connection au serveur */
 	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -94,7 +95,6 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	((*waitlist).nb_connect)++;
 	/* Ajout de l'adresse socket du client auquel on se connecte à ses données */
-	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
 	memset(fd_array[*num_clients+(*waitlist).nb_connect].address_client, '\0', sizeof(fd_array->address_client));
 	strcpy(fd_array[*num_clients+(*waitlist).nb_connect].address_client, client_inaddr);
 	fd_array[*num_clients+(*waitlist).nb_connect].fd_client = sock_host;
@@ -241,6 +241,11 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 	if(strcpy(client_name, posSpace+1) == NULL) {
 		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
 		return -1;
+	}
+	posSpace = NULL;
+	if((posSpace = strchr(client_name, ' ')) != NULL) {
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously. Be careful with space."RESET"\n");
+    return -1;
 	}
 	client_name[strlen(client_name)-1] = '\0';
 
