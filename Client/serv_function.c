@@ -6,7 +6,9 @@ void ask_name(){
 	d'autentification plus complexe.*/
 
 	char user[WRITE_SIZE]; //laisser a write size pour que ce soit cohérent avec le read
+	int i;
 	int result;
+	int bchar=0;
 
 	printf(BLUE"[PROGRAM] Please enter your name: "RESET"\n");
 	do {
@@ -16,19 +18,27 @@ void ask_name(){
 			exit(EXIT_FAILURE);
 			break;
 		} else if(result > 16) { //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
-		printf(BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
-	} else if(result < 4) {
-		printf(BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
-	}
-	if (strchr(user, ' ') != NULL) {
-		printf(BLUE"[PROGRAM] You can't have a space in your username, please enter another : "RESET"\n");
-	}
-} while(result > 16 || result < 4 || strchr(user, ' ') != NULL);
+			printf(BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
+		} else if(result < 4) {
+			printf(BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
+		}
+		if (strcmp(user, "/quit\n") == 0) {
+			printf(BLUE"[PROGRAM] Exit\n");
+			exit(EXIT_SUCCESS);
+		}
+		for(i=0 ; i < strlen(user) ; i++) {
+			bchar = (ispunct((unsigned char) user[i]) || isblank((unsigned char) user[i])) ? 1 : 0;
+			if(bchar) {break;}
+		}
+		if (bchar) {
+			printf(BLUE"[PROGRAM] You can't have a space or any punctuation in your username, please enter another : "RESET"\n");
+		}
+	} while(result > 16 || result < 4 || bchar);
 
-user[strlen(user)-1] = '\0';
-strcpy(General_Name, user);
+	user[strlen(user)-1] = '\0';
+	strcpy(General_Name, user);
 
-printf(BLUE"Your name is: "RED"%s"RESET"\n", General_Name);
+	printf(BLUE"Your name is: "RED"%s"RESET"\n", General_Name);
 
 }
 
@@ -396,19 +406,19 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 	char username[16];
 	int client_fd = 0;
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-	printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
-	return;
-} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
-printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
-return;
-}
-sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
-if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
-	printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
-	printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
-	return;
-}
-init_transfer(client_fd, readfds, fd_array, num_clients);
+		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+		return;
+	}
+	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
+	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
+		printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
+		return;
+	}
+	init_transfer(client_fd, readfds, fd_array, num_clients);
 }
 
 void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
@@ -421,67 +431,60 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	message *frame = (message *) malloc(sizeof(message));
 
 	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-	printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
-	free(frame);
+		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+		free(frame);
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
+		}
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on évite qu'il puisse écrire à l'infini
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+		free(frame);
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
+		}
+		return;
+
+	}
+
+	w=my_count_word(cmd); //compte le nombre d'arg après /msg
+
+	while(w>0) {
+		sscanf(cmd+i, "%s", username);
+		if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+			printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
+			printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
+			free(frame);
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
+			}
+			return;
+		}
+		cptfd++;
+		i+=strlen(username);
+		w--;
+	}
+	printf(BLUE"Enter your message :"RESET"\n");
+	fgets(msg, WRITE_SIZE, stdin);
+	normal_msg(frame, msg);
+	int fds;
+	for(cptfd--;cptfd>=0;cptfd--) {
+		fds = fd[cptfd];
+		send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
+	}
 
 	//on avertis l'ui si elle est connectee
 	if (userInterface_fd > 0 ) {
-		sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
+		char content[MSG_SIZE];
+		sprintf(content,"MESSAGECONFIRM %s %s\n",username,msg);
+		sendUiMsg(content,readfds,fd_array,num_clients);
 	}
 
-	return;
-
-} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
-printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
-free(frame);
-
-//on avertis l'ui si elle est connectee
-if (userInterface_fd > 0 ) {
-	sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
-}
-
-return;
-
-}
-
-w=my_count_word(cmd); //compte le nombre d'arg après /msg
-
-while(w>0) {
-	sscanf(cmd+i, "%s", username);
-	if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
-		printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
-		printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
-		free(frame);
-
-		//on avertis l'ui si elle est connectee
-		if (userInterface_fd > 0 ) {
-			sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
-		}
-
-		return;
-	}
-	cptfd++;
-	i+=strlen(username);
-	w--;
-}
-printf(BLUE"Enter your message :"RESET"\n");
-fgets(msg, WRITE_SIZE, stdin);
-normal_msg(frame, msg);
-int fds;
-for(cptfd--;cptfd>=0;cptfd--) {
-	fds = fd[cptfd];
-	send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
-}
-
-//on avertis l'ui si elle est connectee
-if (userInterface_fd > 0 ) {
-	char content[MSG_SIZE];
-	sprintf(content,"MESSAGECONFIRM %s %s\n",username,msg);
-	sendUiMsg(content,readfds,fd_array,num_clients);
-}
-
-free((*frame).msg_content);
-free(frame);
+	free((*frame).msg_content);
+	free(frame);
 }
 
 void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
