@@ -169,6 +169,8 @@ int login_client(message *msg_send, int *client_sockfd, client_data *fd_array, i
     FD_CLR(*client_sockfd, readfds);
 		((*waitlist).nb_connect)--;
 		(*waitlist).waiting[waiting_arr]=0;
+		free((*msg_send).msg_content);
+		free(msg_send);
     return -1;
 
   }
@@ -177,9 +179,10 @@ int login_client(message *msg_send, int *client_sockfd, client_data *fd_array, i
 int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, char *msg, waitList *waitlist) {
 
 	/* Fonction qui permet à un client de refuser une connextion d'un utilisateur distant. */
-	message *msg_send = (message *) malloc(sizeof(message));
+
 	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
+	int waiting_ind, waiting_arr;
 	char *posSpace = NULL;
 
 	if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
@@ -195,23 +198,34 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 		return -1;
 	}
 	client_name[strlen(client_name)-1] = '\0';
+	/* Aucune erreur, on alloue la mémoire */
+	message *msg_send = (message *) malloc(sizeof(message));
 
 	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
+
+	waiting_ind = search_client_waiting_array_by_fd(client_sockfd, fd_array, num_clients, *waitlist);
+	waiting_arr = search_waiting_array_by_fd(client_sockfd, *waitlist);
 
 	printf(BLUE"[PROGRAM] Session not established : you refused the connection with "RED"%s."RESET"\n", client_name);
   session_denied(msg_send, 2);
   send_msg(msg_send, &client_sockfd, readfds, fd_array, num_clients);
-  free((*msg_send).msg_content);
-  close(client_sockfd);
+	/* Suppression des paramètres pré-enregistrés si les index sont différents */
+	memset(fd_array[waiting_ind].address_client, '\0', sizeof(fd_array->address_client));
+	memset(fd_array[waiting_ind].name_client, '\0', sizeof(fd_array->name_client));
+	fd_array[waiting_ind].fd_client = 0;
+	close(client_sockfd);
   FD_CLR(client_sockfd, readfds);
-
+	((*waitlist).nb_connect)--;
+	(*waitlist).waiting[waiting_arr]=0;
+	free((*msg_send).msg_content);
+	free(msg_send);
 	return 0;
 }
 
 int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, char *msg, waitList *waitlist) {
 
 	/* Fonction qui permet à un client d'accepter une connextion d'un utilisateur distant. */
-	message *msg_send = (message *) malloc(sizeof(message));
+
 	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
 	char *posSpace = NULL;
@@ -231,6 +245,8 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 	client_name[strlen(client_name)-1] = '\0';
 
 	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
+	/* Aucune erreur, on alloue de la mémoire */
+	message *msg_send = (message *) malloc(sizeof(message));
 	//On lui demande de se logger
   if (login_client(msg_send, &client_sockfd, fd_array, num_clients, readfds, waitlist) != -1) {
     //On confirme la connection du client
@@ -370,7 +386,6 @@ int search_client_id_by_name(char *user, client_data *fd_array, int *num_clients
 
 	int i;
 	for(i=0; i<*num_clients; i++){
-		printf("i : %i\tName : %s\n", i, fd_array[i].name_client);
 		if(strcmp(user, fd_array[i].name_client) == 0)
 			return fd_array[i].id_client;
 	}
