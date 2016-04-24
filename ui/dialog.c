@@ -17,6 +17,43 @@ void quick_message(GtkWindow *parent, gchar *message){
  gtk_widget_show_all (dialog);
 }
 
+// Display a quick message
+void ask_connect(GtkWindow *parent, char *name,char * adress){
+ GtkWidget *dialog, *label, *content_area;
+ GtkDialogFlags flags;
+
+ char contenu[200];
+ char request[MSG_SIZE];
+
+ sprintf(contenu,"%s essaie de se connecter depuis l'adresse %s.",name,adress);
+
+ //Create the widgets
+ flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+ dialog = gtk_dialog_new_with_buttons (contenu,GTK_WINDOW(window),flags,"Accepter",1,"Refuser",0,NULL);
+ content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+ label = gtk_label_new(contenu);
+
+ //Add the label, and show everything we’ve added
+ gtk_container_add (GTK_CONTAINER (content_area), label);
+ gtk_widget_show_all (dialog);
+
+ int validorquit = 0;
+ int result;
+ while (validorquit == 0){
+   result = gtk_dialog_run(GTK_DIALOG(dialog));
+   printf("%d\n", result);
+   if (result == 1) {
+      validorquit = 1;
+      sprintf(request,"/accept %s\n",name);
+      sendRequest(request);
+    }else{
+      validorquit = 1;
+      sprintf(request,"/refuse %s\n",name);
+      sendRequest(request);
+    }
+  }
+  gtk_widget_destroy(dialog);
+}
 void show_widget(GtkWindow *parent, GtkWidget * widget){
   gtk_widget_set_visible(GTK_WIDGET(widget) , !gtk_widget_get_visible(GTK_WIDGET(widget)));
 }
@@ -167,13 +204,16 @@ void enter_adress(GtkWindow *parent){
       validorquit = 1;
 
       //Validation par flag
-      if (strlen(gtk_entry_get_text(GTK_ENTRY(entryName))) < 3){
+      if (strlen(gtk_entry_get_text(GTK_ENTRY(entryName))) < 3 || strlen(gtk_entry_get_text(GTK_ENTRY(entryName))) > 15){
+        quick_message(GTK_WINDOW(dialog),"Le nom doit être entre 3 et 15 caracteres.");
         validorquit = 0;
       }
       if (strlen(gtk_entry_get_text(GTK_ENTRY(entryAdress))) < 7){
+        quick_message(GTK_WINDOW(dialog),"Adresse invalide.");
         validorquit = 0;
       }
       if(atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) <= 0 || atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) >= 100000){
+        quick_message(GTK_WINDOW(dialog),"Le port doit être entre 0 et 100000");
         validorquit = 0;
       }
 

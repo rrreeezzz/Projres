@@ -64,7 +64,7 @@ void exitClient(int fd, fd_set *readfds, client_data *fd_array, int *num_clients
 		message *msg = (message *) malloc(sizeof(message));
 		char content[MSG_SIZE];
 		printf("%s\n",fd_array[fd].name_client);
-		sprintf(content,"DISCONNECTCONFIRM %s \n",fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
+		sprintf(content,"DISCONNECTCONFIRM %s\n",fd_array[search_client_array_by_fd(fd, fd_array, num_clients)].name_client);
 		normal_msg(msg,content);
 		send_msg(msg, &userInterface_fd ,readfds,fd_array,num_clients);
 		free((*msg).msg_content);
@@ -663,4 +663,3 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }
-

@@ -61,6 +61,7 @@ void on_deconnection(char * username){
 
 void on_connection_ask(char * username, char * adress){
   printf(BLUE"Demande de connection de la part de: "RED"%s"BLUE" à l'adresse "RED"%s"RESET"\n",username,adress);
+  ask_connect(GTK_WINDOW(window),username,adress);
 }
 
 void on_connection_confirm(char * username){
@@ -70,14 +71,34 @@ void on_connection_confirm(char * username){
 //Mise a jour de des connections
 void on_connection_list_update(int length){
     printf(BLUE"Mise a jour de la liste des connections: %d elements."RESET"\n",length );
+    int i;
+    for (i = 0; i < MAXTABS; i++) {
+      tabs[i].flag = 0;
+      return;
+    }
 }
 
 void on_connection_list_iteration(char * username){
   printf(BLUE"Connection: "RED"%s"RESET"\n",username);
+  int i;
+  for (i = 0; i < MAXTABS; i++) {
+    if ( tabs[i].name!=NULL && strcmp(tabs[i].name,username) == 0) {
+      tabs[i].flag = 1;
+      return;
+    }
+  }
+  addTab(username);
 }
 
 void on_connection_list_end(){
   printf(BLUE"Fin de mise a jour de la liste des connections !"RESET"\n");
+  int i;
+  for (i = 0; i < MAXTABS; i++) {
+    if (tabs[i].flag == 0 && tabs[i].name != NULL){
+      printf(GREEN"contact %s\n"RESET, tabs[i].name);
+      return;
+    }
+  }
 }
 
 /*
