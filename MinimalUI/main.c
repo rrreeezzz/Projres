@@ -6,145 +6,127 @@
 
 #include "main.h"
 #include "utilities.h"
-
-/*
-* Messages possibles
-*/
-//message normal
-void normal_msg(message *segment, char *data) {
-	/*Fonction qui permet d'envoyer un message*/
-	(*segment).code = 100;
-	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s", data);
-}
-//deconnection
-void session_end(message *segment) {
-	/*Fonction pour envoyer fin de connection*/
-	(*segment).code = 303;
-	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s", General_Name);
-	(*segment).length = strlen((*segment).msg_content);
-}
-
+#include "message.h"
+#include "protocol.h"
 
 /*
 * Envoi de donnees
 */
-void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
-
-	/*Fonction qui concatène et envois les trames*/
-
+void send_msg(message *segment) {
 	(*segment).temps = time(NULL);
 	char msg[MSG_SIZE];
 
 	sprintf(msg, "%d/%d/%d/", (*segment).code, (*segment).length, (int) (*segment).temps);
-	//printf("msg envoyé : %s\n", msg); //pour debug
-	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
+	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);
 
-	if (write(*fd, msg, MSG_SIZE) <= 0) {
+	if (write(fdClientPrincipal, msg, MSG_SIZE) <= 0) {
 		perror("Write error");
-		exitClient(*fd, readfds, fd_array, num_clients);
+		close(fdClientPrincipal);
+		exit(EXIT_FAILURE);
 	}
 }
 
 /*
-* Parseur
+* Envoi d'un message normal
 */
-int protocol_parser(char *msg, message *msg_rcv) {
-
-	/*Fonction qui se charge de séparer les différents champs de la trame reçu*/
-
-	char * sep = NULL;
-	char code[3], length[WRITE_SIZE], send_time[WRITE_SIZE];
-	(*msg_rcv).msg_content = malloc(WRITE_SIZE);
-
-	if(sscanf(msg, "%[^/]/%[^/]/%[^/]/", code, length, send_time) == 3){
-		(*msg_rcv).code = atoi(code);
-		(*msg_rcv).length = atoi(length);
-		(*msg_rcv).temps = (time_t) atoi(send_time);
-		sep=strchr(msg,'/'); //
-		sep=strchr(sep+1,'/'); //
-		sep=strchr(sep+1,'/'); // Pour se mettre après le dernier / pour memcpy le content
-		memcpy((*msg_rcv).msg_content, sep+1, WRITE_SIZE); //50
-		return 0;
-	}
-	return -1;
+void sendRequest(char * content) {
+	message *msg = (message *) malloc(sizeof(message));
+	normal_msg(msg,content);
+	send_msg(msg);
+	free((*msg).msg_content);
+	free(msg);
 }
 
-void routine_client(int fdClient){
+void traiterRequete() {
 
-	struct sockaddr_in client_address;
-	int addresslen = sizeof(struct sockaddr_in);
-	client_data fd_array[1]; //tableau de data client
+	char msg[MSG_SIZE];
+	int  result;
+
+	memset(msg, '\0', MSG_SIZE);
+
+	if ((result = read(fdClientPrincipal, msg, MSG_SIZE)) > 0) { /* Une requête en attente sur le descripteur fd */
+		//printf("msg recu : %s\n", msg); //pour debug
+		rechercheProtocol(msg);
+	} else {
+		close(fdClientPrincipal);
+		exit(EXIT_FAILURE);
+	}
+
+}
+
+int routine_client(){
+
 	fd_set readfds, testfds;
-	int maxfds;
-	char client_inaddr[INET_ADDRSTRLEN];
-	message *msg = (message *) malloc(sizeof(message));
+	message *mesge = (message *) malloc(sizeof(message));
+	char msg[WRITE_SIZE];
+	struct sockaddr_in address;
 
 	FD_ZERO(&readfds);
-	FD_SET(*server_sockfd, &readfds);
 	FD_SET(0, &readfds);  /* On ajoute le clavier au file descriptor set */
 
   //Connection au client
-  int sock_host;
-  struct hostent *hostinfo;
-  struct sockaddr_in address;
-
-  sock_host = socket(AF_INET, SOCK_STREAM, 0);
+  fdClientPrincipal = socket(AF_INET, SOCK_STREAM, 0);
 
   address.sin_addr.s_addr = inet_addr(adresseClientPrincipal);
   address.sin_family = AF_INET;
   address.sin_port = htons(portClientPrincipal);
 
   //Tentative de connection
-  if (connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0){
+  if (connect(fdClientPrincipal, (struct sockaddr *)&address, sizeof(address)) < 0){
     return -1;
   }
 
-  //Recuperation du nom
+	//Envoi du nom dans un message session-initiate
+	session_initiate(mesge);
+	send_msg(mesge);
+	free((*mesge).msg_content);
 
-  //Ajout au fd_read
+  //Recuperation du nom, et de la confrirmation de connection
+	if (read(fdClientPrincipal, msg, MSG_SIZE) < 0){
+		return -1;
+	}
+	protocol_parser(msg,mesge);
+	if (mesge->code != 201){
+		return -1;
+	}
+	strncpy(General_Name,(*mesge).msg_content,strlen((*mesge).msg_content));
+	free((*mesge).msg_content);
+
+	//confirmation de la connection
+	session_confirmed(mesge); //on crée le message de session-accept-2
+	send_msg(mesge);
+	free((*mesge).msg_content);
+
+
+  //Ajout au readfds
+	FD_SET(fdClientPrincipal, &readfds);
 
 	/*  Attente de requetes */
-	while (*server_sockfd != -1) {
+	while (1) {
 		testfds = readfds;
 		//printf("maxfds : %i\n", maxfds); //debug
-		if(select(maxfds+1, &testfds, NULL, NULL, NULL) < 0) {
+		if(select(fdClientPrincipal+1, &testfds, NULL, NULL, NULL) < 0) {
 			perror("Select");
 			exit(EXIT_FAILURE);
 		}
 
-		/* Il y a une activité, on cherche sur quel descripteur grâce à FD_ISSET */
-		for (fd=0; fd<maxfds+1; fd++) {
-			if (FD_ISSET(fd, &testfds)) {
-				if (fd == 0) {  //Activite sur le clavier
-
-
-
-				} else if (fdClient == fd) {  // Retour de commandes
-
-
-
-
-        }//if fd ==
-	    }//if FD_ISSET
-	  }//for
+		if (FD_ISSET(0, &testfds)) {
+			fgets(msg, WRITE_SIZE, stdin);
+			sendRequest(msg);
+		}
+		if (FD_ISSET(fdClientPrincipal, &testfds)) {
+			traiterRequete();
+		}
 	}//while
 }
 
 
 int main(int argc, char *argv[]) {
-	int fdClient;
 
-  adresseClientPrincipal = "127.0.0.1";
-  portClientPrincipal = "40190";
+  strcpy(adresseClientPrincipal,"127.0.0.1");
+  portClientPrincipal = 54942;
 
-  if ( (fdClient = connectClient()) > 0){
-    routine_server(fdClient);
-  } else {
-    printf("Impossible de se connecter.\n");
-  }
-
+  routine_client();
 
 	exit(EXIT_SUCCESS);
 }

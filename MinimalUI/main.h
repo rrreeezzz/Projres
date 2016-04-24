@@ -6,11 +6,20 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <time.h>
+
+#define WRITE_SIZE 1000
+#define MSG_SIZE WRITE_SIZE+25
+#define MAX_SIZE_PORT 5
+#define MIN_SIZE_USERNAME 4
+#define MAX_SIZE_USERNAME 16
+#define MAX_SIZE_ADDRESS 22
 
 char General_Name[MAX_SIZE_USERNAME];
 char adresseClientPrincipal[16];
 int portClientPrincipal;
+int fdClientPrincipal;
 
 typedef struct {
   int code;
