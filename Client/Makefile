@@ -1,4 +1,4 @@
-CFLAGS=-Wall -g -lpthread
+CFLAGS=-Wall -g -lpthread -lopenal -lsndfile
 
 all: client clean
 
@@ -11,7 +11,9 @@ client: message.h message.c protocole.h protocole.c client.c client_function.h c
 	gcc -c client.c
 	gcc -c transfert.c
 	gcc -c online.c
-	gcc -Wall -g -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o ${CFLAGS}
+	g++ -c OpenAL_capture.cpp
+	g++ -c OpenAL_lecture.cpp
+	g++ -Wall -g -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o OpenAL_capture.o OpenAL_lecture.o ${CFLAGS}
 
 clean:
 	rm -rf *.o

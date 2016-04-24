@@ -106,7 +106,7 @@ void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_d
 
   if(pthread_create(&pid_transfer, NULL, file_transfer, (void *) &data) != 0){
     perror("Probleme avec pthread_create");
-    exit(EXIT_FAILURE); // A voir ce qu'on fait ?!;;/:?;:!;:???
+    exit(EXIT_FAILURE); // A voir ce qu'on fait ?!
   }
 }
 
@@ -116,7 +116,7 @@ void * file_transfer(void *arg) {
   int file_fd;
   int client_sockfd;
   char filename[256];
-  char buffer[WRITE_SIZE];  //50
+  char buffer[WRITE_SIZE];
   fd_set *readfds;
   client_data *fd_array;
   int *num_clients;
@@ -133,12 +133,11 @@ void * file_transfer(void *arg) {
   fd_array = data->fd_array;
   num_clients = data->num_clients;
 
-  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { //50
+  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { 
    	transfer_msg(msg, buffer, n);
    	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
-   	memset(buffer, '\0', WRITE_SIZE);  //50
+   	memset(buffer, '\0', WRITE_SIZE); 
    	//usleep(100);
-
   }
 
   usleep(100); //Au cazouuu
@@ -146,6 +145,70 @@ void * file_transfer(void *arg) {
   send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
   printf(BLUE"Transfer of file "RED"%s "BLUE"succeed"RESET"\n", filename); // rajouter le nom à qui on a envoyé
+  close(file_fd);
+  free((*msg).msg_content);
+  pthread_exit(NULL);
+}
+
+
+void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+  int file_fd = 0;
+  paramThread data;
+
+  if ((file_fd = open("vocal.wav", O_RDONLY)) < 0) {
+    printf("Using vocal message failed\n");
+    return;
+  }
+  
+  //On remplit la structure
+  data.file_fd = file_fd;
+  data.client_sockfd = client_sockfd;
+  data.readfds = readfds;
+  data.fd_array = fd_array;
+  data.num_clients = num_clients;
+
+  if(pthread_create(&pid_transfer, NULL, vocal_transfer, (void *) &data) != 0){
+    perror("Probleme avec pthread_create");
+    exit(EXIT_FAILURE); // A voir ce qu'on fait ?!
+  }
+}
+
+void * vocal_transfer(void *arg) {
+  //On récupère la structure
+  paramThread * data = (paramThread*) arg;
+  int file_fd;
+  int client_sockfd;
+  char buffer[WRITE_SIZE]; 
+  fd_set *readfds;
+  client_data *fd_array;
+  int *num_clients;
+  int n=0;
+
+  message *msg = (message *) malloc(sizeof(message));
+
+  //On recupere les donnees de la structure
+  file_fd = data->file_fd;
+  client_sockfd = data->client_sockfd;
+  readfds = data->readfds;
+  fd_array = data->fd_array;
+  num_clients = data->num_clients;
+
+  vocal_begin(msg);
+  send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+  usleep(500); //Au cazou
+  
+
+  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { 
+   	vocal_msg(msg, buffer, n);
+   	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+   	memset(buffer, '\0', WRITE_SIZE); 
+   	//usleep(100);
+	
+  }
+
+  usleep(100); //Au cazouuu
+  vocal_end(msg);
+  send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
   close(file_fd);
   free((*msg).msg_content);

@@ -52,8 +52,8 @@ int protocol_parser(char *msg, message *msg_rcv) {
 void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist) { //les erreurs de cmd seront gérées côté client et la cmd help aussi !!!!!!!
 
 	/*Fonction qui va, en fonction du type de message reçu, appliquer la bonne opération dessus*/
-	static int file_fd = -1;
-	int tab[2];
+
+	char buffer[50];
 	char filename[256];
 
 	message *msg_send = (message *) malloc(sizeof(message));
@@ -93,7 +93,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 102 : données de transfert de fichier
 			case 102:
-			if(write(file_fd, msg_rcv->msg_content, msg_rcv->length)<0);
+			if(write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length)<0);
 			// gestion erreur ?!!!!!!!!!! a faire
 			break;
 
@@ -164,8 +164,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
     	// 203 : TRANSFER_INITIATE
       case 203:
-			printf("TRANS INIT data : %s\n", msg_rcv->msg_content); // POUR DEBUG
-      if((file_fd = ask_transfer(msg_rcv, filename)) < 0){
+	  if((fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = ask_transfer(msg_rcv, filename)) < 0){
 				transfer_refused(msg_send);
 			} else {
 				transfer_accept(msg_send, filename);
@@ -243,8 +242,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			//308 : TRANSFER_END
 			case 308:
 			printf(BLUE"Transfer of file "RED"%s"BLUE" succeed"RESET"\n", (*msg_rcv).msg_content);
-			close(file_fd);
-			file_fd = -1;
+			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
 			break;
 
 			case 403:
@@ -255,6 +253,22 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché n'existe pas dans la base de données."RESET"\n");
 			break;
 
+			case 500:
+			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal = open(buffer, O_CREAT | O_TRUNC | O_WRONLY, 0755);
+			break;
+
+			case 501:
+			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal, msg_rcv->msg_content, msg_rcv->length);
+			break;
+
+			case 502:
+			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal);
+			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+			printf("[%s] VOCAL MESSAGE", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
+			main_lecture(buffer);
+			break;
+			
 			default:
 			break;
 		}
