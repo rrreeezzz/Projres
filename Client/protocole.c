@@ -77,7 +77,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 100:
 			if (search_client_ready_by_fd(*client_sockfd, fd_array, num_clients) != -1){//on regarde si le client est ready (session-initiate et session_accept passées)
 				/*A CHANGER, TEMPORAIRE*/
-				printf(BLUE"["RED"%s"BLUE"] %s"RESET, fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
+				printf("[%s] %s", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client, (*msg_rcv).msg_content);
 				//on avertis l'ui si elle est connectee
 				if (userInterface_fd > 0 ) {
 					char content[MSG_SIZE];
@@ -85,7 +85,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 					sendUiMsg(content,readfds,fd_array,num_clients);
 				}
 			} else {
-				printf("[PROGRAM] %s not ready for communication\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
+				printf(BLUE"[PROGRAM] "RED"%s"BLUE" not ready for communication"RESET"\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			}
 			break;
 
@@ -106,7 +106,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
 				printf(BLUE"\n[PROGRAM] A user interface at the adress "RED"%s"BLUE" is trying to establish a connection with you. It can control the program if you accept. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
 			} else {
-				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%s"BLUE"\" or \"/refuse "RED"%s"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, (*msg_rcv).msg_content, (*msg_rcv).msg_content);
 
 				//on avertis l'ui si elle est connectee
 				if (userInterface_fd > 0 ) {
@@ -116,6 +116,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				}
 
 			}
+			fd_array[*num_clients+(*waitlist).nb_connect].fd_client = *client_sockfd;
 			strcpy(fd_array[*num_clients+(*waitlist).nb_connect].name_client, (*msg_rcv).msg_content);
 			break;
 
@@ -128,7 +129,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 				free((*msg_send).msg_content);
 				client_ready(*client_sockfd, fd_array, num_clients);
 				if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
-					printf(BLUE "A user interface is now connected, you will see all its activities from here.\n\n");
+					printf(BLUE "A user interface is now connected, you will see all its activities from here."RESET"\n\n");
 					userInterface_fd=*client_sockfd;
 				} else {
 					printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);
@@ -147,7 +148,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 202:
 			client_ready(*client_sockfd, fd_array, num_clients);
 			if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
-				printf(BLUE "A user interface is now connected, you will see all its activities from here.\n\n");
+				printf(BLUE "A user interface is now connected, you will see all its activities from here."RESET"\n\n");
 				userInterface_fd=*client_sockfd;
 			} else {
 				printf(BLUE "You are now in communication with : "RED"%s" RESET "\n\n", (*msg_rcv).msg_content);

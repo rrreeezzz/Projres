@@ -10,16 +10,26 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 	if(user == NULL){
 		while(strlen(hostname) == 0 || *port == -1){
 			fgets(hostname, 256, stdin);
+
+			if(strcmp(hostname, "/quit\n") == 0) {
+				printf(BLUE"\n [PROGRAM] Getting out of connection routine."RESET"\n");
+				break;
+			}
+			if(strlen(hostname) > MAX_SIZE_ADDRESS || !isdigit(hostname[0])) {
+				printf(BLUE"\n [PROGRAM] -----Please enter correct address-----"RESET"\n");
+				continue;
+			}
 			if((posPort = strchr(hostname, ' ')) != NULL){
 				*port = (int) strtol(posPort, NULL, 10);
-				if(*port <= 0 || *port >= 100000)
+				if(*port <= 0 || *port >= 100000 || ((strncmp(hostname, "0.0.0.0", 7) == 0) && *port == General_Port))
 				*port = -1;
-			}else if((posPort = strchr(hostname, ':')) != NULL){
+			} else if ((posPort = strchr(hostname, ':')) != NULL){
 				*port = (int) strtol(posPort+1, NULL, 10);
-				if(*port <= 0 || *port >= 100000)
+				if(*port <= 0 || *port >= 100000 || ((strncmp(hostname, "0.0.0.0", 7) == 0) && *port == General_Port))
 				*port = -1;
-			}else if(posPort == NULL || *port == -1){
-				printf(BLUE"\n-----Please enter correct address-----"RESET"\n");
+			}
+			if(posPort == NULL || *port == -1){
+				printf(BLUE"\n [PROGRAM] -----Please enter correct address-----"RESET"\n");
 				continue;
 			}
 
@@ -29,7 +39,8 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 			if((hostinfo = gethostbyname(temp)) == NULL)
 			memset(hostname, 0, sizeof (hostname));
 		}
-	}else{
+	} else {
+
 		posPort = strchr(user->address, ':');
 		*port = (int) strtol(posPort+1, NULL, 10);
 		strncpy(temp, user->address, ((int) strlen(user->address) - (int) strlen(posPort)));
@@ -167,20 +178,27 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 
 	/* Fonction qui permet à un client de refuser une connextion d'un utilisateur distant. */
 	message *msg_send = (message *) malloc(sizeof(message));
+	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
 	char *posSpace = NULL;
 
-	if((posSpace = strchr(msg, ' ')) == NULL) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/accept fd\" as described previously."RESET"\n");
-    return -1;
-  }
-
-	if((client_sockfd = atoi(posSpace)) == 0){
-		printf(BLUE"[PROGRAM] Error command."RESET"\n");
+	if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
 		return -1;
 	}
+	if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+    return -1;
+  }
+	if(strcpy(client_name, posSpace+1) == NULL) {
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+		return -1;
+	}
+	client_name[strlen(client_name)-1] = '\0';
 
-	printf(BLUE"[PROGRAM] Session not established : you refused the connection with "RED"%s."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].msg_rcv->msg_content);
+	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
+
+	printf(BLUE"[PROGRAM] Session not established : you refused the connection with "RED"%s."RESET"\n", client_name);
   session_denied(msg_send, 2);
   send_msg(msg_send, &client_sockfd, readfds, fd_array, num_clients);
   free((*msg_send).msg_content);
@@ -194,19 +212,25 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 
 	/* Fonction qui permet à un client d'accepter une connextion d'un utilisateur distant. */
 	message *msg_send = (message *) malloc(sizeof(message));
+	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
 	char *posSpace = NULL;
 
-	if((posSpace = strchr(msg, ' ')) == NULL) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/accept fd\" as described previously."RESET"\n");
-    return -1;
-  }
-
-	if((client_sockfd = atoi(posSpace)) == 0){
-		printf(BLUE"[PROGRAM] Error command."RESET"\n");
+	if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
 		return -1;
 	}
+	if((posSpace = strchr(msg, ' ')) == NULL) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+    return -1;
+  }
+	if(strcpy(client_name, posSpace+1) == NULL) {
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+		return -1;
+	}
+	client_name[strlen(client_name)-1] = '\0';
 
+	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
 	//On lui demande de se logger
   if (login_client(msg_send, &client_sockfd, fd_array, num_clients, readfds, waitlist) != -1) {
     //On confirme la connection du client
@@ -287,6 +311,19 @@ int search_client_waiting_array_by_fd(int fd, client_data *fd_array, int *num_cl
 	for(i=0; i <= *num_clients+waitlist.nb_connect; i++){
 		if(fd == fd_array[i].fd_client)
 			return i;
+	}
+	return -1;
+}
+
+int search_client_waiting_fd_by_name(char *user, client_data *fd_array, int *num_clients, waitList waitlist) {
+
+/*Fonction qui prend un file descriptor et renvoie l'indice dans fd_array correspondant au client en attente s'il existe*/
+
+	int i;
+	for(i=0; i <= *num_clients+waitlist.nb_connect; i++){
+		if(strcmp(user, fd_array[i].name_client) == 0) {
+			return fd_array[i].fd_client;
+		}
 	}
 	return -1;
 }

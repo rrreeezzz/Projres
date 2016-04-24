@@ -173,7 +173,8 @@ int * init_server(){
 	if (bind(*server_sockfd, (struct sockaddr *)&server_address, addresslen) < 0) { perror("bind"); exit(EXIT_FAILURE); }
 	if (getsockname(*server_sockfd, (struct sockaddr *)&server_address, (socklen_t *)&addresslen) < 0) { perror("getsockname"); exit(EXIT_FAILURE); }
 
-	printf(BLUE"\n*** Connections available on port : "RED"%d"BLUE" ***"RESET"\n", ntohs(server_address.sin_port));
+	General_Port = ntohs(server_address.sin_port);
+	printf(BLUE"\n*** Connections available on port : "RED"%d"BLUE" ***"RESET"\n", General_Port);
 
 	return server_sockfd;
 }
@@ -301,7 +302,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		//On parse le message
 		if(protocol_parser(buffer, msg_rcv) == -1){
 			free(msg_rcv);
-			printf(GREEN"Error parsing the message\n"RESET);
+			printf(GREEN"Error parsing the message"RESET"\n");
 			return ;
 		}
 
@@ -339,7 +340,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 	//printf(CYAN"%s\n"RESET,msg );
 
 	if(NULL == strchr(msg, '\n')){
-		printf("[PROGRAM] : Message too long, max is %d caracters.\n", WRITE_SIZE);
+		printf(BLUE"[PROGRAM] : Message too long, max is "RED"%d"BLUE" caracters."RESET"\n", WRITE_SIZE);
 		while((ch = getchar()) != '\n'){
 			if(ch < 0) {
 				perror("Erreur taille message");
@@ -355,9 +356,9 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
 		} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
 			connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
-		} else if (strncmp(msg, "/accept", 7)==0){ // /accept fd
+		} else if (strncmp(msg, "/accept", 7)==0){ // /accept username
 			connect_accept(fd_array, num_clients, readfds, msg, waitlist);
-		} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse fd
+		} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse username
 			connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
 		} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
 			disconnect(maxfds, readfds, num_clients, fd_array, msg);

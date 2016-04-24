@@ -38,6 +38,7 @@ extern int search_client_ready_by_fd(int fd, client_data *fd_array, int *num_cli
 extern int search_client_fd_by_name(char *user, client_data *fd_array, int *num_clients);
 extern char * search_client_address_by_name(char *user, client_data *fd_array, int *num_clients);
 extern int search_client_waiting_array_by_fd(int fd, client_data *fd_array, int *num_clients, waitList waitlist);
+extern int search_client_waiting_fd_by_name(char *user, client_data *fd_array, int *num_clients, waitList waitlist);
 extern int search_waiting_array_by_fd(int fd, waitList waitlist);
 
 #endif
