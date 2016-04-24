@@ -394,7 +394,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv();
 		} else if (strncmp(msg, "/vocal", 6)==0){
-			slash_vocal(msg, readfds, fd_array, num_client
+			slash_vocal(msg, readfds, fd_array, num_clients);
 		} else {
 			if(*num_clients > 0) {
 				slash_all(1, msg, readfds, fd_array, num_clients);
