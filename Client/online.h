@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <ifaddrs.h>
 
 #include "message.h"
 #include "protocole.h"
