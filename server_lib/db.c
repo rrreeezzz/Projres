@@ -89,6 +89,9 @@ int exist_user_mysql(char *name){
   char operation[REQUEST_SIZE]; //mettre un define
   int nb;
 
+  if(NULL != strchr(name, '\''))
+    return NEXIST;
+
   sprintf(operation, "SELECT COUNT(*) FROM user WHERE NAME = '%s'", name); //cette commande ne donne qu'une colonne, avec un champ 1 si trouvé 0 sinon
 
   if(mysql_query(db, operation))
