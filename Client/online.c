@@ -106,3 +106,36 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   close(online);
   return 0;
 }
+
+int erase_serv(){
+
+  online = 0;
+
+  char msg[MSG_SIZE];
+  char temp[MSG_SIZE];
+  struct sockaddr_in info_online;
+  time_t tps = time(NULL);
+
+  info_online.sin_family = AF_INET;
+  inet_aton("0.0.0.0", (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
+  info_online.sin_port = htons(40000); //port par defaut du serveur
+
+  online = socket(AF_INET, SOCK_STREAM, 0);
+  /* Connection au serveur annuaire */
+  if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
+    perror("Erreur de connection, le serveur ne semble pas être en ligne");
+    return -1;
+  }
+
+  sprintf(temp, "FROM:%s", General_Name);
+  sprintf(msg, "404/%d/%zd/%s/END", (int) tps, strlen(temp), temp);
+
+  if(write(online, msg, MSG_SIZE) <= 0){
+    perror("Erreur write serveur annuaire");
+    return -1;
+  }
+
+  printf(BLUE"[PROGRAM] : You has been erased from the database."RESET"\n");
+  close(online);
+  return 0;
+}

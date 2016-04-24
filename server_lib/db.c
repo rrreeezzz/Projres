@@ -225,17 +225,18 @@ int del_user_mysql(char *data){
 
   char operation[REQUEST_SIZE]; //mettre un define
   char name[MAX_SIZE_PARAMETER];
-  char ip[MAX_SIZE_PARAMETER];
 
-  sscanf(data, "FROM:%sIP:%s", name, ip);
+  sscanf(data, "FROM:%s", name);
 
-  if(exist_user_mysql(name))
+  if(!exist_user_mysql(name))
   return -1;
 
-  sprintf(operation, "DELETE FROM user WHERE NAME='%s' AND IP='%s'", name, ip);
+  sprintf(operation, "DELETE FROM user WHERE NAME='%s'", name);
 
   if (mysql_query(db, operation))
   error_mysql();
+
+  printf("\e[1;33m[SERVER]\e[0m %s s'est effacé de la base de donnée.\n", name);
 
   return 0;
 
