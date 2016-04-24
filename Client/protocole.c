@@ -263,12 +263,12 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 
 			case 502:
+            sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+			printf("[%s] VOCAL MESSAGE\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal);
-			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
-			printf("[%s] VOCAL MESSAGE", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			main_lecture(buffer);
 			break;
-			
+
 			default:
 			break;
 		}

@@ -410,13 +410,13 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 	char username[16];
 	int client_fd = 0;
 	if (strlen(cmd) < 11) { //11 car strlen("/vocal \n") = 8, et name entre 3 et 16 char, donc 11 minimum
-		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+		printf(BLUE"[PROGRAM] Wrong argument : /vocal name"RESET"\n");
 		return;
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		return;
 	}
-	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
+	sscanf(cmd+7, "%s", username); // +7 car cmd+7 correspond aux arguments (noms d'utilisateurs)
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
 		printf(BLUE"[PROGRAM] /vocal aborted"RESET"\n");
@@ -429,8 +429,8 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];
 	int client_fd = 0;
-	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+	if (strlen(cmd) < 12) { //12 car strlen("/transfer \n") = 12, et name entre 3 et 16 char, donc 12 minimum
+		printf(BLUE"[PROGRAM] Wrong argument : /transfer name"RESET"\n");
 		return;
 	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
@@ -439,7 +439,7 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
-		printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
+		printf(BLUE"[PROGRAM] /transfer aborted"RESET"\n");
 		return;
 	}
 	init_transfer(client_fd, readfds, fd_array, num_clients);
@@ -460,7 +460,7 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	message *frame = (message *) malloc(sizeof(message));
 
 	if (strlen(cmd) < 10) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf(BLUE"[PROGRAM] Wrong arguments. Please use \"/msg username message\", length of name must be between 3 and 16"RESET"\n");
+		printf(BLUE"[PROGRAM] Wrong arguments. Please use \"/msg username message\""RESET"\n");
 		free(frame);
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
@@ -477,11 +477,11 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 		return;
 	}
 	if((posSpace = strchr(cmd, ' ')) == NULL) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\" as described previously."RESET"\n");
+    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\""RESET"\n");
     return;
   }
 	if(strcpy(data, posSpace+1) == NULL) {
-		printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\" as described previously."RESET"\n");
+		printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\""RESET"\n");
 		return;
 	}
 
@@ -497,7 +497,7 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 
 	/* Vérification de la syntaxe de la commande */
   if(!isalpha(contact_data[0][0]) || strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
+    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\""RESET"\n");
     //on avertis l'ui si elle est connectee
     if (userInterface_fd > 0) {
       sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
@@ -663,3 +663,4 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }
+
