@@ -4,27 +4,31 @@
 *  pour communiquer avec le protocole applicatif
 */
 
-#include "main.h"
-#include "utilities.h"
-#include "message.h"
-#include "protocol.h"
-#include "basicCommunication.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+// Fonctions.h contient les differentes fonctions lies aux evenements du serveur
+#include "fonctions.h"
+
+// Librairie
+#include "lib/minimalUI.h"
 
 int main(int argc, char *argv[]) {
 
+	//On rentre l'adresse et le port
   strcpy(adresseClientPrincipal,"127.0.0.1");
-  portClientPrincipal = 55275;
+  portClientPrincipal = 55567;
 
+	//On tente de se connecter
 	if (connect_client() < 0){
 		perror("Impossible to reach the server");
 		exit(EXIT_FAILURE);
 	} else {
-		printf(BLUE"Connection Succes!\n"RESET);
+		printf("Connection Succes!\n");
 	}
 
-
-
+	//On execute la routine du client
   while ( routine_client() == 0) {}
 
 	exit(EXIT_SUCCESS);

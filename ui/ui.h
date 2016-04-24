@@ -37,12 +37,21 @@ typedef struct onglet {
 //Pour afficher les clients du carnet
 typedef struct clientData {
   char * name;
-  char * adress;
-  int port;
 } clientData;
 
 onglet tabs[MAXTABS];
 clientData clientsArray[MAXCONTACTS];
+
+int routine_client();
+int connect_client();
+int sendRequest(char * content);
+
+#define WRITE_SIZE 1000
+#define MSG_SIZE WRITE_SIZE+25
+#define MAX_SIZE_PORT 5
+#define MIN_SIZE_USERNAME 4
+#define MAX_SIZE_USERNAME 16
+#define MAX_SIZE_ADDRESS 22
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -51,4 +60,9 @@ clientData clientsArray[MAXCONTACTS];
 #include <unistd.h>
 #include "tabManagement.c"
 #include "dialog.c"
-#include "communication.c"
+
+// Fonctions.h contient les differentes fonctions lies aux evenements du serveur
+#include "fonctions.h"
+
+// Librairie
+#include "MinimalUI/lib/minimalUI.h"

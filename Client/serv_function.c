@@ -313,6 +313,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 	if(protocol_parser(buffer, msg_rcv) == -1){
 		free(msg_rcv);
 		printf(GREEN"Error parsing the message"RESET"\n");
+		exitClient(userInterface_fd, readfds, fd_array, num_clients);
 		return ;
 	}
 

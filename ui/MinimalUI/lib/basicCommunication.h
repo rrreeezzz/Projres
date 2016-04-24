@@ -82,7 +82,7 @@ int traiterRequete() {
 
 int connect_client(){
     message mesge;
-  	char msg[MSG_SIZE];
+  	char msg[WRITE_SIZE];
   	struct sockaddr_in address;
 
     //Creation socket client
@@ -114,7 +114,7 @@ int connect_client(){
   	protocol_parser(msg,&mesge);
   	if (mesge.code != 201){
       free(mesge.msg_content);
-      printf("Acceptation Error\n" );
+      printf("Connection refused\n" );
   		return -1;
   	}
   	strncpy(General_Name,mesge.msg_content,mesge.length);
@@ -122,7 +122,7 @@ int connect_client(){
 
   	//confirmation de la connection
     if (sendConfirmation() < 0){
-      printf("Confimration Error\n" );
+      printf("Confirmation Error\n" );
   		return -1;
     }
 
@@ -141,7 +141,6 @@ int connect_client(){
 * 1 => deconnection normale
 */
 int routine_client(){
-  char msg[WRITE_SIZE];
   fd_set testfds;
 
 	testfds = readfds;
@@ -153,10 +152,12 @@ int routine_client(){
 	}
 
   //Activitee du clavier
+	/*
 	if (FD_ISSET(0, &testfds)) {
 		fgets(msg, WRITE_SIZE, stdin);
 		sendRequest(msg);
 	}
+	*/
 
   //Retour de l'ui
 	if (FD_ISSET(fdClientPrincipal, &testfds)) {

@@ -35,14 +35,14 @@ void show_widget(GtkWindow *parent, GtkWidget * widget){
 }
 
 //Entrer une adresse
-void connect_client(GtkWindow *parent){
+void connect_client_dialog(GtkWindow *parent){
  GtkWidget *dialog,*labelAdress,*labelPort,*content_area,*entryAdress,*entryPort,*buttonAddr,*buttonPort;
  GtkDialogFlags flags;
  char port[10];
 
  //Create the widgets
  flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
- dialog = gtk_dialog_new_with_buttons ("Connection au client",GTK_WINDOW(window),flags,"OK",1,"DEFAULT",0,NULL);
+ dialog = gtk_dialog_new_with_buttons ("Connection au client",GTK_WINDOW(window),flags,"OK",1,"CANCEL",0,NULL);
  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 
  //Create labels
@@ -112,8 +112,7 @@ void connect_client(GtkWindow *parent){
       }
       break;
     case 0:
-      memcpy(adresseClientPrincipal,DEFAULTADRESS,strlen(DEFAULTADRESS));
-      portClientPrincipal = DEFAULTPORT;
+      exit(EXIT_SUCCESS);
     default:
         validorquit = 1;
         break;
@@ -123,7 +122,7 @@ void connect_client(GtkWindow *parent){
       portClientPrincipal
     );
     //Si on arrive pas a se connecter
-    if ((fdPrincipal = connectClient()) < 0){
+    if ((fdPrincipal = connect_client()) < 0){
       validorquit = 0;
       quick_message(GTK_WINDOW(parent), "Impossible de se connecter, veuillez réessayer.");
       printf("Erreur de connection\n");
@@ -186,12 +185,13 @@ void enter_adress(GtkWindow *parent){
 
       //Si valide on ajoute un contact
       if (validorquit == 1){
+          char request[MSG_SIZE];
+          sprintf( request,"/add %s %s:%d",gtk_entry_get_text(GTK_ENTRY(entryName)),gtk_entry_get_text(GTK_ENTRY(entryAdress)),atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) );
+          sendRequest(request);
+
+          /*
           int idClient = opt_client();
           clientsArray[idClient].name = malloc(16*sizeof(char));
-          strcpy(clientsArray[idClient].name,gtk_entry_get_text(GTK_ENTRY(entryName)));
-          clientsArray[idClient].adress = malloc(16*sizeof(char));
-          strcpy(clientsArray[idClient].adress,gtk_entry_get_text(GTK_ENTRY(entryAdress)));
-          clientsArray[idClient].port = atoi(gtk_entry_get_text(GTK_ENTRY(entryPort)));
 
           //Grille
           GtkWidget * ongletGrid = gtk_grid_new();
@@ -212,6 +212,7 @@ void enter_adress(GtkWindow *parent){
           gtk_list_box_row_set_activatable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
           gtk_list_box_row_set_selectable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
           gtk_widget_show_all(ongletGrid);
+          */
       }
       break;
     default:
