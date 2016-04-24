@@ -29,18 +29,20 @@ int fdPrincipal;
 typedef struct onglet {
   GtkWidget * grid;
   GtkWidget * label;
-  int type; //1 si direct, 2 si groupe unicast
-  int fd;
+  char * name;
   int nbTab;
+  int flag;
 } onglet;
 
 //Pour afficher les clients du carnet
-typedef struct clientData {
+typedef struct contactData {
   char * name;
-} clientData;
+  GtkWidget * listElement;
+  int flag;
+} contactData;
 
 onglet tabs[MAXTABS];
-clientData clientsArray[MAXCONTACTS];
+contactData contactArray[MAXCONTACTS];
 
 int routine_client();
 int connect_client();

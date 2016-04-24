@@ -80,9 +80,26 @@ int traiterRequete() {
 
 }
 
+int recvName(){
+	message mesge;
+	char msg[MSG_SIZE];
+
+	//Recuperation du nom, et de la confrirmation de connection
+	if (read(fdClientPrincipal, msg, MSG_SIZE) < 0){
+		printf("Read error\n" );
+		return -1;
+	}
+	protocol_parser(msg,&mesge);
+	if (mesge.code != 201){
+		free(mesge.msg_content);
+		return -1;
+	}
+	strncpy(General_Name,mesge.msg_content,mesge.length);
+	free(mesge.msg_content);
+	return 0;
+}
+
 int connect_client(){
-    message mesge;
-  	char msg[WRITE_SIZE];
   	struct sockaddr_in address;
 
     //Creation socket client
@@ -105,20 +122,7 @@ int connect_client(){
   		return -1;
     }
 
-    //Recuperation du nom, et de la confrirmation de connection
-  	if (read(fdClientPrincipal, msg, MSG_SIZE) < 0){
-      printf("Read error\n" );
-  		return -1;
-  	}
-
-  	protocol_parser(msg,&mesge);
-  	if (mesge.code != 201){
-      free(mesge.msg_content);
-      printf("Connection refused\n" );
-  		return -1;
-  	}
-  	strncpy(General_Name,mesge.msg_content,mesge.length);
-    free(mesge.msg_content);
+		recvName();
 
   	//confirmation de la connection
     if (sendConfirmation() < 0){

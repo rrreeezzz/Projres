@@ -69,6 +69,7 @@ int main(int argc, char *argv[] ) {
   //Afficher fenetre puis main loop
   gtk_widget_show_all(window);
 
+
   while (1){
     while (gtk_events_pending ()) {
       gtk_main_iteration();

@@ -2,13 +2,18 @@
 ///  CODE ORIGINAL ISSUS DU TUTORIEL DE LAURENT GOMILA            ///
 ///  sur developpez.net, Effectuer des captures audio avec OpenAL ///
 ///								  ///
-///  Modifié pour être utilisé dans notre projet et               ///
+///  Modifiï¿½ pour ï¿½tre utilisï¿½ dans notre projet et               ///
 ///  permettre l'envoie de messages vocaux.		          ///
 /////////////////////////////////////////////////////////////////////
 
 
-#include <AL/al.h>
-#include <AL/alc.h>
+#ifdef __APPLE__
+  #include <OpenAL/al.h>
+  #include <OpenAL/alc.h>
+#else
+  #include <al/al.h>
+  #include <al/alc.h>
+#endif
 #include <sndfile.h>
 #include <ctime>
 #include <iomanip>
@@ -18,7 +23,7 @@
 #include <cstdlib>
 #include <pthread.h>
 
-// Les différents devices audio utilisés
+// Les diffï¿½rents devices audio utilisï¿½s
 ALCdevice* Device        = NULL;
 ALCdevice* CaptureDevice = NULL;
 
@@ -26,9 +31,9 @@ extern "C" int main_capture(); // pour appeler la fonction qui est du c++ dans n
 
 
 ////////////////////////////////////////////////////////////
-/// Récupère la liste des noms des devices de capture disponibles
+/// Rï¿½cupï¿½re la liste des noms des devices de capture disponibles
 ///
-/// \param Devices : Tableau de chaînes à remplir avec les noms des devices
+/// \param Devices : Tableau de chaï¿½nes ï¿½ remplir avec les noms des devices
 ///
 ////////////////////////////////////////////////////////////
 void GetCaptureDevices(std::vector<std::string>& Devices)
@@ -36,12 +41,12 @@ void GetCaptureDevices(std::vector<std::string>& Devices)
     // Vidage de la liste
     Devices.clear();
 
-    // Récupération des devices disponibles
+    // Rï¿½cupï¿½ration des devices disponibles
     const ALCchar* DeviceList = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 
     if (DeviceList)
     {
-        // Extraction des devices contenus dans la chaîne renvoyée
+        // Extraction des devices contenus dans la chaï¿½ne renvoyï¿½e
         while (strlen(DeviceList) > 0)
         {
             Devices.push_back(DeviceList);
@@ -50,17 +55,17 @@ void GetCaptureDevices(std::vector<std::string>& Devices)
     }
     else
     {
-        std::cerr << "Impossible de récupérer la liste des devices de capture" << std::endl;
+        std::cerr << "Impossible de rï¿½cupï¿½rer la liste des devices de capture" << std::endl;
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-/// Initialise OpenAL (ouvre un device et crée un contexte audio)
+/// Initialise OpenAL (ouvre un device et crï¿½e un contexte audio)
 ///
-/// \param DeviceName : Nom du device à ouvrir (NULL pour le device par défaut)
+/// \param DeviceName : Nom du device ï¿½ ouvrir (NULL pour le device par dï¿½faut)
 ///
-/// \return True si tout s'est bien passé, false en cas d'erreur
+/// \return True si tout s'est bien passï¿½, false en cas d'erreur
 ///
 ////////////////////////////////////////////////////////////
 bool InitOpenAL_capture(const char* DeviceName = NULL)
@@ -69,15 +74,15 @@ bool InitOpenAL_capture(const char* DeviceName = NULL)
     Device = alcOpenDevice(DeviceName);
     if (!Device)
     {
-        std::cerr << "Impossible d'ouvrir le device par défaut" << std::endl;
+        std::cerr << "Impossible d'ouvrir le device par dï¿½faut" << std::endl;
         return false;
     }
 
-    // Création du contexte
+    // Crï¿½ation du contexte
     ALCcontext* Context = alcCreateContext(Device, NULL);
     if (!Context)
     {
-        std::cerr << "Impossible de créer un contexte audio" << std::endl;
+        std::cerr << "Impossible de crï¿½er un contexte audio" << std::endl;
         return false;
     }
 
@@ -95,17 +100,17 @@ bool InitOpenAL_capture(const char* DeviceName = NULL)
 ////////////////////////////////////////////////////////////
 /// Initialise la capture audio
 ///
-/// \param DeviceName : Nom du device de capture à ouvrir (NULL pour le device par défaut)
+/// \param DeviceName : Nom du device de capture ï¿½ ouvrir (NULL pour le device par dï¿½faut)
 ///
-/// \return True si tout s'est bien passé, false en cas d'erreur
+/// \return True si tout s'est bien passï¿½, false en cas d'erreur
 ///
 ////////////////////////////////////////////////////////////
 bool InitCapture(const char* DeviceName = NULL)
 {
-    // On commence par vérifier que la capture audio est supportée
+    // On commence par vï¿½rifier que la capture audio est supportï¿½e
     if (alcIsExtensionPresent(Device, "ALC_EXT_CAPTURE") == AL_FALSE)
     {
-        std::cerr << "La capture audio n'est pas supportée par votre systeme" << std::endl;
+        std::cerr << "La capture audio n'est pas supportï¿½e par votre systeme" << std::endl;
         return false;
     }
 
@@ -122,29 +127,29 @@ bool InitCapture(const char* DeviceName = NULL)
 
 
 ////////////////////////////////////////////////////////////
-/// Sauvegarde un tableau d'échantillons dans un fichier audio
+/// Sauvegarde un tableau d'ï¿½chantillons dans un fichier audio
 ///
-/// \param Filename : Nom du fichier audio à charger
-/// \param Samples :  Tableau d'échantillons
+/// \param Filename : Nom du fichier audio ï¿½ charger
+/// \param Samples :  Tableau d'ï¿½chantillons
 ///
 ////////////////////////////////////////////////////////////
 void SaveSound(const std::string& Filename, const std::vector<ALshort>& Samples)
 {
-    // On renseigne les paramètres du fichier à créer
+    // On renseigne les paramï¿½tres du fichier ï¿½ crï¿½er
     SF_INFO FileInfos;
     FileInfos.channels   = 1;
     FileInfos.samplerate = 44100;
     FileInfos.format     = SF_FORMAT_PCM_16 | SF_FORMAT_WAV;
 
-    // On ouvre le fichier en écriture
+    // On ouvre le fichier en ï¿½criture
     SNDFILE* File = sf_open(Filename.c_str(), SFM_WRITE, &FileInfos);
     if (!File)
     {
-        std::cerr << "Impossible de créer le fichier audio" << std::endl;
+        std::cerr << "Impossible de crï¿½er le fichier audio" << std::endl;
         return;
     }
 
-    // Ecriture des échantillons audio
+    // Ecriture des ï¿½chantillons audio
     sf_write_short(File, &Samples[0], Samples.size());
 
     // Fermeture du fichier
@@ -169,10 +174,10 @@ void ShutdownCapture()
 ////////////////////////////////////////////////////////////
 void ShutdownOpenAL_capture()
 {
-    // Récupération du contexte
+    // Rï¿½cupï¿½ration du contexte
     ALCcontext* Context = alcGetCurrentContext();
 
-    // Désactivation du contexte
+    // Dï¿½sactivation du contexte
     alcMakeContextCurrent(NULL);
 
     // Destruction du contexte
@@ -184,7 +189,7 @@ void ShutdownOpenAL_capture()
 
 
 ////////////////////////////////////////////////////////////
-/// Point d'entrée du programme
+/// Point d'entrï¿½e du programme
 ///
 /// \return Code d'erreur de l'application
 ///
@@ -193,7 +198,7 @@ int main_capture()
 {
     int time_left = 0;
 
-    // Initialisation d'OpenAL avec le device par défaut
+    // Initialisation d'OpenAL avec le device par dï¿½faut
     if (!InitOpenAL_capture(NULL))
         return EXIT_FAILURE;
 
@@ -204,20 +209,20 @@ int main_capture()
     // Lancement de la capture
     alcCaptureStart(CaptureDevice);
 
-    // On va stocker les échantillons capturés dans un tableau d'entiers signés 16 bits
+    // On va stocker les ï¿½chantillons capturï¿½s dans un tableau d'entiers signï¿½s 16 bits
     std::vector<ALshort> Samples;
 
     // ...Et c'est parti pour 5 secondes de capture
     time_t Start = time(NULL);
 
-    while ((time_left = time(NULL) - Start) <= 5) // si x passe à 1, on stop la capture
+    while ((time_left = time(NULL) - Start) <= 5) // si x passe ï¿½ 1, on stop la capture
     {
 	std::cout << "\rSpeech capture in progress... " << std::fixed << std::setprecision(2) << 5-time_left << " sec left";
-        // On récupère le nombre d'échantillons disponibles
+        // On rï¿½cupï¿½re le nombre d'ï¿½chantillons disponibles
         ALCint SamplesAvailable;
         alcGetIntegerv(CaptureDevice, ALC_CAPTURE_SAMPLES, 1, &SamplesAvailable);
 
-        // On lit les échantillons et on les ajoute au tableau
+        // On lit les ï¿½chantillons et on les ajoute au tableau
         if (SamplesAvailable > 0)
         {
             std::size_t Start = Samples.size();
@@ -229,7 +234,7 @@ int main_capture()
     // On stoppe la capture
     alcCaptureStop(CaptureDevice);
 
-    // On n'oublie pas les éventuels échantillons qu'il reste à récupérer
+    // On n'oublie pas les ï¿½ventuels ï¿½chantillons qu'il reste ï¿½ rï¿½cupï¿½rer
     ALCint SamplesAvailable;
     alcGetIntegerv(CaptureDevice, ALC_CAPTURE_SAMPLES, 1, &SamplesAvailable);
     if (SamplesAvailable > 0)
@@ -238,10 +243,10 @@ int main_capture()
         Samples.resize(Start + SamplesAvailable);
         alcCaptureSamples(CaptureDevice, &Samples[Start], SamplesAvailable);
     }
-	
+
 	std::cout << "\rSpeech capture complete                   " << std::endl;
 
-    // On sauvegarde les échantillons capturés dans un fichier
+    // On sauvegarde les ï¿½chantillons capturï¿½s dans un fichier
     SaveSound("vocal.wav", Samples);
 
     // Fermeture de la capture

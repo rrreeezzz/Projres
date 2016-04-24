@@ -17,21 +17,13 @@ void quick_message(GtkWindow *parent, gchar *message){
  gtk_widget_show_all (dialog);
 }
 
-//Retourne un num de tab non prit
-void connectToClient(GtkWidget * parent,char * name){
-  addTab(name,1);
-}
-
-int opt_client(){
-  int i;
-  for (i = 0; i < MAXCONTACTS-1; i++) {
-    if (clientsArray[i].name==NULL) return i;
-  }
-  return -1;
-}
-
 void show_widget(GtkWindow *parent, GtkWidget * widget){
   gtk_widget_set_visible(GTK_WIDGET(widget) , !gtk_widget_get_visible(GTK_WIDGET(widget)));
+}
+
+void refresh_client_data(){
+  sendRequest("/contact\n");
+  sendRequest("/who\n");
 }
 
 //Entrer une adresse
@@ -122,17 +114,19 @@ void connect_client_dialog(GtkWindow *parent){
       portClientPrincipal
     );
     //Si on arrive pas a se connecter
-    if ((fdPrincipal = connect_client()) < 0){
+    if (connect_client() == 0){
+      refresh_client_data();
+    } else {
       validorquit = 0;
       quick_message(GTK_WINDOW(parent), "Impossible de se connecter, veuillez réessayer.");
       printf("Erreur de connection\n");
     }
+
   }
 
 
   gtk_widget_destroy(dialog);
 }
-
 
 //Entrer une adresse
 void enter_adress(GtkWindow *parent){
@@ -186,34 +180,10 @@ void enter_adress(GtkWindow *parent){
       //Si valide on ajoute un contact
       if (validorquit == 1){
           char request[MSG_SIZE];
-          sprintf( request,"/add %s %s:%d",gtk_entry_get_text(GTK_ENTRY(entryName)),gtk_entry_get_text(GTK_ENTRY(entryAdress)),atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) );
+          sprintf( request,"/add %s %s:%d \n",gtk_entry_get_text(GTK_ENTRY(entryName)),gtk_entry_get_text(GTK_ENTRY(entryAdress)),atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) );
           sendRequest(request);
-
-          /*
-          int idClient = opt_client();
-          clientsArray[idClient].name = malloc(16*sizeof(char));
-
-          //Grille
-          GtkWidget * ongletGrid = gtk_grid_new();
-          gtk_grid_set_row_homogeneous(GTK_GRID(ongletGrid),TRUE);
-          gtk_grid_set_column_homogeneous(GTK_GRID(ongletGrid),TRUE);
-
-          //Bouton
-          GtkWidget * labelName = gtk_label_new(clientsArray[idClient].name);
-          GtkWidget * connectButton = gtk_button_new_with_label("=>");
-          g_signal_connect(connectButton, "clicked", G_CALLBACK(connectToClient),clientsArray[idClient].name);
-
-
-          //Packing
-          gtk_grid_attach(GTK_GRID(ongletGrid),labelName,1,1,2,1);
-          gtk_grid_attach(GTK_GRID(ongletGrid),connectButton,3,1,1,1);
-
-          gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(ongletGrid),1);
-          gtk_list_box_row_set_activatable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
-          gtk_list_box_row_set_selectable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
-          gtk_widget_show_all(ongletGrid);
-          */
       }
+
       break;
     default:
         validorquit = 1;

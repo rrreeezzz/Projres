@@ -1,5 +1,9 @@
-CFLAGS=-Wall -g -lpthread -lopenal -lsndfile
-
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+	CFLAGS=-Wall -g -lpthread -framework OpenAL -lsndfile
+else
+	CFLAGS=-Wall -g -lpthread -lopenal -lsndfile
+endif
 all: client clean
 
 client: message.h message.c protocole.h protocole.c client.c client_function.h client_function.c serv_function.h serv_function.c transfert.c annuaire.c annuaire.h online.c online.h

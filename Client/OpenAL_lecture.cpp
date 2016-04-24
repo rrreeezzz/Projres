@@ -2,12 +2,17 @@
 ///  CODE ORIGINAL ISSUS DU TUTORIEL DE LAURENT GOMILA         ///
 ///  sur developpez.net, Premiers pas avec l'API audio OpenAL  ///
 ///                                                            ///
-///  Modifié pour être utilisé dans notre projet et            ///
+///  Modifiï¿½ pour ï¿½tre utilisï¿½ dans notre projet et            ///
 ///  permettre la lecture de messages vocaux.		       ///
 //////////////////////////////////////////////////////////////////
 
-#include <AL/al.h>
-#include <AL/alc.h>
+#ifdef __APPLE__
+  #include <OpenAL/al.h>
+  #include <OpenAL/alc.h>
+#else
+  #include <al/al.h>
+  #include <al/alc.h>
+#endif
 #include <sndfile.h>
 #include <iomanip>
 #include <iostream>
@@ -19,9 +24,9 @@
 extern "C" int main_lecture(char *fichier); // pour appeler la fonction qui est du c++ dans nos fichiers .c
 
 ////////////////////////////////////////////////////////////
-/// Récupère la liste des noms des devices disponibles
+/// Rï¿½cupï¿½re la liste des noms des devices disponibles
 ///
-/// \param Devices : Tableau de chaînes à remplir avec les noms des devices
+/// \param Devices : Tableau de chaï¿½nes ï¿½ remplir avec les noms des devices
 ///
 ////////////////////////////////////////////////////////////
 void GetDevices(std::vector<std::string>& Devices)
@@ -29,12 +34,12 @@ void GetDevices(std::vector<std::string>& Devices)
     // Vidage de la liste
     Devices.clear();
 
-    // Récupération des devices disponibles
+    // Rï¿½cupï¿½ration des devices disponibles
     const ALCchar* DeviceList = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 
     if (DeviceList)
     {
-        // Extraction des devices contenus dans la chaîne renvoyée
+        // Extraction des devices contenus dans la chaï¿½ne renvoyï¿½e
         while (strlen(DeviceList) > 0)
         {
             Devices.push_back(DeviceList);
@@ -43,17 +48,17 @@ void GetDevices(std::vector<std::string>& Devices)
     }
     else
     {
-        std::cerr << "Impossible de récupérer la liste des devices" << std::endl;
+        std::cerr << "Impossible de rï¿½cupï¿½rer la liste des devices" << std::endl;
     }
 }
 
 
 ////////////////////////////////////////////////////////////
-/// Initialise OpenAL (ouvre un device et crée un contexte audio)
+/// Initialise OpenAL (ouvre un device et crï¿½e un contexte audio)
 ///
-/// \param DeviceName : Nom du device à ouvrir (NULL pour le device par défaut)
+/// \param DeviceName : Nom du device ï¿½ ouvrir (NULL pour le device par dï¿½faut)
 ///
-/// \return True si tout s'est bien passé, false en cas d'erreur
+/// \return True si tout s'est bien passï¿½, false en cas d'erreur
 ///
 ////////////////////////////////////////////////////////////
 bool InitOpenAL_lecture(const char* DeviceName = NULL)
@@ -62,15 +67,15 @@ bool InitOpenAL_lecture(const char* DeviceName = NULL)
     ALCdevice* Device = alcOpenDevice(DeviceName);
     if (!Device)
     {
-        std::cerr << "Impossible d'ouvrir le device par défaut" << std::endl;
+        std::cerr << "Impossible d'ouvrir le device par dï¿½faut" << std::endl;
         return false;
     }
 
-    // Création du contexte
+    // Crï¿½ation du contexte
     ALCcontext* Context = alcCreateContext(Device, NULL);
     if (!Context)
     {
-        std::cerr << "Impossible de créer un contexte audio" << std::endl;
+        std::cerr << "Impossible de crï¿½er un contexte audio" << std::endl;
         return false;
     }
 
@@ -86,11 +91,11 @@ bool InitOpenAL_lecture(const char* DeviceName = NULL)
 
 
 ////////////////////////////////////////////////////////////
-/// Crée un tampon OpenAL à partir d'un fichier audio
+/// Crï¿½e un tampon OpenAL ï¿½ partir d'un fichier audio
 ///
-/// \param Filename : Nom du fichier audio à charger
+/// \param Filename : Nom du fichier audio ï¿½ charger
 ///
-/// \return Identificateur du tampon OpenAL (0 si échec)
+/// \return Identificateur du tampon OpenAL (0 si ï¿½chec)
 ///
 ////////////////////////////////////////////////////////////
 ALuint LoadSound(const std::string& Filename)
@@ -104,43 +109,43 @@ ALuint LoadSound(const std::string& Filename)
         return 0;
     }
 
-    // Lecture du nombre d'échantillons et du taux d'échantillonnage (nombre d'échantillons à lire par seconde)
+    // Lecture du nombre d'ï¿½chantillons et du taux d'ï¿½chantillonnage (nombre d'ï¿½chantillons ï¿½ lire par seconde)
     ALsizei NbSamples  = static_cast<ALsizei>(FileInfos.channels * FileInfos.frames);
     ALsizei SampleRate = static_cast<ALsizei>(FileInfos.samplerate);
 
-    // Lecture des échantillons audio au format entier 16 bits signé (le plus commun)
+    // Lecture des ï¿½chantillons audio au format entier 16 bits signï¿½ (le plus commun)
     std::vector<ALshort> Samples(NbSamples);
     if (sf_read_short(File, &Samples[0], NbSamples) < NbSamples)
     {
-        std::cerr << "Impossible de lire les échantillons stockés dans le fichier audio" << std::endl;
+        std::cerr << "Impossible de lire les ï¿½chantillons stockï¿½s dans le fichier audio" << std::endl;
         return 0;
     }
 
     // Fermeture du fichier
     sf_close(File);
 
-    // Détermination du format en fonction du nombre de canaux
+    // Dï¿½termination du format en fonction du nombre de canaux
     ALenum Format;
     switch (FileInfos.channels)
     {
         case 1 : Format = AL_FORMAT_MONO16;   break;
         case 2 : Format = AL_FORMAT_STEREO16; break;
         default :
-            std::cerr << "Format audio non supporté (plus de 2 canaux)" << std::endl;
+            std::cerr << "Format audio non supportï¿½ (plus de 2 canaux)" << std::endl;
             return 0;
     }
 
-    // Création du tampon OpenAL
+    // Crï¿½ation du tampon OpenAL
     ALuint Buffer;
     alGenBuffers(1, &Buffer);
 
-    // Remplissage avec les échantillons lus
+    // Remplissage avec les ï¿½chantillons lus
     alBufferData(Buffer, Format, &Samples[0], NbSamples * sizeof(ALushort), SampleRate);
 
-    // Vérification des erreurs
+    // Vï¿½rification des erreurs
     if (alGetError() != AL_NO_ERROR)
     {
-        std::cerr << "Impossible de remplir le tampon OpenAL avec les échantillons du fichier audio" << std::endl;
+        std::cerr << "Impossible de remplir le tampon OpenAL avec les ï¿½chantillons du fichier audio" << std::endl;
         return 0;
     }
 
@@ -154,11 +159,11 @@ ALuint LoadSound(const std::string& Filename)
 ////////////////////////////////////////////////////////////
 void ShutdownOpenAL_lecture()
 {
-    // Récupération du contexte et du device
+    // Rï¿½cupï¿½ration du contexte et du device
     ALCcontext* Context = alcGetCurrentContext();
     ALCdevice*  Device  = alcGetContextsDevice(Context);
 
-    // Désactivation du contexte
+    // Dï¿½sactivation du contexte
     alcMakeContextCurrent(NULL);
 
     // Destruction du contexte
@@ -170,7 +175,7 @@ void ShutdownOpenAL_lecture()
 
 
 ////////////////////////////////////////////////////////////
-/// Point d'entrée du programme
+/// Point d'entrï¿½e du programme
 ///
 /// \return Code d'erreur de l'application
 ///
@@ -178,14 +183,14 @@ void ShutdownOpenAL_lecture()
 int main_lecture(char *fichier)
 {
     // Initialisation d'OpenAL
-    InitOpenAL_lecture(NULL); //NULL = device par défault
+    InitOpenAL_lecture(NULL); //NULL = device par dï¿½fault
 
     // Chargement du fichier audio
     ALuint Buffer = LoadSound(fichier);
     if (Buffer == 0)
         return EXIT_FAILURE;
 
-    // Création d'une source
+    // Crï¿½ation d'une source
     ALuint Source;
     alGenSources(1, &Source);
     alSourcei(Source, AL_BUFFER, Buffer);
@@ -193,11 +198,11 @@ int main_lecture(char *fichier)
     // On joue le son
     alSourcePlay(Source);
 
-    // On attend qu'il soit terminé
+    // On attend qu'il soit terminï¿½
     ALint Status;
     do
     {
-        // Récupération de l'état du son
+        // Rï¿½cupï¿½ration de l'ï¿½tat du son
         alGetSourcei(Source, AL_SOURCE_STATE, &Status);
     }
     while (Status == AL_PLAYING);
