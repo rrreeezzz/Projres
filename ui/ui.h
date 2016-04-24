@@ -21,7 +21,7 @@ GtkWidget * window;
 GtkWidget * contactList;
 
 //Connection principale au client
-char adressClientPrincipal[16];
+char adresseClientPrincipal[16];
 int portClientPrincipal;
 int fdPrincipal;
 
