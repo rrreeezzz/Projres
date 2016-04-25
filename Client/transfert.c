@@ -1,29 +1,22 @@
 #include "transfert.h"
 
-void init_transfer(int client_fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+void init_transfer(char *filepath, int client_fd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+
   int fd = 0;
-  char filename[256];
+  //char filename[256];
   int taille;
   struct stat statut;
 
-  printf("Enter the filename :\n");
-  fgets(filename, 256, stdin);
-  char *positionEntree = NULL;
-  if((positionEntree = strchr(filename, '\n')) != NULL) { // On recherche l'"Entree"
-  *positionEntree = '\0';
-}// mieux gerer les erreurs : if (positionEntree != NULL etc....
-
-  if ((fd = open(filename, O_RDONLY)) < 0) {
-    printf("Opening file failed : wrong filename\n");
+  if ((fd = access(filepath, R_OK)) < 0) {
+    printf(BLUE"[PROGRAM] Testing file for transfer failed : either file doesn't exist or you don't have permission to read."RESET"\n");
     return;
   }
-  close(fd);
 
-  if(stat(filename, &statut) < 0) {perror("Error with file opened"); exit(EXIT_FAILURE);}
+  if(stat(filepath, &statut) < 0) {perror("Error with file opened"); return;}
   taille = (int) statut.st_size;
 
   message *msg = (message *) malloc(sizeof(message));
-  transfer_initiate(msg, filename, taille);
+  transfer_initiate(msg, filepath, taille);
   send_msg(msg, &client_fd,readfds,fd_array,num_clients);
   free((*msg).msg_content);
   free(msg);
