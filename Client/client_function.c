@@ -28,7 +28,6 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 			}
 
 			hostname[strlen(hostname) - 1] = '\0';
-			printf("host:\"%s\"\n", hostname);
 			/* Vérification de la syntaxe de l'adresse*/
 			bchar = 0; countpoint=0; countcolon=0; countspace=0;
 			for (i=0; i < strlen(hostname); i++) {
@@ -36,9 +35,8 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				if(hostname[i] == ' ') {countspace++;}
 				if(hostname[i] == ':') {countcolon++;}
 				bchar = (isdigit((unsigned char) hostname[i]) || hostname[i] == '.' || hostname[i] == ':' || hostname[i] == ' ') ? 0 : 1;
-				if(bchar) {printf("bchar : \"%c\"", hostname[i]); break;}
+				if(bchar) {break;}
 			}
-			printf("point:%i\tspace:%i\tcolon:%i\tbchar:%i\n", countpoint, countspace, countcolon, bchar);
 			if(countpoint != 3 || bchar || ((countspace == 1 && countcolon > 0) && (countcolon == 1 && countspace > 0)) || !isdigit(hostname[0])) {
 				printf(BLUE"\n[PROGRAM] ----- Wrong syntax : please enter correct address -----"RESET"\n");
 				continue;
@@ -53,7 +51,6 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				if(*port <= 0 || *port >= 100000 || ((strncmp(hostname, "0.0.0.0", 7) == 0) && *port == General_Port))
 				*port = -1;
 			}
-			printf("yolo\n");
 			if(posPort == NULL || *port == -1){
 				printf(BLUE"\n[PROGRAM] -----Please enter correct address-----"RESET"\n");
 				continue;
@@ -333,6 +330,7 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
 		printf(BLUE"[PROGRAM] Error command. Please use \"/disconnect username\"."RESET"\n\n");
 		return -1;
 	}
+	name[strlen(name) - 1] = '\0';
 	for(i=0 ; i < strlen(name) ; i++) {
     bchar = (isalnum((unsigned char) name[i])) ? 0 : 1;
     if(bchar) {break;}
@@ -341,7 +339,6 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
     printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/disconnect username\".\n"RESET"\n\n");
     return -1;
   }
-	name[strlen(name) - 1] = '\0';
 
 	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {
 		printf(BLUE"Client is not connected"RESET"\n\n");

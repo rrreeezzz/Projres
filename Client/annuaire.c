@@ -382,7 +382,6 @@ int add_contact_online(client_data *fd_array, annuaireData * contact, int *num_c
     printf(BLUE"[PROGRAM] Connected contact updated !"RESET"\n");
   }
 
-  free(contact);
   close(contact_file);
   close(new_file);
   return 0;

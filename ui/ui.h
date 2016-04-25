@@ -62,8 +62,8 @@ int sendRequest(char * content);
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "tabManagement.c"
-#include "dialog.c"
+#include "tabManagement.h"
+#include "dialog.h"
 
 // Fonctions.h contient les differentes fonctions lies aux evenements du serveur
 #include "fonctions.h"
