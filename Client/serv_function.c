@@ -394,7 +394,11 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv();
 		} else if (strncmp(msg, "/vocal", 6)==0){
+			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);
+			#else
+			printf("You can't use speech voice with your computer, please read README.txt\n");
+			#endif
 		} else {
 			if(*num_clients > 0) {
 				slash_all(1, msg, readfds, fd_array, num_clients);
@@ -405,6 +409,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 	}
 }
 
+#if defined(PROJ)
 void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];
 	int client_fd = 0;
@@ -424,6 +429,7 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 	main_capture();
 	prepare_vocal(client_fd, readfds, fd_array, num_clients);
 }
+#endif
 
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];

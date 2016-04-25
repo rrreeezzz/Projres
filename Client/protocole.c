@@ -253,6 +253,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché n'existe pas dans la base de données."RESET"\n");
 			break;
 
+			#if defined(PROJ)
 			case 500:
 			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal = open(buffer, O_CREAT | O_TRUNC | O_WRONLY, 0755);
@@ -263,11 +264,12 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 
 			case 502:
-            sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+            		sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			printf("[%s] VOCAL MESSAGE\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal);
 			main_lecture(buffer);
 			break;
+			#endif
 
 			default:
 			break;

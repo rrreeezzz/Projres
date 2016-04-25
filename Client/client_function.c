@@ -350,7 +350,6 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
 	session_end(discomsg);
 	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
 	exitClient(client_sockfd, readfds, fd_array, num_clients);
-	//printf(BLUE"["RED"%s"BLUE"] End of connection."RESET"\n", name);
 	free((*discomsg).msg_content);
 	free(discomsg);
 	return 0;
