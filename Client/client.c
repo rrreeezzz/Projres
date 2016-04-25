@@ -12,5 +12,6 @@ int main(int argc, char *argv[]) {
 
 	routine_server(server_sockfd);
 
+	system("./clean_vocal.sh");
 	exit(EXIT_SUCCESS);
 }//main
