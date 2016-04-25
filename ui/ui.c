@@ -33,15 +33,21 @@ int main(int argc, char *argv[] ) {
   gtk_widget_set_margin_top(GTK_WIDGET(contactListTitle),10);
   gtk_widget_set_margin_bottom(GTK_WIDGET(contactListTitle),10);
 
-  GtkWidget * addContact=gtk_label_new("Add contact");
+  GtkWidget * addContact=gtk_label_new("Ajouter contact");
   gtk_widget_set_margin_top(GTK_WIDGET(addContact),10);
   gtk_widget_set_margin_bottom(GTK_WIDGET(addContact),10);
+
+  GtkWidget * refreshContact=gtk_label_new("Rafraichir");
+  gtk_widget_set_margin_top(GTK_WIDGET(refreshContact),10);
+  gtk_widget_set_margin_bottom(GTK_WIDGET(refreshContact),10);
+
   g_signal_connect(GTK_WIDGET(contactList), "row-activated", G_CALLBACK(enter_adress),"Hello");
 
   gtk_grid_set_row_homogeneous(GTK_GRID(contactGrid),TRUE);
   gtk_grid_set_column_homogeneous(GTK_GRID(contactGrid),TRUE);
 
   gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(addContact),0);
+  gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(refreshContact),1);
   //gtk_container_add(GTK_CONTAINER(contactGrid),contactList);
   gtk_grid_attach(GTK_GRID(contactGrid),contactListTitle,1,1,1,1);
   gtk_grid_attach(GTK_GRID(contactGrid),contactList,1,2,1,20);

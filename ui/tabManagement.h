@@ -146,7 +146,7 @@ int addTab(char * name){
   /* Zone de lecture de conversation */
   gtk_text_view_set_editable(GTK_TEXT_VIEW(outputZone),FALSE);
   g_object_set(G_OBJECT(outputZone), "margin", 20, NULL);
-  sprintf(buff,"Connection etablished with: %s\n",name);
+  sprintf(buff,"Connexion établie avec : %s\n",name);
   write_line_text_zone(outputZone,buff);
 
   /* Zone d'ecriture */
