@@ -21,9 +21,11 @@
 #include "serv_function.h"
 
 int online;
+#define MAX_SIZE_PARAMETER 70
 
 extern int connect_serv();
 extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 extern int erase_serv();
+extern int get_Config(char * conf);
 
 #endif
