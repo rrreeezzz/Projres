@@ -45,7 +45,7 @@ void on_contact_list_end(){
   int i;
   for (i = 0; i < MAXCONTACTS; i++) {
     if (contactArray[i].flag == 0 && contactArray[i].name != NULL){
-      printf(GREEN"contact %s\n"RESET, contactArray[i].name);
+      removeContact(contactArray[i].name);
       return;
     }
   }
@@ -95,7 +95,7 @@ void on_connection_list_end(){
   int i;
   for (i = 0; i < MAXTABS; i++) {
     if (tabs[i].flag == 0 && tabs[i].name != NULL){
-      printf(GREEN"contact %s\n"RESET, tabs[i].name);
+      closeTab(tabs[i].name);
       return;
     }
   }
@@ -106,10 +106,30 @@ void on_connection_list_end(){
 */
 void on_message_recv(char * username, char * content){
   printf(BLUE"Message de "RED"%s"BLUE" : "RED"%s"RESET"\n",username,content);
+  int i;
+  for (i = 0; i < MAXTABS; i++) {
+    if ( tabs[i].name!=NULL && strcmp(tabs[i].name,username) == 0) {
+      char ligne[WRITE_SIZE];
+      sprintf(ligne,"%s: %s",username,content);
+      write_line_text_zone(tabs[i].textZone,ligne);
+      return;
+    }
+  }
+
 }
 void on_message_send(char * username, char * content){
   printf(BLUE"Message envoyé à"RED" %s"BLUE" : "RED"%s"RESET"\n",username,content);
+  int i;
+  for (i = 0; i < MAXTABS; i++) {
+    if ( tabs[i].name!=NULL && strcmp(tabs[i].name,username) == 0) {
+      char ligne[WRITE_SIZE];
+      sprintf(ligne,"me: %s",content);
+      write_line_text_zone(tabs[i].textZone,ligne);
+      return;
+    }
+  }
 }
+
 void on_message_sendall(char * content){
   printf(BLUE"Message envoyé à tous : "RED"%s"RESET"\n",content);
 }

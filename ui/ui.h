@@ -32,6 +32,8 @@ typedef struct onglet {
   char * name;
   int nbTab;
   int flag;
+  GtkWidget * textZone;
+  GtkWidget * inputZone;
 } onglet;
 
 //Pour afficher les clients du carnet

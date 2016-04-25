@@ -122,7 +122,10 @@ int connect_client(){
   		return -1;
     }
 
-		recvName();
+		if (recvName() < 0){
+      printf("Acceptation error\n" );
+      return -1;
+    }
 
   	//confirmation de la connection
     if (sendConfirmation() < 0){
