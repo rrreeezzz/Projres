@@ -8,7 +8,9 @@ Retenez les ID pour gérer la base de données.
 Lancer mysql avec : mysql -u'user' -p'password'
 
 Créer une base de donnée avec: CREATE DATABASE pswd;
+Ensuite : USE pswd;
 Puis créer les tables: CREATE TABLE user(ID INT, NAME TEXT, IP TEXT);
+Pour plus d'informations, se référer a mysql.
 
 Remplacer ensuite les infos dans conf.txt, après les champs user: et password:
 Lancer le ./install

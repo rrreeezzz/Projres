@@ -1,6 +1,6 @@
 ---MYSQL INFO---
 user:root
-password:yolo1200
+password:test49
 
 --SERVEUR--
 port:40000
