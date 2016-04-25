@@ -93,7 +93,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			// 102 : données de transfert de fichier
 			case 102:
-			if(write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length)<0);
+			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length);
 			// gestion erreur ?!!!!!!!!!! a faire
 			break;
 
