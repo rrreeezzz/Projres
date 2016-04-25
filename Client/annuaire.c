@@ -27,6 +27,10 @@ int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char 
   char contact_data[3][strlen(msg)]; // 3 au cas où le client entre ""/add username address port"
   char data[MAX_SIZE_CONTACT];
 
+  memset(contact_data[0], '\0', strlen(contact_data[0]));
+  memset(contact_data[1], '\0', strlen(contact_data[1]));
+  memset(contact_data[2], '\0', strlen(contact_data[2]));
+
   /* Init structure user */
   if((posSpace = strchr(msg, ' ')) == NULL) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n");
@@ -46,7 +50,7 @@ int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char 
     i++;
   }
   /* Vérification de la longueur des données */
-  if(strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME || strlen(contact_data[1])+strlen(contact_data[2]) < MIN_SIZE_ADDRESS || strlen(contact_data[1])+strlen(contact_data[2]) > MAX_SIZE_ADDRESS || strlen(contact_data[2]) > 5) {
+  if(strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME || strlen(contact_data[1])+strlen(contact_data[2]) < MIN_SIZE_ADDRESS-1 || strlen(contact_data[1])+strlen(contact_data[2]) > MAX_SIZE_ADDRESS-1) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/add username address"RED":"BLUE"port\" or \"/add username address port\".\n[PROGRAM] Username must be between 4 and 16 characters."RESET"\n\n");
     //on avertis l'ui si elle est connectee
     if (userInterface_fd > 0) {
