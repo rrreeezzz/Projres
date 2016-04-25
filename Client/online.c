@@ -27,8 +27,15 @@ int connect_serv(){
 
 	freeifaddrs(my_ip);
 
+  /*Récupération configuration adresse serveur*/
+  char conf[MAX_SIZE_PARAMETER] = "server_address";
+  if(get_Config(conf) < 0){
+    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
+    exit(EXIT_FAILURE);
+  }
+
   info_online.sin_family = AF_INET;
-  inet_aton("0.0.0.0", (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
+  inet_aton(conf, (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
   info_online.sin_port = htons(40000); //port par defaut du serveur
 
   online = socket(AF_INET, SOCK_STREAM, 0);
@@ -73,8 +80,15 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   strcpy(name, posSpace+1);
   name[strlen(name) - 1] = '\0';
 
+  /*Récupération configuration adresse serveur*/
+  char conf[MAX_SIZE_PARAMETER] = "server_address";
+  if(get_Config(conf) < 0){
+    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
+    exit(EXIT_FAILURE);
+  }
+
   info_online.sin_family = AF_INET;
-  inet_aton("0.0.0.0", (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
+  inet_aton(conf, (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
   info_online.sin_port = htons(40000); //port par defaut du serveur
 
   online = socket(AF_INET, SOCK_STREAM, 0);
@@ -115,8 +129,15 @@ int erase_serv(){
   struct sockaddr_in info_online;
   time_t tps = time(NULL);
 
+  /*Récupération configuration adresse serveur*/
+  char conf[MAX_SIZE_PARAMETER] = "server_address";
+  if(get_Config(conf) < 0){
+    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
+    exit(EXIT_FAILURE);
+  }
+
   info_online.sin_family = AF_INET;
-  inet_aton("0.0.0.0", (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
+  inet_aton(conf, (struct in_addr *) &info_online.sin_addr.s_addr); //recup adresse serveur ?
   info_online.sin_port = htons(40000); //port par defaut du serveur
 
   online = socket(AF_INET, SOCK_STREAM, 0);
@@ -136,5 +157,26 @@ int erase_serv(){
 
   printf(BLUE"[PROGRAM] : You have been erased from the database."RESET"\n");
   close(online);
+  return 0;
+}
+
+int get_Config(char * conf){
+
+  /*Fonction qui permet d'aller chercher les arguments des options dans le fichier conf.txt.
+  Celle-ci prend en argument l'option, et renvois l'argument dans le même buffer.*/
+
+  char line[MAX_SIZE_PARAMETER];
+  FILE * f;
+
+  sprintf(line, "grep '%s' ../conf.txt | cut -d':' -f2",conf);
+  f = popen(line, "r");
+  if(f == NULL){
+    perror("Failed to fetch argument.");
+    return -1;
+  }
+
+  fgets(conf, MAX_SIZE_PARAMETER, f);
+  pclose(f);
+
   return 0;
 }
