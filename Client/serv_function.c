@@ -388,11 +388,13 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strncmp(msg, "/transfer", 9)==0){
 			slash_transfer(msg, readfds, fd_array, num_clients);
 		} else if (strcmp(msg, "/online\n")==0){
-			connect_serv();
+			connect_serv(fd_array, num_clients, readfds);
 		} else if (strncmp(msg, "/search", 7)==0){
 			search_serv(msg, fd_array, num_clients, readfds, waitlist);
 		} else if (strcmp(msg, "/erase\n")==0){
-			erase_serv();
+			erase_serv(fd_array, num_clients, readfds);
+		} else if (strcmp(msg, "/status\n")==0){
+			get_serv_status(fd_array, num_clients, readfds);
 		} else if (strncmp(msg, "/vocal", 6)==0){
 			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);

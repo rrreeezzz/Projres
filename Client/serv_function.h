@@ -42,5 +42,7 @@ extern int protocol_parser(char *msg, message *msg_rcv);
 extern int connect_serv();
 extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
 extern void sendUiMsg(char * content, fd_set *readfds, client_data *fd_array, int *num_clients);
+extern int get_serv_status(client_data *fd_array, int *num_clients, fd_set *readfds);
+extern int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds);
 
 #endif

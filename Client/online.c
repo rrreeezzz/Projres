@@ -1,6 +1,22 @@
 #include "online.h"
 
-int connect_serv(){
+int get_serv_status(client_data *fd_array, int *num_clients, fd_set *readfds){
+  if (online == 0) {
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDRSERVOFFLINE\n",readfds,fd_array,num_clients);
+    }
+    printf(BLUE"Vous êtes déconnecté du serveur d'adresses."RESET"\n");
+  } else if (online == 1){
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDRSERVONLINE\n",readfds,fd_array,num_clients);
+    }
+    printf(BLUE"Vous êtes connecté au serveur d'adresses."RESET"\n");
+  }
+
+  return 1;
+}
+
+int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
 
   online = 0;
 
@@ -57,6 +73,9 @@ int connect_serv(){
   }
 
   printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n\n");
+  if (userInterface_fd > 0) {
+    sendUiMsg("ADDRSERVONLINE\n",readfds,fd_array,num_clients);
+  }
   close(online);
   return 0;
 }
@@ -120,7 +139,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   return 0;
 }
 
-int erase_serv(){
+int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
 
   online = 0;
 
@@ -156,6 +175,9 @@ int erase_serv(){
   }
 
   printf(BLUE"[PROGRAM] : You have been erased from the database."RESET"\n");
+  if (userInterface_fd > 0) {
+    sendUiMsg("ADDRSERVOFFLINE\n",readfds,fd_array,num_clients);
+  }
   close(online);
   return 0;
 }

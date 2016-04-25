@@ -23,9 +23,10 @@
 int online;
 #define MAX_SIZE_PARAMETER 70
 
-extern int connect_serv();
+extern int get_serv_status(client_data *fd_array, int *num_clients, fd_set *readfds);
+extern int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds);
 extern int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *readfds, waitList *waitlist);
-extern int erase_serv();
+extern int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds);
 extern int get_Config(char * conf);
 
 #endif
