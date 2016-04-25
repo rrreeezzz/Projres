@@ -99,7 +99,7 @@ int recvName(){
 	return 0;
 }
 
-int connect_client(){
+int connect_client(int stdincdt){
   	struct sockaddr_in address;
 
     //Creation socket client
@@ -134,8 +134,11 @@ int connect_client(){
     }
 
     FD_ZERO(&readfds);
-    FD_SET(0,&readfds);
+		if (stdincdt == 1){
+			FD_SET(0,&readfds);
+		}
     FD_SET(fdClientPrincipal,&readfds);
+
 
     return 0;
 }
@@ -147,28 +150,30 @@ int connect_client(){
 * 0 => deroulement normal
 * 1 => deconnection normale
 */
-int routine_client(){
+int routine_client(int stdincdt){
   fd_set testfds;
+	char msg[WRITE_SIZE];
 
+	//Structure de timeout
+	struct timeval timeoutSelect;
+	timeoutSelect.tv_usec = 10; //10 microsecondes
 	testfds = readfds;
 
   //On regarde l'activitee des FD
-	if(select(fdClientPrincipal+1, &testfds, NULL, NULL, NULL) < 0) {
-		perror("Select");
-		return -1;
+	if(select(fdClientPrincipal+1, &testfds, NULL, NULL, &timeoutSelect) < 0) {
+		return 0;
 	}
-
-  //Activitee du clavier
-	/*
-	if (FD_ISSET(0, &testfds)) {
-		fgets(msg, WRITE_SIZE, stdin);
-		sendRequest(msg);
+	if (stdincdt == 1){
+		if (FD_ISSET(0, &testfds)) {
+			fgets(msg, WRITE_SIZE, stdin);
+			sendRequest(msg);
+		}
 	}
-	*/
 
   //Retour de l'ui
 	if (FD_ISSET(fdClientPrincipal, &testfds)) {
 		traiterRequete();
 	}
+
   return 0;
 }

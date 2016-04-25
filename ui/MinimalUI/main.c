@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
 
 	//On tente de se connecter
-	if (connect_client() < 0){
+	if (connect_client(MINIMALUI_STDIN) < 0){
 		perror("Impossible to reach the server");
 		exit(EXIT_FAILURE);
 	} else {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//On execute la routine du client
-  while ( routine_client() == 0) {}
+  while ( routine_client(MINIMALUI_STDIN) == 0) {}
 
 	exit(EXIT_SUCCESS);
 }

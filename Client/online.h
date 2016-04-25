@@ -18,6 +18,7 @@
 
 #include "message.h"
 #include "protocole.h"
+#include "serv_function.h"
 
 int online;
 

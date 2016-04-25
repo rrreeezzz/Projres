@@ -2,7 +2,7 @@
 
 echo -e "\033[31mInstallation du programme...\033[0m"
 
-cd ./Client && make && cd ../server_lib && make && cd ../ui && make
+cd ./Client && make && cd ../server_lib && make && cd ../ui && gcc `pkg-config --cflags gtk+-3.0` ui.c -o ui `pkg-config --libs gtk+-3.0`
 
 if test $? == 0
 then

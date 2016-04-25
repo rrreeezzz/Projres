@@ -133,10 +133,10 @@ void * file_transfer(void *arg) {
   fd_array = data->fd_array;
   num_clients = data->num_clients;
 
-  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { 
+  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) {
    	transfer_msg(msg, buffer, n);
    	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
-   	memset(buffer, '\0', WRITE_SIZE); 
+   	memset(buffer, '\0', WRITE_SIZE);
    	//usleep(100);
   }
 
@@ -159,7 +159,7 @@ void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, in
     printf("Using vocal message failed\n");
     return;
   }
-  
+
   //On remplit la structure
   data.file_fd = file_fd;
   data.client_sockfd = client_sockfd;
@@ -178,7 +178,7 @@ void * vocal_transfer(void *arg) {
   paramThread * data = (paramThread*) arg;
   int file_fd;
   int client_sockfd;
-  char buffer[WRITE_SIZE]; 
+  char buffer[WRITE_SIZE];
   fd_set *readfds;
   client_data *fd_array;
   int *num_clients;
@@ -196,14 +196,13 @@ void * vocal_transfer(void *arg) {
   vocal_begin(msg);
   send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
   usleep(500); //Au cazou
-  
 
-  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) { 
-   	vocal_msg(msg, buffer, n);
-   	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
-   	memset(buffer, '\0', WRITE_SIZE); 
-   	//usleep(100);
-	
+
+  while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) {
+    vocal_msg(msg, buffer, n);
+    send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+    memset(buffer, '\0', WRITE_SIZE);
+    //usleep(100);
   }
 
   usleep(100); //Au cazouuu
