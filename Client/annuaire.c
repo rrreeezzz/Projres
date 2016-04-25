@@ -73,7 +73,7 @@ int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char 
   if(contact_data[2][0] != '\0') {
     port = atoi(contact_data[2]);
     if(port <= 0 || port >= 65536 || ((strcmp(contact_data[1], "0.0.0.0") == 0) && (port == General_Port))) {
-      port == -1;
+      port = -1;
     } else {
       strcat(contact_data[1], ":");
       strcat(contact_data[1], contact_data[2]);

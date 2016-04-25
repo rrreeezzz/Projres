@@ -5,12 +5,15 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 	struct hostent *hostinfo;
 	char *posPort = NULL;
 	char hostname[MAX_SIZE_ADDRESS]; //Changer 256, et surtout dans les fgets car cela peut poser des problèmes de sécurité
+	char address[MAX_SIZE_ADDRESS];
 	char temp[MAX_SIZE_ADDRESS];
 	int i, countpoint, countspace, countcolon;
 	int bchar;
 
 	if(user == NULL){
-		while(strlen(hostname) == 0 || *port == -1 || countpoint != 3 || countspace > 1 || countcolon != 1) {
+		while(strlen(hostname) == 0 || *port == -1 || countpoint != 3 || (countspace > 1 && countcolon == 1) || !isdigit(hostname[0])) {
+
+			memset(hostname, '\0', strlen(hostname));
 			fgets(hostname, WRITE_SIZE, stdin);
 
 			if(strcmp(hostname, "/exit\n") == 0) {
@@ -19,19 +22,24 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				break;
 			}
 			/* Vérification de la taille de l'adresse */
-			if(strlen(hostname) < MIN_SIZE_ADDRESS || strlen(hostname) > MAX_SIZE_ADDRESS) {
+			if(strlen(hostname) < MIN_SIZE_ADDRESS || strlen(hostname) > MAX_SIZE_ADDRESS ) {
 				printf(BLUE"\n[PROGRAM] ----- Wrong length : please enter correct address -----"RESET"\n");
 				continue;
 			}
+
+			hostname[strlen(hostname) - 1] = '\0';
+			printf("host:\"%s\"\n", hostname);
 			/* Vérification de la syntaxe de l'adresse*/
+			bchar = 0; countpoint=0; countcolon=0; countspace=0;
 			for (i=0; i < strlen(hostname); i++) {
 				if(hostname[i] == '.') {countpoint++;}
 				if(hostname[i] == ' ') {countspace++;}
 				if(hostname[i] == ':') {countcolon++;}
 				bchar = (isdigit((unsigned char) hostname[i]) || hostname[i] == '.' || hostname[i] == ':' || hostname[i] == ' ') ? 0 : 1;
-				if(bchar) {break;}
+				if(bchar) {printf("bchar : \"%c\"", hostname[i]); break;}
 			}
-			if(countpoint != 3 || bchar || countspace > 1 || countcolon != 1) {
+			printf("point:%i\tspace:%i\tcolon:%i\tbchar:%i\n", countpoint, countspace, countcolon, bchar);
+			if(countpoint != 3 || bchar || (countspace != 1 && countcolon == 1) || !isdigit(hostname[0])) {
 				printf(BLUE"\n[PROGRAM] ----- Wrong syntax : please enter correct address -----"RESET"\n");
 				continue;
 			}
@@ -45,6 +53,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				if(*port <= 0 || *port >= 100000 || ((strncmp(hostname, "0.0.0.0", 7) == 0) && *port == General_Port))
 				*port = -1;
 			}
+			printf("yolo\n");
 			if(posPort == NULL || *port == -1){
 				printf(BLUE"\n[PROGRAM] -----Please enter correct address-----"RESET"\n");
 				continue;
@@ -53,9 +62,11 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 			strncpy(temp, hostname, ((int) strlen(hostname) - (int) strlen(posPort)));
 			temp[((int) strlen(hostname) - (int) strlen(posPort))] = '\0';
 
-			if((hostinfo = gethostbyname(temp)) == NULL)
-			memset(hostname, 0, sizeof (hostname));
+			if((hostinfo = gethostbyname(temp)) == NULL) {
+				memset(hostname, '\0', sizeof (hostname));
+			}
 		}
+
 	} else {
 
 		posPort = strchr(user->address, ':');
