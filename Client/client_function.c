@@ -11,7 +11,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 	int bchar;
 
 	if(user == NULL){
-		while(strlen(hostname) == 0 || *port == -1 || countpoint != 3 || (countspace > 1 && countcolon == 1) || !isdigit(hostname[0])) {
+		while(strlen(hostname) == 0 || *port == -1 || countpoint != 3 || ((countspace == 1 && countcolon > 0) && (countcolon == 1 && countspace > 0)) || !isdigit(hostname[0])) {
 
 			memset(hostname, '\0', strlen(hostname));
 			fgets(hostname, WRITE_SIZE, stdin);
@@ -39,7 +39,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				if(bchar) {printf("bchar : \"%c\"", hostname[i]); break;}
 			}
 			printf("point:%i\tspace:%i\tcolon:%i\tbchar:%i\n", countpoint, countspace, countcolon, bchar);
-			if(countpoint != 3 || bchar || (countspace != 1 && countcolon == 1) || !isdigit(hostname[0])) {
+			if(countpoint != 3 || bchar || ((countspace == 1 && countcolon > 0) && (countcolon == 1 && countspace > 0)) || !isdigit(hostname[0])) {
 				printf(BLUE"\n[PROGRAM] ----- Wrong syntax : please enter correct address -----"RESET"\n");
 				continue;
 			}
@@ -229,6 +229,7 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 		printf(BLUE"[PROGRAM] Error command. Please use \"/refuse username\" as described previously."RESET"\n\n");
 		return -1;
 	}
+	client_name[strlen(client_name)-1] = '\0';
 	for(i=0 ; i < strlen(client_name) ; i++) {
     bchar = (isalnum((unsigned char) client_name[i])) ? 0 : 1;
     if(bchar) {break;}
@@ -237,7 +238,6 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
     printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/refuse username\" as described previously.\n"RESET"\n\n");
     return -1;
   }
-	client_name[strlen(client_name)-1] = '\0';
 
 	if((client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist)) == -1) {
 		printf(BLUE"[PROGRAM] This user is not in your waiting list."RESET"\n\n");
@@ -285,6 +285,7 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n\n");
 		return -1;
 	}
+	client_name[strlen(client_name)-1] = '\0';
 	for(i=0 ; i < strlen(client_name) ; i++) {
     bchar = (isalnum((unsigned char) client_name[i])) ? 0 : 1;
     if(bchar) {break;}
@@ -293,7 +294,6 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
     printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/accept username\" as described previously.\n"RESET"\n\n");
     return -1;
   }
-	client_name[strlen(client_name)-1] = '\0';
 
 	if((client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist)) == -1) {
 		printf(BLUE"[PROGRAM] This user is not in your waiting list."RESET"\n\n");
