@@ -624,11 +624,11 @@ void help(char * msg) {
 
 	char * posSpace = NULL;
 	if((posSpace = strchr(msg, '\n')) == NULL) {
-		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 		return;
 	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 		return;
 	}
 	if (posSpace[0] == ' ') {
@@ -658,7 +658,9 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The search function allows you to search user in the annuary server.\n\t  Use : \"/search USERNAME\""RESET"\n");
 	} else if (strcmp(posSpace, "erase\n") == 0) {
 		printf(BLUE"\n[PROGRAM] The erase function allows you to delete you'r data in the anuary server send by /online.\n\t  Use : \"/erase\""RESET"\n");
+	} else if (strcmp(posSpace, "disconnect\n") == 0) {
+		printf(BLUE"\n[PROGRAM] The diconnect function allows you to disconnect from a user.\n\t  Use : \"/disconnect\""RESET"\n");
 	} else {
-		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }
