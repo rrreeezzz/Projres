@@ -164,7 +164,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
     	// 203 : TRANSFER_INITIATE
       case 203:
-	  if((fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = ask_transfer(msg_rcv, filename)) < 0){
+	  	if((fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = ask_transfer(msg_rcv, filename)) < 0){
 				transfer_refused(msg_send);
 			} else {
 				transfer_accept(msg_send, filename);

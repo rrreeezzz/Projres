@@ -426,22 +426,67 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 }
 
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
-	char username[16];
+
+	char filepath[MAX_SIZE_FILEPATH];
+	char username[MAX_SIZE_USERNAME];
+	char transfer_data[2][MAX_SIZE_FILEPATH]; // filepath > username
+	char data[MAX_SIZE_USERNAME+MAX_SIZE_FILEPATH];
+	char * posSpace;
+	char *pch;
 	int client_fd = 0;
-	if (strlen(cmd) < 12) { //12 car strlen("/transfer \n") = 12, et name entre 3 et 16 char, donc 12 minimum
-		printf(BLUE"[PROGRAM] Wrong argument : /transfer name"RESET"\n");
-		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
-		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+	int i = 0;
+	int bchar;
+
+	memset(transfer_data[0], '\0', strlen(transfer_data[0]));
+  memset(transfer_data[1], '\0', strlen(transfer_data[1]));
+
+	if (strlen(cmd) < 12+MIN_SIZE_USERNAME || strlen(cmd) > 11+MAX_SIZE_FILEPATH+MAX_SIZE_USERNAME) { // strlen("/transfer \n") = 11
+		printf(BLUE"[PROGRAM] Arguments too short or too long : please use \"/transfer username filepath\"\n[PROGRAM] If your file is located is very distant directory, think of moving it near the application's directory before the transfer."RESET"\n");
 		return;
 	}
-	sscanf(cmd+10, "%s", username); // +10 car cmd+10 correspond aux arguments (noms d'utilisateurs)
+	if ((posSpace = strchr(cmd, ' ')) == NULL) {
+		printf(BLUE"[PROGRAM] Error command : please use \"/transfer username filepath\""RESET"\n");
+		return;
+	}
+	strcpy(data, posSpace+1);
+	data[strlen(data) - 1] = '\0';
+	printf("data %s", data);
+  /* Remplissage de la structure contact_data */
+  pch = strtok (data," ");
+  while (pch != NULL) {
+    strcpy(transfer_data[i], pch);
+    pch = strtok (NULL, " ");
+    i++;
+		if(i==2) {break;}
+  }
+	printf("data1 \"%s\"\tdata2 \"%s\"\n", transfer_data[0], transfer_data[1]);
+	/* Vérification de la longueur des données */
+  if(strlen(transfer_data[0]) < MIN_SIZE_USERNAME || strlen (transfer_data[0]) > MAX_SIZE_USERNAME || strlen(transfer_data[1]) < 1 || strlen(transfer_data[1]) > MAX_SIZE_FILEPATH) {
+    printf(BLUE"[PROGRAM] Error command. Please use \"/transfer username filepath\"."RESET"\n\n");
+    return;
+  }
+  /* Vérification des caractères du username */
+	bchar = 0;
+  for(i=0 ; i < strlen(transfer_data[0]) ; i++) {
+    bchar = (isalnum((unsigned char) transfer_data[0][i])) ? 0 : 1;
+    if(bchar) {break;}
+  }
+  if (bchar) {
+    printf(BLUE"[PROGRAM] Error command : Username must be composed of alphanumeric characters.\n[PROGRAM] Please use \"/add username address"RED":"BLUE"port\".\n"RESET"\n\n");
+    return;
+  }
+
+	strcpy(username, transfer_data[0]);
+	strcpy(filepath, transfer_data[1]);
+
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
 		printf(BLUE"[PROGRAM] /transfer aborted"RESET"\n");
 		return;
 	}
-	init_transfer(client_fd, readfds, fd_array, num_clients);
+
+	init_transfer(filepath, client_fd, readfds, fd_array, num_clients);
+
 }
 
 void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
@@ -455,23 +500,14 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	char *pch;
 	int i=0;
 	int client_sockfd;
+	int bchar;
 
-	message *frame = (message *) malloc(sizeof(message));
-
-	if (strlen(cmd) < 10) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
-		printf(BLUE"[PROGRAM] Wrong arguments. Please use \"/msg username message\""RESET"\n");
-		free(frame);
+	/* Initialisation et gestion des erreurs */
+	if (strlen(cmd) < MIN_SIZE_USERNAME+6 || strlen(cmd) > WRITE_SIZE+MIN_SIZE_USERNAME+6) { // "/msg " = 5 + un espace = 6
+		printf(BLUE"[PROGRAM] Message too short or too long. Please use \"/msg username message\""RESET"\n");
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
-			sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
-		}
-		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on évite qu'il puisse écrire à l'infini
-		printf(BLUE"[PROGRAM] Message too long"RESET"\n");
-		free(frame);
-		//on avertis l'ui si elle est connectee
-		if (userInterface_fd > 0 ) {
-			sendUiMsg("MESSAGEERROR Message too long\n",readfds,fd_array,num_clients);
+			sendUiMsg("MESSAGEERROR Message too short or too long\n",readfds,fd_array,num_clients);
 		}
 		return;
 	}
@@ -493,32 +529,47 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
     strcat(contact_data[1], msgtmp);
     pch = strtok (NULL, " ");
   }
-
 	/* Vérification de la syntaxe de la commande */
-  if(!isalpha(contact_data[0][0]) || strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/msg username message\""RESET"\n");
+  if(strlen(contact_data[0]) < MIN_SIZE_USERNAME || strlen (contact_data[0]) > MAX_SIZE_USERNAME) {
+    printf(BLUE"[PROGRAM] Username length is wrong. Please use \"/msg username message\""RESET"\n");
+    //on avertis l'ui si elle est connectee
+    if (userInterface_fd > 0) {
+      sendUiMsg("ADDCONTACTERROR Username length is wrong.\n",readfds,fd_array,num_clients);
+    }
+    return;
+  }
+	bchar = 0;
+	/* Vérification des caractères du username */
+  for(i=0 ; i < strlen(contact_data[0]) ; i++) {
+    bchar = (isalnum((unsigned char) contact_data[0][i])) ? 0 : 1;
+    if(bchar) {break;}
+  }
+  if (bchar) {
+    printf(BLUE"[PROGRAM] Error command : Username must be composed of alphanumeric characters.\n[PROGRAM] Please use \"/add username address"RED":"BLUE"port\".\n"RESET"\n\n");
     //on avertis l'ui si elle est connectee
     if (userInterface_fd > 0) {
       sendUiMsg("ADDCONTACTERROR Wrong command.\n",readfds,fd_array,num_clients);
     }
     return;
   }
+	/* Copie des données */
 	strcpy(username, contact_data[0]);
 	strcpy(msg, contact_data[1]);
 	msg[strlen(msg)-1] = '\0';
 	/* On réinitialise le tableau pour les prochains messages */
 	memset(contact_data[1], '\0', sizeof(contact_data[1]));
 
-
+	/* Vérification de la présence du client dans les utilisateurs connectés */
 	if ((client_sockfd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
-		free(frame);
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
 			sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
 		}
 		return;
 	}
+	/* Fin de l'initialisation / gestion des erreurs : on alloue la mémoire nécessaire */
+	message *frame = (message *) malloc(sizeof(message));
 
 	normal_msg(frame, msg);
 	send_msg(frame, &client_sockfd, readfds, fd_array, num_clients);
@@ -534,65 +585,65 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 }
 
 void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+
 	char msg[WRITE_SIZE];
+	char *posSpace = NULL;
 	int i;
 	message *frame = (message *) malloc(sizeof(message));
-	char *posSpace = NULL;
 
 	if (mod == 0) {
-		if (strcmp(cmd, "/all\n")==0) {
-			printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
-
+		/* Initialisation et gestion des erreurs mod 0*/
+		if (strlen(cmd) < 7 || strlen(cmd) > WRITE_SIZE+6) { // "/all \n" = 6
+			printf(BLUE"[PROGRAM] Message too short or too long. Please use \"/all message\""RESET"\n");
 			//on avertis l'ui si elle est connectee
 			if (userInterface_fd > 0 ) {
-				sendUiMsg("ALLMSGERROR Command Error\n",readfds,fd_array,num_clients);
+				sendUiMsg("ALLMSGERROR Message too short or too long\n",readfds,fd_array,num_clients);
 			}
+			return;
+		}
+		/* Fin initialisation / gestion d'erreurs mod 0 */
 
-			return ;
-
-		} else if (strlen(cmd) > 6) { //6 car strlen("/all \n") = 6 = message vide
 		strcpy(msg, cmd+5);
-	} else {
-		printf(BLUE"[PROGRAM] Error command. Please use \"/all message\"."RESET"\n");
+		normal_msg(frame, msg);
 
+		for (i=0; i<*num_clients ; i++) {
+			if (fd_array[i].fd_client != userInterface_fd){
+				send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			}
+		}
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
-			sendUiMsg("ALLMSGERROR Command Error\n",readfds,fd_array,num_clients);
+			char message[MSG_SIZE];
+			sprintf(message,"ALLMSGCONFIRM %s \n",msg);
+			sendUiMsg(message,readfds,fd_array,num_clients);
 		}
-
-		free(frame);
-		return ;
-
-	}
-	normal_msg(frame, msg);
-	for (i=0; i<*num_clients ; i++) {
-		if (fd_array[i].fd_client != userInterface_fd){
-			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+	} else { //mod = 1
+		/* Initialisation et gestion des erreurs mod 1*/
+		if (strlen(cmd) < 3 || strlen(cmd) > WRITE_SIZE+1) { // Eviter message vide + pour le \n
+			printf(BLUE"[PROGRAM] Message too short or too long."RESET"\n");
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("ALLMSGERROR Message too short or too long\n",readfds,fd_array,num_clients);
+			}
+			return;
+		}
+		/* Fin initialisation / gestion d'erreurs mod 1 */
+		normal_msg(frame, cmd);
+		for (i=0; i<*num_clients ; i++) {
+			if (fd_array[i].fd_client != userInterface_fd){
+				send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
+			}
+		}
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			char message[MSG_SIZE];
+			sprintf(message,"ALLMSGCONFIRM %s \n",cmd);
+			sendUiMsg(message,readfds,fd_array,num_clients);
 		}
 	}
-	//on avertis l'ui si elle est connectee
-	if (userInterface_fd > 0 ) {
-		char message[MSG_SIZE];
-		sprintf(message,"ALLMSGCONFIRM %s \n",msg);
-		sendUiMsg(message,readfds,fd_array,num_clients);
-	}
-} else { //mod = 1
-	normal_msg(frame, cmd);
-	for (i=0; i<*num_clients ; i++) {
-		if (fd_array[i].fd_client != userInterface_fd){
-			send_msg(frame, &(fd_array[i].fd_client),readfds,fd_array,num_clients);
-		}
-	}
-	//on avertis l'ui si elle est connectee
-	if (userInterface_fd > 0 ) {
-		char message[MSG_SIZE];
-		sprintf(message,"ALLMSGCONFIRM %s \n",cmd);
-		sendUiMsg(message,readfds,fd_array,num_clients);
-	}
-}
 
-free((*frame).msg_content);
-free(frame);
+	free((*frame).msg_content);
+	free(frame);
 }
 
 int is_sep(char c) {
