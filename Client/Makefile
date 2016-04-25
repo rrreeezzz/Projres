@@ -1,17 +1,17 @@
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-	CFLAGS=-Wall -g -lpthread -framework OpenAL -lsndfile -DPROJ=1
+	CFLAGS=-Wall -g -lpthread -framework OpenAL -lsndfile
 else
-	CFLAGS=-Wall -g -lpthread -lopenal -lsndfile -DPROJ=1
+	CFLAGS=-Wall -g -lpthread -lopenal -lsndfile
 endif
 
 all: client clean
 
-client: message.h message.c protocole.h protocole.c client.c client_function.h client_function.c serv_function.h serv_function.c transfert.c annuaire.c annuaire.h online.c online.h
-	gcc -c message.c
-	gcc -c protocole.c
+client: 
+	gcc -c message.c -DPROJ
+	gcc -c protocole.c -DPROJ
 	gcc -c client_function.c
-	gcc -c serv_function.c
+	gcc -c serv_function.c -DPROJ
 	gcc -c annuaire.c
 	gcc -c client.c
 	gcc -c transfert.c
@@ -30,7 +30,7 @@ mrproper: clean
 ecole: client_ecole clean
 	
 
-client_ecole: message.h message.c protocole.h protocole.c client.c client_function.h client_function.c serv_function.h serv_function.c transfert.c annuaire.c annuaire.h online.c online.h
+client_ecole:
 	gcc -c message.c
 	gcc -c protocole.c
 	gcc -c client_function.c
