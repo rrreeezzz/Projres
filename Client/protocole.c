@@ -10,7 +10,7 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 	sprintf(msg, "%d/%d/%d/", (*segment).code, (*segment).length, (int) (*segment).temps);
 	//printf("msg envoyé : %s\n", msg); //pour debug
 	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
-	
+
 	if (write(*fd, msg, MSG_SIZE) <= 0) {
 		perror("Write error");
 		exitClient(*fd, readfds, fd_array, num_clients);
@@ -104,7 +104,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			// 200 : SESSION_INITIATE Si un client se connecte
 			case 200:
 			if (strcmp((*msg_rcv).msg_content,"USERINTERFACE\0")==0){
-				printf(BLUE"\n[PROGRAM] A user interface at the adress "RED"%s"BLUE" is trying to establish a connection with you. It can control the program if you accept. Do you accept ? Type \"/accept "RED"%i"BLUE"\" or \"/refuse "RED"%i"BLUE"\"."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].address_client, *client_sockfd, *client_sockfd);
+				printf(BLUE"\n[PROGRAM] A user interface at the adress "RED"%s"BLUE" is trying to establish a connection with you. It can control the program if you accept. Do you accept ? Type \"/accept "RED"%s"BLUE"\" or \"/refuse "RED"%s"BLUE"\"."RESET"\n", fd_array[*num_clients+(*waitlist).nb_connect].address_client, (*msg_rcv).msg_content, (*msg_rcv).msg_content);
 			} else {
 				printf(BLUE"\n[PROGRAM] "RED"%s : %s"BLUE" is trying to establish a connection with you. Do you accept ? Type \"/accept "RED"%s"BLUE"\" or \"/refuse "RED"%s"BLUE"\"."RESET"\n", (*msg_rcv).msg_content, fd_array[*num_clients+(*waitlist).nb_connect].address_client, (*msg_rcv).msg_content, (*msg_rcv).msg_content);
 

@@ -10,7 +10,7 @@ void ask_name(){
 	int result;
 	int bchar=0;
 
-	printf(BLUE"[PROGRAM] Please enter your name: "RESET"\n");
+	printf(BLUE"[PROGRAM] Please enter your name (alphabetic characters only): "RESET"\n");
 	do {
 		memset (user, '\0', sizeof(user));//réinitialisation chaine
 		if ((result = read(0, user, WRITE_SIZE)) <= 0){
@@ -296,110 +296,110 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		fgets(msg, WRITE_SIZE, stdin);
 	} else { //Si le message viens de l'ui
 
-	char buffer[MSG_SIZE];
+		char buffer[MSG_SIZE];
 
-	//On lis le message, sinon on quitte la connection en resettant le fd de l'interface
-	if ( read(fd, buffer, MSG_SIZE) < 0 ){
-		exitClient(fd, readfds, fd_array, num_clients);
-		userInterface_fd=-1;
-		return ;
-	}
+		//On lis le message, sinon on quitte la connection en resettant le fd de l'interface
+		if ( read(fd, buffer, MSG_SIZE) < 0 ){
+			exitClient(fd, readfds, fd_array, num_clients);
+			userInterface_fd=-1;
+			return ;
+		}
 
-	message *msg_rcv = (message *) malloc(sizeof(message));
+		message *msg_rcv = (message *) malloc(sizeof(message));
 
-	printf("%s\n", buffer );
+		printf("%s\n", buffer );
 
-	//On parse le message
-	if(protocol_parser(buffer, msg_rcv) == -1){
-		free(msg_rcv);
-		printf(GREEN"Error parsing the message"RESET"\n");
-		return ;
-	}
+		//On parse le message
+		if(protocol_parser(buffer, msg_rcv) == -1){
+			free(msg_rcv);
+			printf(GREEN"Error parsing the message"RESET"\n");
+			return ;
+		}
 
-	//protocole de communication avec l'application, on reimplente uniquement les fonctions basiques
-	switch((*msg_rcv).code) {
+		//protocole de communication avec l'application, on reimplente uniquement les fonctions basiques
+		switch((*msg_rcv).code) {
 
-		// 100 : Basic command
-		case 100:
-		printf(BLUE"["GREEN"UI"BLUE"] %s "RESET"\n", (*msg_rcv).msg_content);
-		memcpy(msg,(*msg_rcv).msg_content,WRITE_SIZE);
-		break;
+			// 100 : Basic command
+			case 100:
+			printf(BLUE"["GREEN"UI"BLUE"] %s "RESET"\n", (*msg_rcv).msg_content);
+			memcpy(msg,(*msg_rcv).msg_content,WRITE_SIZE);
+			break;
 
-		// 303 : SESSION_END
-		case 303:
-		//On deconnecte l'utilisateur
-		exitClient(userInterface_fd, readfds, fd_array, num_clients);
+			// 303 : SESSION_END
+			case 303:
+			//On deconnecte l'utilisateur
+			exitClient(userInterface_fd, readfds, fd_array, num_clients);
 
-		//On execute default
+			//On execute default
 
-		//On ne traite pas la commande
-		default:
+			//On ne traite pas la commande
+			default:
 
-		//On libere le message
-		free(msg_rcv);
+			//On libere le message
+			free(msg_rcv);
+			free(msg_rcv->msg_content);
+
+			//On sors de la fonction
+			return ;
+
+		}
 		free(msg_rcv->msg_content);
-
-		//On sors de la fonction
-		return ;
-
+		free(msg_rcv);
 	}
-	free(msg_rcv->msg_content);
-	free(msg_rcv);
-}
 
-//printf(CYAN"%s\n"RESET,msg );
+	//printf(CYAN"%s\n"RESET,msg );
 
-if(NULL == strchr(msg, '\n')){
-	printf(BLUE"[PROGRAM] : Message too long, max is "RED"%d"BLUE" caracters."RESET"\n", WRITE_SIZE);
-	while((ch = getchar()) != '\n'){
-		if(ch < 0) {
-			perror("Erreur taille message");
+	if(NULL == strchr(msg, '\n')){
+		printf(BLUE"[PROGRAM] : Message too long, max is "RED"%d"BLUE" caracters."RESET"\n", WRITE_SIZE);
+		while((ch = getchar()) != '\n'){
+			if(ch < 0) {
+				perror("Erreur taille message");
+			}
 		}
-	}
-} else {
-
-	if (strcmp(msg, "/quit\n")==0) {
-		quit_server(readfds, fd_array, server_sockfd, num_clients);
-	} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
-		help(msg);
-	} else if (strcmp(msg, "/connect\n")==0){
-		client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
-	} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
-		connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
-	} else if (strncmp(msg, "/accept", 7)==0){ // /accept username
-		connect_accept(fd_array, num_clients, readfds, msg, waitlist);
-	} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse username
-		connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
-	} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
-		disconnect(maxfds, readfds, num_clients, fd_array, msg);
-	} else if (strncmp(msg, "/msg", 4)==0) {
-		slash_msg(msg, readfds, fd_array, num_clients);
-	} else if (strncmp(msg, "/all", 4)==0) {
-		slash_all(0, msg, readfds, fd_array, num_clients);
-	} else if (strncmp(msg, "/add", 4) == 0){ // /add username address:port ou /add username (online)
-		add_contact(readfds,fd_array, num_clients,msg);
-	} else if (strncmp(msg, "/remove", 7) == 0){
-		remove_contact(readfds,fd_array, num_clients,msg);
-	} else if (strcmp(msg, "/contact\n") == 0){
-		print_contact_list(readfds,fd_array, num_clients);
-	} else if (strcmp(msg, "/who\n") == 0) {
-		print_connected_user(readfds,fd_array, num_clients);
-	} else if (strncmp(msg, "/transfer", 9)==0){
-		slash_transfer(msg, readfds, fd_array, num_clients);
-	} else if (strcmp(msg, "/online\n")==0){
-		connect_serv();
-	} else if (strncmp(msg, "/search", 7)==0){
-		search_serv(msg, fd_array, num_clients, readfds, waitlist);
-	} else if (strcmp(msg, "/erase\n")==0){
-		erase_serv();
 	} else {
-		if(*num_clients > 0) {
-			slash_all(1, msg, readfds, fd_array, num_clients);
+
+		if (strcmp(msg, "/quit\n")==0) {
+			quit_server(readfds, fd_array, server_sockfd, num_clients);
+		} else if (strcmp(msg, "/help\n")==0 || strncmp(msg, "/help", 5)==0) {
+			help(msg);
+		} else if (strcmp(msg, "/connect\n")==0){
+			client(maxfds, readfds, num_clients, fd_array, NULL, waitlist);
+		} else if (strncmp(msg, "/connect", 8)==0){ //cas ou on met un contact après
+			connect_to_contact(maxfds, readfds, num_clients, fd_array, msg, waitlist);
+		} else if (strncmp(msg, "/accept", 7)==0){ // /accept username
+			connect_accept(fd_array, num_clients, readfds, msg, waitlist);
+		} else if (strncmp(msg, "/refuse", 7)==0){ // /refuse username
+			connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
+		} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
+			disconnect(maxfds, readfds, num_clients, fd_array, msg);
+		} else if (strncmp(msg, "/msg", 4)==0) {
+			slash_msg(msg, readfds, fd_array, num_clients);
+		} else if (strncmp(msg, "/all", 4)==0) {
+			slash_all(0, msg, readfds, fd_array, num_clients);
+		} else if (strncmp(msg, "/add", 4) == 0){ // /add username address:port ou /add username (online)
+			add_contact(readfds,fd_array, num_clients,msg);
+		} else if (strncmp(msg, "/remove", 7) == 0){
+			remove_contact(readfds,fd_array, num_clients,msg);
+		} else if (strcmp(msg, "/contact\n") == 0){
+			print_contact_list(readfds,fd_array, num_clients);
+		} else if (strcmp(msg, "/who\n") == 0) {
+			print_connected_user(readfds,fd_array, num_clients);
+		} else if (strncmp(msg, "/transfer", 9)==0){
+			slash_transfer(msg, readfds, fd_array, num_clients);
+		} else if (strcmp(msg, "/online\n")==0){
+			connect_serv();
+		} else if (strncmp(msg, "/search", 7)==0){
+			search_serv(msg, fd_array, num_clients, readfds, waitlist);
+		} else if (strcmp(msg, "/erase\n")==0){
+			erase_serv();
 		} else {
-			if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			if(*num_clients > 0) {
+				slash_all(1, msg, readfds, fd_array, num_clients);
+			} else {
+				if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+			}
 		}
 	}
-}
 }
 
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {

@@ -14,7 +14,7 @@
 int main(int argc, char *argv[]) {
 
   strcpy(adresseClientPrincipal,"127.0.0.1");
-  portClientPrincipal = 55067;
+  portClientPrincipal = 54623;
 
 	if (connect_client() < 0){
 		perror("Impossible to reach the server");

@@ -4,21 +4,38 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 
 	struct hostent *hostinfo;
 	char *posPort = NULL;
-	char hostname[256]; //Changer 256, et surtout dans les fgets car cela peut poser des problèmes de sécurité
-	char temp[256];
+	char hostname[MAX_SIZE_ADDRESS]; //Changer 256, et surtout dans les fgets car cela peut poser des problèmes de sécurité
+	char temp[MAX_SIZE_ADDRESS];
+	int i, countpoint, countspace, countcolon;
+	int bchar;
 
 	if(user == NULL){
-		while(strlen(hostname) == 0 || *port == -1){
-			fgets(hostname, 256, stdin);
+		while(strlen(hostname) == 0 || *port == -1 || countpoint != 3 || countspace > 1 || countcolon != 1) {
+			fgets(hostname, WRITE_SIZE, stdin);
 
-			if(strcmp(hostname, "/quit\n") == 0) {
-				printf(BLUE"\n [PROGRAM] Getting out of connection routine."RESET"\n");
+			if(strcmp(hostname, "/exit\n") == 0) {
+				printf(BLUE"\n[PROGRAM] Getting out of connection routine."RESET"\n");
+				*port = -1;
 				break;
 			}
-			if(strlen(hostname) > MAX_SIZE_ADDRESS || !isdigit(hostname[0])) {
-				printf(BLUE"\n [PROGRAM] -----Please enter correct address-----"RESET"\n");
+			/* Vérification de la taille de l'adresse */
+			if(strlen(hostname) < MIN_SIZE_ADDRESS || strlen(hostname) > MAX_SIZE_ADDRESS) {
+				printf(BLUE"\n[PROGRAM] ----- Wrong length : please enter correct address -----"RESET"\n");
 				continue;
 			}
+			/* Vérification de la syntaxe de l'adresse*/
+			for (i=0; i < strlen(hostname); i++) {
+				if(hostname[i] == '.') {countpoint++;}
+				if(hostname[i] == ' ') {countspace++;}
+				if(hostname[i] == ':') {countcolon++;}
+				bchar = (isdigit((unsigned char) hostname[i]) || hostname[i] == '.' || hostname[i] == ':' || hostname[i] == ' ') ? 0 : 1;
+				if(bchar) {break;}
+			}
+			if(countpoint != 3 || bchar || countspace > 1 || countcolon != 1) {
+				printf(BLUE"\n[PROGRAM] ----- Wrong syntax : please enter correct address -----"RESET"\n");
+				continue;
+			}
+			/* Vérification du port */
 			if((posPort = strchr(hostname, ' ')) != NULL){
 				*port = (int) strtol(posPort, NULL, 10);
 				if(*port <= 0 || *port >= 100000 || ((strncmp(hostname, "0.0.0.0", 7) == 0) && *port == General_Port))
@@ -29,7 +46,7 @@ struct hostent * ask_server_address(int *port, annuaireData *user){
 				*port = -1;
 			}
 			if(posPort == NULL || *port == -1){
-				printf(BLUE"\n [PROGRAM] -----Please enter correct address-----"RESET"\n");
+				printf(BLUE"\n[PROGRAM] -----Please enter correct address-----"RESET"\n");
 				continue;
 			}
 
@@ -63,17 +80,20 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 
 	//Si on ne peut pas recevoir le client
 	if (*num_clients >= MAX_CLIENTS) {
-		printf(BLUE"[Program] You tried to connect to someone, but you are already connected to too many clients."RESET"\n");
+		printf(BLUE"[Program] You tried to establish a connection with someone, but you are already connected to too many clients."RESET"\n\n");
 		return -1;
 	}
 
 	if(user != NULL){
 		hostinfo = ask_server_address(&port, user);
 	}else{
-		printf(BLUE"\n*** Enter server's address : ***"RESET"\n");
+		printf(BLUE"\n[PROGRAM] *** Enter server's address : \"address:port\" ***\n[PROGRAM] Type \"/exit\" to interrupt."RESET"\n\n");
 		hostinfo = ask_server_address(&port, NULL);
 	}
-
+	/* Cas où l'utilisateur veut quitter la routine de connexion */
+	if(port == -1) {
+		return -1;
+	}
 
 	sock_host = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -81,7 +101,7 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	address.sin_family = AF_INET;
 	address.sin_port = htons(port);
 	inet_ntop(AF_INET, &(address.sin_addr), client_inaddr, INET_ADDRSTRLEN);
-	printf(BLUE"\n*** Attempt to connect with "RED"%s:%i"BLUE" (enter \"/quit\" to stop): ***"RESET"\n\n", client_inaddr, port);
+	printf(BLUE"\n*** Attempt to establish a connection with "RED"%s:%i"BLUE" ***"RESET"\n\n", client_inaddr, port);
 
 	/* Connection au serveur */
 	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -158,7 +178,7 @@ int login_client(message *msg_send, int *client_sockfd, client_data *fd_array, i
     return 0;
 
   } else {
-    printf(BLUE"[PROGRAM] Session denied : "RED"%s"BLUE" already connected"RESET"\n", fd_array[waiting_ind].name_client);
+    printf(BLUE"[PROGRAM] Session denied : "RED"%s"BLUE" already connected"RESET"\n\n", fd_array[waiting_ind].name_client);
     session_denied(msg_send, 1);
 		send_msg(msg_send, client_sockfd,readfds,fd_array,num_clients);
 		/* Suppression des paramètres pré-enregistrés si les index sont différents */
@@ -183,26 +203,37 @@ int connect_refuse(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
 	int waiting_ind, waiting_arr;
+	int i, bchar;
 	char *posSpace = NULL;
 
-	if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
-		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+	if(strlen(msg) < MIN_SIZE_USERNAME+8 || strlen(msg) > MAX_SIZE_USERNAME+8) { // "/refuse " = 8
+		printf(BLUE"[PROGRAM] Error command. Please use \"/refuse username\" as described previously."RESET"\n\n");
 		return -1;
 	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+    printf(BLUE"[PROGRAM] Error command. Please use \"/refuse username\" as described previously."RESET"\n\n");
     return -1;
   }
 	if(strcpy(client_name, posSpace+1) == NULL) {
-		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+		printf(BLUE"[PROGRAM] Error command. Please use \"/refuse username\" as described previously."RESET"\n\n");
 		return -1;
 	}
+	for(i=0 ; i < strlen(client_name) ; i++) {
+    bchar = (isalnum((unsigned char) client_name[i])) ? 0 : 1;
+    if(bchar) {break;}
+  }
+  if (bchar) {
+    printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/refuse username\" as described previously.\n"RESET"\n\n");
+    return -1;
+  }
 	client_name[strlen(client_name)-1] = '\0';
-	/* Aucune erreur, on alloue la mémoire */
+
+	if((client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist)) == -1) {
+		printf(BLUE"[PROGRAM] This user is not in your waiting list."RESET"\n\n");
+    return -1;
+	}
+	/* Fin de l'initialisation / gestion d'erreurs : on alloue de la mémoire */
 	message *msg_send = (message *) malloc(sizeof(message));
-
-	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
-
 	waiting_ind = search_client_waiting_array_by_fd(client_sockfd, fd_array, num_clients, *waitlist);
 	waiting_arr = search_waiting_array_by_fd(client_sockfd, *waitlist);
 
@@ -228,29 +259,37 @@ int connect_accept(client_data *fd_array, int *num_clients, fd_set *readfds, cha
 
 	char client_name[MAX_SIZE_USERNAME];
 	int client_sockfd;
+	int i, bchar;
 	char *posSpace = NULL;
 
-	if(strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
-		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+	if(strlen(msg) < MIN_SIZE_USERNAME+8 || strlen(msg) > MAX_SIZE_USERNAME+8) { // "/accept " = 8
+		printf(BLUE"[PROGRAM] Error command : Username too short or too long.\n[PROGRAM] Please use \"/accept username\" as described previously."RESET"\n\n");
 		return -1;
 	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-    printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+    printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n\n");
     return -1;
   }
 	if(strcpy(client_name, posSpace+1) == NULL) {
-		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n");
+		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously."RESET"\n\n");
 		return -1;
 	}
-	posSpace = NULL;
-	if((posSpace = strchr(client_name, ' ')) != NULL) {
-		printf(BLUE"[PROGRAM] Error command. Please use \"/accept username\" as described previously. Be careful with space."RESET"\n");
+	for(i=0 ; i < strlen(client_name) ; i++) {
+    bchar = (isalnum((unsigned char) client_name[i])) ? 0 : 1;
+    if(bchar) {break;}
+  }
+  if (bchar) {
+    printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/accept username\" as described previously.\n"RESET"\n\n");
     return -1;
-	}
+  }
 	client_name[strlen(client_name)-1] = '\0';
 
-	client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist);
-	/* Aucune erreur, on alloue de la mémoire */
+	if((client_sockfd = search_client_waiting_fd_by_name(client_name, fd_array, num_clients, *waitlist)) == -1) {
+		printf(BLUE"[PROGRAM] This user is not in your waiting list."RESET"\n\n");
+    return -1;
+	}
+	/* Fin de l'initialisation / gestion d'erreurs : on alloue de la mémoire */
+
 	message *msg_send = (message *) malloc(sizeof(message));
 	//On lui demande de se logger
   if (login_client(msg_send, &client_sockfd, fd_array, num_clients, readfds, waitlist) != -1) {
@@ -267,21 +306,38 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
 
 	char *posSpace = NULL;
 	char name[MAX_SIZE_USERNAME];
-	int i;
+	int i, bchar;
 	int client_sockfd;
-	message *discomsg = (message *) malloc(sizeof(message));
+
+	if(strlen(msg) < MIN_SIZE_USERNAME+12 || strlen(msg) > MAX_SIZE_USERNAME+12) { // "/disconnect " = 12
+		printf(BLUE"[PROGRAM] Error command : Username too short or too long.\n[PROGRAM] Please use \"/disconnect username\"."RESET"\n\n");
+		return -1;
+	}
 
 	if((posSpace = strchr(msg, ' ')) == NULL){
-    printf(BLUE"[PROGRAM] Error command."RESET"\n");
+    printf(BLUE"[PROGRAM] Error command. Please use \"/disconnect username\"."RESET"\n\n");
     return -1;
   }
-	strcpy(name, posSpace+1);
+	if(strcpy(name, posSpace+1) == NULL) {
+		printf(BLUE"[PROGRAM] Error command. Please use \"/disconnect username\"."RESET"\n\n");
+		return -1;
+	}
+	for(i=0 ; i < strlen(name) ; i++) {
+    bchar = (isalnum((unsigned char) name[i])) ? 0 : 1;
+    if(bchar) {break;}
+  }
+  if (bchar) {
+    printf(BLUE"[PROGRAM] Error command : Username must only be composed of alphanumeric characters.\n[PROGRAM] Please use \"/disconnect username\".\n"RESET"\n\n");
+    return -1;
+  }
 	name[strlen(name) - 1] = '\0';
 
 	if((client_sockfd = search_client_fd_by_name(name, fd_array, num_clients)) < 0) {
-		printf(BLUE"Client is not connected"RESET"\n");
+		printf(BLUE"Client is not connected"RESET"\n\n");
 		return -1;
 	}
+	/* Fin de l'initialisation / gestion d'erreurs : on alloue de la mémoire */
+	message *discomsg = (message *) malloc(sizeof(message));
 
 	session_end(discomsg);
 	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
