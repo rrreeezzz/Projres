@@ -394,17 +394,22 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv();
 		} else if (strncmp(msg, "/vocal", 6)==0){
+			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);
+			#else
+			printf("You can't use speech voice with your computer, please read README.txt\n");
+			#endif
 		} else {
 			if(*num_clients > 0) {
 				slash_all(1, msg, readfds, fd_array, num_clients);
 			} else {
-				if(countdisc < 10) { printf("[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n"); countdisc++;}
+				if(countdisc < 10) { printf(BLUE"[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n" RESET); countdisc++;}
 			}
 		}
 	}
 }
 
+#if defined(PROJ)
 void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 	char username[16];
 	int client_fd = 0;
@@ -424,6 +429,7 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 	main_capture();
 	prepare_vocal(client_fd, readfds, fd_array, num_clients);
 }
+#endif
 
 void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 
@@ -675,11 +681,11 @@ void help(char * msg) {
 
 	char * posSpace = NULL;
 	if((posSpace = strchr(msg, '\n')) == NULL) {
-		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 		return;
 	}
 	if((posSpace = strchr(msg, ' ')) == NULL) {
-		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] Hello ! This is a client/server chat application. You need to connect you to other user to start chating\n\t  The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 		return;
 	}
 	if (posSpace[0] == ' ') {
@@ -709,7 +715,9 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The search function allows you to search user in the annuary server.\n\t  Use : \"/search USERNAME\""RESET"\n");
 	} else if (strcmp(posSpace, "erase\n") == 0) {
 		printf(BLUE"\n[PROGRAM] The erase function allows you to delete you'r data in the anuary server send by /online.\n\t  Use : \"/erase\""RESET"\n");
+	} else if (strcmp(posSpace, "disconnect\n") == 0) {
+		printf(BLUE"\n[PROGRAM] The diconnect function allows you to disconnect from a user.\n\t  Use : \"/disconnect\""RESET"\n");
 	} else {
-		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search\n\t  Use : /help FunctionName"RESET"\n");
+		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }

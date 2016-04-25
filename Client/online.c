@@ -20,7 +20,6 @@ int connect_serv(){
 
 		read_ip = (struct sockaddr_in *) my_ip_curs->ifa_addr;
 		if(read_ip->sin_family == AF_INET && strcmp(my_ip_curs->ifa_name, "eth0") == 0){
-			printf("name : %s adress : %s\n", my_ip_curs->ifa_name, inet_ntoa(read_ip->sin_addr));
       break;
     }
 		my_ip_curs = my_ip_curs->ifa_next;
@@ -35,7 +34,7 @@ int connect_serv(){
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror("Erreur de connection, le serveur ne semble pas être en ligne");
+    perror(BLUE"Erreur de connection, le serveur ne semble pas être en ligne"RESET);
     return -1;
   }
 
@@ -81,7 +80,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror("Erreur de connection, le serveur ne semble pas être en ligne");
+    perror(BLUE"Erreur de connection, le serveur ne semble pas être en ligne"RESET);
     return -1;
   }
 
