@@ -70,6 +70,13 @@ void connectToUser(GtkWidget *widget,char * name) {
   sendRequest(request);
 }
 
+void send_private_message(GtkWidget *widget,int *nbTab){
+  char request[WRITE_SIZE];
+  sprintf(request,"/msg %s %s\n",tabs[*nbTab].name,gtk_entry_get_text(GTK_ENTRY(tabs[*nbTab].inputZone)));
+  sendRequest(request);
+  gtk_entry_set_text(GTK_ENTRY(tabs[*nbTab].inputZone),"");
+}
+
 void addContact(char * name){
   int idClient = opt_client();
   contactArray[idClient].name = malloc(16*sizeof(char));
@@ -129,25 +136,28 @@ int addTab(char * name){
   tabs[nbTab].nbTab = nbTab;
   tabs[nbTab].name = malloc(16*sizeof(char));
   tabs[nbTab].flag = 1;
+  tabs[nbTab].textZone = outputZone;
 
   strcpy(tabs[nbTab].name,name);
 
   /* Boutons de controle */
   GtkWidget * button = gtk_button_new();
   gtk_button_set_label((GtkButton *)button, "Close tab");
-  g_signal_connect(G_OBJECT( button ), "clicked", G_CALLBACK(close_connection_request), tabs[nbTab].name );
+  g_signal_connect(G_OBJECT( button ), "clicked", G_CALLBACK(close_connection_request),tabs[nbTab].name);
 
   /* Zone de lecture de conversation */
   gtk_text_view_set_editable(GTK_TEXT_VIEW(outputZone),FALSE);
   g_object_set(G_OBJECT(outputZone), "margin", 20, NULL);
-  sprintf(buff,"Connection etablished with: %s",name);
+  sprintf(buff,"Connection etablished with: %s\n",name);
   write_line_text_zone(outputZone,buff);
 
   /* Zone d'ecriture */
   inputZone = gtk_entry_new();
+  tabs[nbTab].inputZone = inputZone;
 
   /* Boutons d'envoi*/
   gtk_button_set_label((GtkButton *)sendButton, "Envoyer");
+  g_signal_connect(G_OBJECT(sendButton), "clicked", G_CALLBACK(send_private_message),&tabs[nbTab].nbTab);
 
   /* Formation de la grille */
   gtk_grid_set_row_homogeneous(GTK_GRID(grid),TRUE);
