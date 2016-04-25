@@ -114,6 +114,9 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
     perror(BLUE"Erreur de connection, le serveur ne semble pas être en ligne"RESET);
+    if (userInterface_fd > 0) {
+      sendUiMsg("SERVERROR Le serveur n'est pas en ligne.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
@@ -163,6 +166,9 @@ int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
     perror("Erreur de connection, le serveur ne semble pas être en ligne");
+    if (userInterface_fd > 0) {
+      sendUiMsg("SERVERROR Le serveur n'est pas en ligne.\n",readfds,fd_array,num_clients);
+    }
     return -1;
   }
 
