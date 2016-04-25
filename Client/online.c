@@ -42,7 +42,7 @@ int connect_serv(){
   printf(BLUE"[PROGRAM] : Your ip is "RED"%s "RESET"\n", inet_ntoa(read_ip->sin_addr));
   printf(BLUE"[PROGRAM] : Server ip is "RED"%s "RESET"\n", inet_ntoa(info_online.sin_addr));
 
-  sprintf(temp, "FROM:%s IP:%s", General_Name, inet_ntoa(read_ip->sin_addr));
+  sprintf(temp, "FROM:%s IP:%s:%d", General_Name, inet_ntoa(read_ip->sin_addr), General_Port);
   sprintf(msg, "400/%d/%zd/%s/END", (int) tps, strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
