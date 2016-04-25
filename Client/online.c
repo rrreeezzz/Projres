@@ -49,7 +49,7 @@ int connect_serv(){
     return -1;
   }
 
-  printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n");
+  printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n\n");
   close(online);
   return 0;
 }
@@ -66,7 +66,7 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   time_t tps = time(NULL);
 
   if((posSpace = strchr(buf, ' ')) == NULL){
-    printf("[PROGRAM] Error command.");
+    printf(BLUE"[PROGRAM] Error command."RESET"\n");
     return -1;
   }
 
@@ -134,7 +134,7 @@ int erase_serv(){
     return -1;
   }
 
-  printf(BLUE"[PROGRAM] : You has been erased from the database."RESET"\n");
+  printf(BLUE"[PROGRAM] : You have been erased from the database."RESET"\n");
   close(online);
   return 0;
 }

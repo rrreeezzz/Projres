@@ -403,7 +403,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			if(*num_clients > 0) {
 				slash_all(1, msg, readfds, fd_array, num_clients);
 			} else {
-				if(countdisc < 10) { printf(BLUE"[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works.\n" RESET); countdisc++;}
+				if(countdisc < 10) { printf(BLUE"[PROGRAM] You are not connected to anyone. You may have been disconnected from peer.\n\t  Use /who to double-check your connections\n\t  Use /connect to establish a connection or type /help if you need information about how this chat works."RESET"\n"); countdisc++;}
 			}
 		}
 	}

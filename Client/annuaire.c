@@ -568,7 +568,7 @@ int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_da
   annuaireData *test = (annuaireData *) malloc(sizeof(annuaireData));
 
   if(strlen(msg) < MIN_SIZE_USERNAME+9 || strlen(msg) > MAX_SIZE_USERNAME+9) {// "/connect " = 9
-    printf(BLUE"[PROGRAM] Error command : Username too short or too long"RESET"\n");
+    printf(BLUE"[PROGRAM] Error command : if you want to use \"/connect username\" -> username too short or too long"RESET"\n");
     return -1;
   }
   if((posSpace = strchr(msg, ' ')) == NULL){
@@ -584,7 +584,7 @@ int connect_to_contact(int *maxfds, fd_set *readfds, int *num_clients, client_da
     if(bchar) {break;}
   }
   if (bchar) {
-    printf(BLUE"[PROGRAM] Error command : Username must be composed of alphanumeric characters. "RESET"\n");
+    printf(BLUE"[PROGRAM] Error command : if you want to use \"/connect username\" -> username must be composed of alphanumeric characters. "RESET"\n");
     return -1;
   }
   /* Fin de l'initialisation / gestion d'erreurs. */

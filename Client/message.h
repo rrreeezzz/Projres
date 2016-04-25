@@ -16,7 +16,7 @@
 #define MAX_CLIENTS 95
 #define Max(x,y) (x>y ? x:y) //pour optdesc
 #define MAX_SIZE_PORT 5
-#define MIN_SIZE_USERNAME 4
+#define MIN_SIZE_USERNAME 3
 #define MAX_SIZE_USERNAME 16
 #define MIN_SIZE_ADDRESS 12
 #define MAX_SIZE_ADDRESS 22
