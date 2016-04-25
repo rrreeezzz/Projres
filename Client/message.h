@@ -39,6 +39,8 @@ typedef struct {
   char name_client[MAX_SIZE_USERNAME];
   char address_client[INET_ADDRSTRLEN];
   int rdy;
+  int fd_transfer;
+  int fd_vocal;
   message *msg_rcv;
 } client_data;
 
@@ -59,10 +61,13 @@ extern void session_denied(message *segment, int type);
 extern void normal_msg(message *segment, char * data);
 extern void session_end(message *segment);
 extern void session_aborted(message *segment);
-void transfer_accept(message *segment, char *filename);
-void transfer_refused(message *segment);
-void transfer_initiate(message *segment, char *filename, int taille);
-void transfer_msg(message *segment, char *data, int n);
-void transfer_end(message *segment, char *filename);
+extern void transfer_accept(message *segment, char *filename);
+extern void transfer_refused(message *segment);
+extern void transfer_initiate(message *segment, char *filename, int taille);
+extern void transfer_msg(message *segment, char *data, int n);
+extern void transfer_end(message *segment, char *filename);
+extern void vocal_begin(message *segment);
+extern void vocal_msg(message *segment, char *data, int n);
+extern void vocal_end(message *segment);
 
 #endif

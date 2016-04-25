@@ -7,18 +7,8 @@ int opt_tab(){
   return -1;
 }
 
-//Fermer une tab, ne pas appeler, c'est une fonction pour un signal
-static void close_tab(GtkButton *button, onglet * onglet){
-  gint page;
-
-  page = gtk_notebook_page_num(GTK_NOTEBOOK(tabmenu),onglet->grid);
-  gtk_notebook_remove_page(GTK_NOTEBOOK(tabmenu), page);
-
-  onglet->grid = NULL;
-}
-
 //ecris une ligne dans une zone de texte selectionnee
-void write_line_text_zone( GtkWidget * textZone, char * msg){
+void write_line_text_zone(GtkWidget * textZone, char * msg){
   GtkTextIter endIter;
 
   //On recupere le buffer
@@ -29,11 +19,99 @@ void write_line_text_zone( GtkWidget * textZone, char * msg){
   gtk_text_buffer_insert(textZone_buf, &endIter ,(gchar *)msg,strlen(msg));
 }
 
+int opt_client(){
+  int i;
+  for (i = 0; i < MAXCONTACTS-1; i++) {
+    if (contactArray[i].name==NULL) return i;
+  }
+  return -1;
+}
+
+void removeContact(char * name){
+  int i;
+  for (i = 0; i < MAXCONTACTS; i++) {
+    if (strcmp(contactArray[i].name,name) == 0){
+      gtk_widget_destroy(GTK_WIDGET(contactArray[i].listElement));
+      free(contactArray[i].name);
+      contactArray[i].name=NULL;
+      return;
+    }
+  }
+}
+
+void closeTab(char * name){
+  int i;
+  for (i = 0; i < MAXTABS; i++) {
+    if (tabs[i].name != NULL && strcmp(tabs[i].name,name) == 0){
+      gtk_widget_destroy(GTK_WIDGET(tabs[i].grid));
+      free(tabs[i].name);
+      tabs[i].name = NULL;
+      return;
+    }
+  }
+}
+
+//Fermer une tab, ne pas appeler, c'est une fonction pour un signal
+void close_connection_request(GtkButton *button, char * name){
+  char request[WRITE_SIZE];
+  sprintf(request,"/disconnect %s\n",name);
+  sendRequest(request);
+}
+
+void removeContactSignal(GtkWidget *widget,char * name) {
+  char request[WRITE_SIZE];
+  sprintf(request,"/remove %s\n",name);
+  sendRequest(request);
+}
+
+void connectToUser(GtkWidget *widget,char * name) {
+  char request[WRITE_SIZE];
+  sprintf(request,"/connect %s\n",name);
+  sendRequest(request);
+}
+
+void addContact(char * name){
+  int idClient = opt_client();
+  contactArray[idClient].name = malloc(16*sizeof(char));
+  contactArray[idClient].flag = 1;
+
+  strcpy(contactArray[idClient].name,name);
+
+  //Label
+  GtkWidget * labelName = gtk_label_new(name);
+
+  //Boutons de connection
+  GtkWidget * removeContact = gtk_button_new_with_label("X");
+  GtkWidget * connectButton = gtk_button_new_with_label("=>");
+
+  //Signaux
+  g_signal_connect(G_OBJECT( removeContact ), "clicked", G_CALLBACK(removeContactSignal), contactArray[idClient].name);
+  g_signal_connect(G_OBJECT( connectButton ), "clicked", G_CALLBACK(connectToUser), contactArray[idClient].name);
+
+  //Creation de la grille
+  GtkWidget * grilleDuContact = gtk_grid_new();
+  gtk_grid_set_row_homogeneous(GTK_GRID(grilleDuContact),TRUE);
+  gtk_grid_set_column_homogeneous(GTK_GRID(grilleDuContact),TRUE);
+
+  //On remplis la grille
+  gtk_grid_attach(GTK_GRID(grilleDuContact),removeContact,1,1,1,1);
+  gtk_grid_attach(GTK_GRID(grilleDuContact),labelName,2,1,2,1);
+  gtk_grid_attach(GTK_GRID(grilleDuContact),connectButton,4,1,1,1);
+
+  contactArray[idClient].listElement = grilleDuContact;
+
+  //Packing
+  gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(grilleDuContact),1);
+  gtk_list_box_row_set_selectable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
+  gtk_list_box_row_set_activatable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
+  gtk_widget_show_all(grilleDuContact);
+}
+
 /* Ajouter une tab, prend en parametre le nom,
 type=1 si seul => Name est le nom du client
 type=2 si groupe => Name est le nom du groupe
 */
-int addTab(char * name,int type){
+int addTab(char * name){
   int nbTab;
   char buff[200];
 
@@ -48,13 +126,16 @@ int addTab(char * name,int type){
   nbTab=opt_tab();
   tabs[nbTab].grid = grid;
   tabs[nbTab].label = label;
-  tabs[nbTab].type = type;
   tabs[nbTab].nbTab = nbTab;
+  tabs[nbTab].name = malloc(16*sizeof(char));
+  tabs[nbTab].flag = 1;
+
+  strcpy(tabs[nbTab].name,name);
 
   /* Boutons de controle */
   GtkWidget * button = gtk_button_new();
   gtk_button_set_label((GtkButton *)button, "Close tab");
-  g_signal_connect(G_OBJECT( button ), "clicked", G_CALLBACK(close_tab), &tabs[nbTab] );
+  g_signal_connect(G_OBJECT( button ), "clicked", G_CALLBACK(close_connection_request), tabs[nbTab].name );
 
   /* Zone de lecture de conversation */
   gtk_text_view_set_editable(GTK_TEXT_VIEW(outputZone),FALSE);

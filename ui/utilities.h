@@ -1,3 +1,6 @@
+#ifndef __UTILITIES_H__
+#define __UTILITIES_H__
+
 #define BLACK   "\x1B[0m"
 #define RED     "\x1B[31m"
 #define GREEN   "\x1B[32m"
@@ -8,3 +11,5 @@
 #define CYAN    "\x1B[36m"
 #define WHITE   "\x1B[37m"
 #define RESET   "\033[0m"
+
+#endif

@@ -32,6 +32,7 @@ int rechercheProtocol(char *msg) {
 			// 100 : msg normal
 			case 100:
 				printf("%s", (*msg_rcv).msg_content);
+        parseApplicationMessage((*msg_rcv).msg_content);
 				break;
 
 			// 303 : SESSION_END
@@ -44,7 +45,7 @@ int rechercheProtocol(char *msg) {
 
 			default:
 				break;
-		} 
+		}
 	}
 	free(msg_rcv->msg_content);
 	free(msg_rcv);

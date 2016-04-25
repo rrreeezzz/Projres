@@ -1,7 +1,6 @@
 #ifndef __UTILITIES_H__
 #define __UTILITIES_H__
 
-
 #define BLACK   "\x1B[0m"
 #define RED     "\x1B[31m"
 #define GREEN   "\x1B[32m"

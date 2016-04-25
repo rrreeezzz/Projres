@@ -64,10 +64,17 @@ int main(int argc, char *argv[] ) {
   gtk_notebook_set_tab_label(GTK_NOTEBOOK(tabmenu),mainGrid, contact_label);
 
   //Boite de dialogue de connection
-  connect_client(GTK_WINDOW(window));
+  connect_client_dialog(GTK_WINDOW(window));
 
   //Afficher fenetre puis main loop
   gtk_widget_show_all(window);
-  gtk_main();
+
+
+  while (1){
+    while (gtk_events_pending ()) {
+      gtk_main_iteration();
+    }
+    routine_client();
+  }
   return(EXIT_SUCCESS);
 }

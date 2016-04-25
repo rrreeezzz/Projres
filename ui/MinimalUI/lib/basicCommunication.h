@@ -32,6 +32,38 @@ int sendRequest(char * content) {
   return result;
 }
 
+/*
+* Envoi d'un message normal
+*/
+int sendInitiate() {
+  int result;
+	message *msg = (message *) malloc(sizeof(message));
+
+	session_initiate(msg);
+	result = send_msg(msg);
+
+	free((*msg).msg_content);
+	free(msg);
+
+  return result;
+}
+
+/*
+* Envoi d'un message normal
+*/
+int sendConfirmation() {
+  int result;
+	message *msg = (message *) malloc(sizeof(message));
+
+	session_confirmed(msg);
+	result = send_msg(msg);
+
+	free((*msg).msg_content);
+	free(msg);
+
+  return result;
+}
+
 int traiterRequete() {
 	char msg[MSG_SIZE];
 	int result;
@@ -48,9 +80,26 @@ int traiterRequete() {
 
 }
 
+int recvName(){
+	message mesge;
+	char msg[MSG_SIZE];
+
+	//Recuperation du nom, et de la confrirmation de connection
+	if (read(fdClientPrincipal, msg, MSG_SIZE) < 0){
+		printf("Read error\n" );
+		return -1;
+	}
+	protocol_parser(msg,&mesge);
+	if (mesge.code != 201){
+		free(mesge.msg_content);
+		return -1;
+	}
+	strncpy(General_Name,mesge.msg_content,mesge.length);
+	free(mesge.msg_content);
+	return 0;
+}
+
 int connect_client(){
-    message * mesge = (message *) malloc(sizeof(message));
-  	char msg[WRITE_SIZE];
   	struct sockaddr_in address;
 
     //Creation socket client
@@ -63,45 +112,28 @@ int connect_client(){
 
     //Tentative de connection
     if (connect(fdClientPrincipal, (struct sockaddr *)&address, sizeof(address)) < 0){
-      free(mesge);
+      printf("Connection error\n" );
       return -1;
     }
 
   	//Envoi de session-initiate
-  	session_initiate(mesge);
-  	if (send_msg(mesge) < 0 ){
-      free(mesge->msg_content);
-      free(mesge);
+  	if (sendInitiate() < 0){
+      printf("Initiation Error\n" );
+  		return -1;
     }
-    free(mesge->msg_content);
 
-    //Recuperation du nom, et de la confrirmation de connection
-  	if (read(fdClientPrincipal, msg, MSG_SIZE) < 0){
-      free(mesge);
-  		return -1;
-  	}
-  	protocol_parser(msg,mesge);
-  	if (mesge->code != 201){
-      free(mesge->msg_content);
-      free(mesge);
-  		return -1;
-  	}
-  	strncpy(General_Name,mesge->msg_content,mesge->length);
-    free(mesge->msg_content);
+		recvName();
 
   	//confirmation de la connection
-  	session_confirmed(mesge); //on crée le message de session-accept-2
-    if (send_msg(mesge) < 0 ){
-      free(mesge->msg_content);
-      free(mesge);
+    if (sendConfirmation() < 0){
+      printf("Confirmation Error\n" );
+  		return -1;
     }
-    free(mesge->msg_content);
 
     FD_ZERO(&readfds);
     FD_SET(0,&readfds);
     FD_SET(fdClientPrincipal,&readfds);
 
-    free(mesge);
     return 0;
 }
 
@@ -113,7 +145,6 @@ int connect_client(){
 * 1 => deconnection normale
 */
 int routine_client(){
-  char msg[WRITE_SIZE];
   fd_set testfds;
 
 	testfds = readfds;
@@ -125,10 +156,12 @@ int routine_client(){
 	}
 
   //Activitee du clavier
+	/*
 	if (FD_ISSET(0, &testfds)) {
 		fgets(msg, WRITE_SIZE, stdin);
 		sendRequest(msg);
 	}
+	*/
 
   //Retour de l'ui
 	if (FD_ISSET(fdClientPrincipal, &testfds)) {
