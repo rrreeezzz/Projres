@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include <time.h>
 
+#define MINIMALUI_NOSTDIN 0
+#define MINIMALUI_STDIN 1
+
 char General_Name[MAX_SIZE_USERNAME];
 char adresseClientPrincipal[16];
 int portClientPrincipal;

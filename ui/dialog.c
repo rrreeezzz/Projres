@@ -151,7 +151,7 @@ void connect_client_dialog(GtkWindow *parent){
       portClientPrincipal
     );
     //Si on arrive pas a se connecter
-    if (connect_client() == 0){
+    if (connect_client(MINIMALUI_NOSTDIN) == 0){
       refresh_client_data();
     } else {
       validorquit = 0;

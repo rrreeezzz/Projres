@@ -56,6 +56,8 @@ int sendRequest(char * content);
 #define MIN_SIZE_USERNAME 4
 #define MAX_SIZE_USERNAME 16
 #define MAX_SIZE_ADDRESS 22
+#define MINIMALUI_NOSTDIN 0
+#define MINIMALUI_STDIN 1
 
 #include <sys/types.h>
 #include <sys/socket.h>

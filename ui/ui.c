@@ -69,12 +69,21 @@ int main(int argc, char *argv[] ) {
   //Afficher fenetre puis main loop
   gtk_widget_show_all(window);
 
-
-  while (1){
+  int continueProgram = 1;
+  int resultRoutine;
+  while (continueProgram){
     while (gtk_events_pending ()) {
       gtk_main_iteration();
     }
-    routine_client();
+    //si on est toujours connecte
+    resultRoutine = routine_client(MINIMALUI_NOSTDIN);
+    //rupture demandee de la part du client
+    if (resultRoutine == 1){
+      continueProgram = 0;
+    //Rupture non demandee, on tente de se reconnecter
+    } else if (resultRoutine == -1){
+      connect_client_dialog(GTK_WINDOW(window));
+    }
   }
   return(EXIT_SUCCESS);
 }
