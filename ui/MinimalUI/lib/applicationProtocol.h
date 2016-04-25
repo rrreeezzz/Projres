@@ -84,4 +84,33 @@ void parseApplicationMessage(char * message){
   if (strncmp(message, "ALLMSGCONFIRM ", 14 ) == 0){
     on_message_sendall(message+14);
   }
+
+  if (strncmp(message, "MESSAGEERROR ", 13 ) == 0){
+    on_message_error(message+13);
+  }
+
+  if (strncmp(message, "CONNECTERROR ", 13 ) == 0){
+    on_connect_error(message+13);
+  }
+
+  if (strncmp(message, "ADDCONTACTERROR ", 16 ) == 0){
+    on_add_contact_error(message+16);
+  }
+
+  if (strncmp(message, "REMOVECONTACTERROR ", 19 ) == 0){
+    on_remove_contact_error(message+19);
+  }
+
+  if (strncmp(message, "SERVERROR ", 10 ) == 0){
+    on_server_error(message+10);
+  }
+
+  if (strncmp(message, "ADDRSERVOFFLINE", 15 ) == 0){
+    on_offline_server();
+  }
+
+  if (strncmp(message, "ADDRSERVONLINE", 15 ) == 0){
+    on_online_server();
+  }
+
 }

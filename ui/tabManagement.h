@@ -1,3 +1,5 @@
+int sendSessionEnd();
+
 //Retourne un num de tab non prit
 int opt_tab(){
   int i;
@@ -75,6 +77,30 @@ void send_private_message(GtkWidget *widget,int *nbTab){
   sprintf(request,"/msg %s %s\n",tabs[*nbTab].name,gtk_entry_get_text(GTK_ENTRY(tabs[*nbTab].inputZone)));
   sendRequest(request);
   gtk_entry_set_text(GTK_ENTRY(tabs[*nbTab].inputZone),"");
+}
+
+void ui_quit_signal(GtkWidget *widget) {
+  sendSessionEnd();
+  gtk_main_quit();
+  close(fdPrincipal);
+  fdPrincipal = -1;
+}
+
+void switch_server_update(){
+  if (serverState == 0){
+    gtk_switch_set_active(GTK_SWITCH(serverSwitch), FALSE);
+  } else {
+    gtk_switch_set_active(GTK_SWITCH(serverSwitch), TRUE);
+  }
+}
+
+void switch_server_press(GtkWidget *widget) {
+  switch_server_update();
+  if (serverState == 0){
+    sendRequest("/online\n");
+  } else {
+    sendRequest("/erase\n");
+  }
 }
 
 void addContact(char * name){

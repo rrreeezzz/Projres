@@ -19,11 +19,13 @@ int windowWidth=600;
 GtkWidget * tabmenu;
 GtkWidget * window;
 GtkWidget * contactList;
+GtkWidget * serverSwitch;
 
 //Connection principale au client
 char adresseClientPrincipal[16];
 int portClientPrincipal;
 int fdPrincipal;
+int serverState;
 
 //Structure de gestion des onglets
 typedef struct onglet {
@@ -53,7 +55,6 @@ int sendRequest(char * content);
 #define WRITE_SIZE 1000
 #define MSG_SIZE WRITE_SIZE+25
 #define MAX_SIZE_PORT 5
-#define MIN_SIZE_USERNAME 4
 #define MAX_SIZE_USERNAME 16
 #define MAX_SIZE_ADDRESS 22
 #define MINIMALUI_NOSTDIN 0

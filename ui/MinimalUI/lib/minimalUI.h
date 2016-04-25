@@ -11,6 +11,10 @@
 
 #define MINIMALUI_NOSTDIN 0
 #define MINIMALUI_STDIN 1
+#define WRITE_SIZE 1000
+#define MSG_SIZE WRITE_SIZE+25
+#define MIN_SIZE_USERNAME 3
+#define MAX_SIZE_USERNAME 16
 
 char General_Name[MAX_SIZE_USERNAME];
 char adresseClientPrincipal[16];

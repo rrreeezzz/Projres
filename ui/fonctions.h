@@ -5,22 +5,22 @@
 * Gestion des contacts
 */
 void on_add_contact(char * username){
-  printf(BLUE"%s added !"RESET"\n",username);
+  printf(RED"%s "BLUE"ajouté !"RESET"\n",username);
   addContact(username);
 }
 
 void on_update_contact(char * username){
-  printf(BLUE"%s updated !"RESET"\n",username );
+  printf(RED"%s "BLUE"mis à jour !"RESET"\n",username );
 }
 
 void on_remove_contact(char * username){
-  printf(BLUE"%s removed !"RESET"\n",username );
+  printf(RED"%s "BLUE"supprimé !"RESET"\n",username );
   removeContact(username);
 }
 
 //Mise a jour de la liste des contacts
 void on_contact_list_update(int length){
-  printf(BLUE"Mise a jour de la liste des contacts: %d elements."RESET"\n",length );
+  printf(BLUE"\nMise a jour de la liste des contacts: "RED"%d elements."RESET"\n",length );
   int i;
   for (i = 0; i < MAXCONTACTS; i++) {
     contactArray[i].flag = 0;
@@ -41,7 +41,7 @@ void on_contact_list_iteration(char * username){
 }
 
 void on_contact_list_end(){
-  printf(BLUE"Fin de mise a jour de la liste des contacts !"RESET"\n");
+  printf(BLUE"Fin de mise a jour de la liste des contacts !"RESET"\n\n");
   int i;
   for (i = 0; i < MAXCONTACTS; i++) {
     if (contactArray[i].flag == 0 && contactArray[i].name != NULL){
@@ -70,7 +70,7 @@ void on_connection_confirm(char * username){
 }
 //Mise a jour de des connections
 void on_connection_list_update(int length){
-    printf(BLUE"Mise a jour de la liste des connections: %d elements."RESET"\n",length );
+    printf(BLUE"\nMise a jour de la liste des connections: "RED"%d elements."RESET"\n",length );
     int i;
     for (i = 0; i < MAXTABS; i++) {
       tabs[i].flag = 0;
@@ -91,7 +91,7 @@ void on_connection_list_iteration(char * username){
 }
 
 void on_connection_list_end(){
-  printf(BLUE"Fin de mise a jour de la liste des connections !"RESET"\n");
+  printf(BLUE"Fin de mise a jour de la liste des connections !"RESET"\n\n");
   int i;
   for (i = 0; i < MAXTABS; i++) {
     if (tabs[i].flag == 0 && tabs[i].name != NULL){
@@ -132,4 +132,53 @@ void on_message_send(char * username, char * content){
 
 void on_message_sendall(char * content){
   printf(BLUE"Message envoyé à tous : "RED"%s"RESET"\n",content);
+}
+
+/*
+* Serveur de contact
+*/
+void on_online_server(){
+  printf(BLUE"Serveur de contact en ligne !"RESET"\n");
+  serverState = 1;
+  switch_server_update();
+}
+void on_offline_server(){
+  printf(BLUE"Serveur de contact hors ligne !"RESET"\n");
+  serverState = 0;
+  switch_server_update();
+}
+
+/*
+* Gestion des erreurs
+*/
+void on_message_error(char * content){
+  printf(BLUE"Erreur d'envoi de message : "RED"%s"RESET"\n",content);
+  char messsge[WRITE_SIZE];
+  sprintf(messsge,"Erreur d'envoi de message : %s\n",content);
+  quick_message(GTK_WINDOW(window), messsge);
+}
+void on_add_contact_error(char * content){
+  printf(BLUE"Erreur d'ajout de contact : "RED"%s"RESET"\n",content);
+  char messsge[WRITE_SIZE];
+  sprintf(messsge,"Erreur d'ajout de contact : %s\n",content);
+  quick_message(GTK_WINDOW(window), messsge);
+}
+void on_remove_contact_error(char * content){
+  printf(BLUE"Erreur de supression de contact : "RED"%s"RESET"\n",content);
+  char messsge[WRITE_SIZE];
+  sprintf(messsge,"Erreur de supression de contact : %s\n",content);
+  quick_message(GTK_WINDOW(window), messsge);
+}
+void on_server_error(char * content){
+  printf(BLUE"Erreur du serveur de contact : "RED"%s"RESET"\n",content);
+  char messsge[WRITE_SIZE];
+  sprintf(messsge,"Erreur du serveur de contact : %s\n",content);
+  quick_message(GTK_WINDOW(window), messsge);
+}
+
+void on_connect_error(char * content){
+  printf(BLUE"Impossible de se connecter : "RED"%s"RESET"\n",content);
+  char messsge[WRITE_SIZE];
+  sprintf(messsge,"Impossible de se connecter : %s\n",content);
+  quick_message(GTK_WINDOW(window), messsge);
 }

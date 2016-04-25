@@ -1,14 +1,8 @@
 #include "ui.h"
-
-void ui_quit_signal(GtkWidget *widget) {
-  sendSessionEnd();
-  gtk_main_quit();
-  close(fdPrincipal);
-  fdPrincipal = -1;
-}
-
 int main(int argc, char *argv[] ) {
   gtk_init (&argc, &argv);
+
+  serverState = 0;
 
   //Generation fenetre
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -23,7 +17,6 @@ int main(int argc, char *argv[] ) {
   contactList = gtk_list_box_new();
   GtkWidget * gtk_scrolled_window_new(GtkAdjustment *hadjustment,GtkAdjustment *vadjustment);
 
-
   //Creation tab
   tabmenu = gtk_notebook_new ();
   gtk_widget_set_name(GTK_WIDGET(tabmenu), "Conversations");
@@ -31,10 +24,6 @@ int main(int argc, char *argv[] ) {
   gtk_notebook_set_scrollable(GTK_NOTEBOOK(tabmenu),TRUE); //Rendre scrollable horizontallement
 
 
-  /*
-  GtkWidget * button = gtk_button_new();
-  gtk_button_set_label((GtkButton *)button, "Add a contact");
-  */
   GtkWidget * contactListTitle=gtk_label_new("Contacts");
   gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(contactList),TRUE);
   gtk_widget_set_margin_top(GTK_WIDGET(contactListTitle),10);
@@ -55,9 +44,16 @@ int main(int argc, char *argv[] ) {
 
   gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(addContact),0);
   gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(refreshContact),1);
-  //gtk_container_add(GTK_CONTAINER(contactGrid),contactList);
-  gtk_grid_attach(GTK_GRID(contactGrid),contactListTitle,1,1,1,1);
-  gtk_grid_attach(GTK_GRID(contactGrid),contactList,1,2,1,20);
+
+
+  //Creation bouton etat serveur
+  GtkWidget * serverButtonLabel=gtk_label_new("Annuaire");
+  serverSwitch = gtk_switch_new();
+  g_signal_connect(GTK_WIDGET(serverSwitch), "button-press-event", G_CALLBACK(switch_server_press),NULL);
+  gtk_grid_attach(GTK_GRID(contactGrid),serverButtonLabel,1,1,1,1);
+  gtk_grid_attach(GTK_GRID(contactGrid),serverSwitch,2,1,1,1);
+  gtk_grid_attach(GTK_GRID(contactGrid),contactListTitle,1,2,2,1);
+  gtk_grid_attach(GTK_GRID(contactGrid),contactList,1,3,2,20);
 
   //Tab positionnement de la denetre principale
   GtkWidget * windowGrid = gtk_grid_new();

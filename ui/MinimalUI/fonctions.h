@@ -68,3 +68,32 @@ void on_message_send(char * username, char * content){
 void on_message_sendall(char * content){
   printf(BLUE"Message envoyé à tous : "RED"%s"RESET"\n",content);
 }
+
+/*
+* Serveur de contact
+*/
+void on_online_server(){
+  printf(BLUE"Serveur de contact en ligne !"RESET"\n");
+}
+void on_offline_server(){
+  printf(BLUE"Serveur de contact hors ligne !"RESET"\n");
+}
+
+/*
+* Gestion des erreurs
+*/
+void on_message_error(char * content){
+  printf(BLUE"Erreur d'envoi de message : "RED"%s"RESET"\n",content);
+}
+void on_add_contact_error(char * content){
+  printf(BLUE"Erreur d'ajout de contact : "RED"%s"RESET"\n",content);
+}
+void on_remove_contact_error(char * content){
+  printf(BLUE"Erreur de supression de contact : "RED"%s"RESET"\n",content);
+}
+void on_server_error(char * content){
+  printf(BLUE"Erreur du serveur de contact : "RED"%s"RESET"\n",content);
+}
+void on_connect_error(char * content){
+  printf(BLUE"Impossible de se connecter : "RED"%s"RESET"\n",content);
+}

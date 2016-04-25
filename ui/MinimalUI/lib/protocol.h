@@ -31,7 +31,6 @@ int rechercheProtocol(char *msg) {
 
 			// 100 : msg normal
 			case 100:
-				printf("%s", (*msg_rcv).msg_content);
         parseApplicationMessage((*msg_rcv).msg_content);
 				break;
 

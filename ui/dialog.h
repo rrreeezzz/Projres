@@ -59,6 +59,7 @@ void show_widget(GtkWindow *parent, GtkWidget * widget){
 }
 
 void refresh_client_data(){
+  sendRequest("/status\n");
   sendRequest("/contact\n");
   sendRequest("/who\n");
 }

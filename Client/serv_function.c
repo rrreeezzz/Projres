@@ -307,12 +307,10 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 
 		message *msg_rcv = (message *) malloc(sizeof(message));
 
-		printf("%s\n", buffer );
-
 		//On parse le message
 		if(protocol_parser(buffer, msg_rcv) == -1){
 			free(msg_rcv);
-			printf(GREEN"Error parsing the message"RESET"\n");
+			printf(GREEN"Error parsing the UI message"RESET"\n");
 			exitClient(userInterface_fd, readfds, fd_array, num_clients);
 			return ;
 		}
@@ -322,7 +320,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 
 			// 100 : Basic command
 			case 100:
-			printf(BLUE"["GREEN"UI"BLUE"] %s "RESET"\n", (*msg_rcv).msg_content);
+			printf(BLUE"["GREEN"UI"BLUE"] %s"RESET, (*msg_rcv).msg_content);
 			memcpy(msg,(*msg_rcv).msg_content,WRITE_SIZE);
 			break;
 

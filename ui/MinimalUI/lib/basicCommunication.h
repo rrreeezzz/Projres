@@ -19,7 +19,7 @@ int send_msg(message *segment) {
 /*
 * Envoi d'un message de fin de session
 */
-int sendSessionEnd() {
+int sendSessionEnd(){
   int result;
 	message *msg = (message *) malloc(sizeof(message));
 
