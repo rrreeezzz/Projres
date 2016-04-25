@@ -31,7 +31,7 @@ void removeContact(char * name){
   int i;
   for (i = 0; i < MAXCONTACTS; i++) {
     if (strcmp(contactArray[i].name,name) == 0){
-      gtk_widget_destroy(GTK_WIDGET(contactArray[i].listElement));
+      gtk_widget_hide(GTK_WIDGET(contactArray[i].listElement));
       free(contactArray[i].name);
       contactArray[i].name=NULL;
       return;
@@ -108,9 +108,7 @@ void addContact(char * name){
   contactArray[idClient].listElement = grilleDuContact;
 
   //Packing
-  gtk_list_box_insert(GTK_LIST_BOX(contactList),GTK_WIDGET(grilleDuContact),1);
-  gtk_list_box_row_set_selectable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
-  gtk_list_box_row_set_activatable(gtk_list_box_get_row_at_index(GTK_LIST_BOX(contactList),1),FALSE);
+  gtk_container_add(GTK_CONTAINER(contactList),GTK_WIDGET(grilleDuContact));
   gtk_widget_show_all(grilleDuContact);
 }
 
