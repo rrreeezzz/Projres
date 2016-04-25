@@ -1,12 +1,19 @@
 #include "ui.h"
 
+void ui_quit_signal(GtkWidget *widget) {
+  sendSessionEnd();
+  gtk_main_quit();
+  close(fdPrincipal);
+  fdPrincipal = -1;
+}
+
 int main(int argc, char *argv[] ) {
   gtk_init (&argc, &argv);
 
   //Generation fenetre
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size(GTK_WINDOW(window), windowHeight, windowWidth);
-  g_signal_connect (GTK_WIDGET (window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect (GTK_WIDGET (window), "destroy", G_CALLBACK (ui_quit_signal), NULL);
 
   //Grille principale
   GtkWidget * mainGrid = gtk_grid_new();
@@ -77,18 +84,22 @@ int main(int argc, char *argv[] ) {
 
   int continueProgram = 1;
   int resultRoutine;
-  while (continueProgram){
+  while (continueProgram && (fdPrincipal != -1)){
+
     while (gtk_events_pending ()) {
       gtk_main_iteration();
     }
-    //si on est toujours connecte
-    resultRoutine = routine_client(MINIMALUI_NOSTDIN);
-    //rupture demandee de la part du client
-    if (resultRoutine == 1){
-      continueProgram = 0;
-    //Rupture non demandee, on tente de se reconnecter
-    } else if (resultRoutine == -1){
-      connect_client_dialog(GTK_WINDOW(window));
+
+    if (fdPrincipal != -1){
+      //si on est toujours connecte
+      resultRoutine = routine_client(MINIMALUI_NOSTDIN);
+      //rupture demandee de la part du client
+      if (resultRoutine == 1){
+        continueProgram = 0;
+      //Rupture non demandee, on tente de se reconnecter
+      } else if (resultRoutine == -1){
+        connect_client_dialog(GTK_WINDOW(window));
+      }
     }
   }
   return(EXIT_SUCCESS);

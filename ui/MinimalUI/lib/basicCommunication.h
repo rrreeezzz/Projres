@@ -17,6 +17,22 @@ int send_msg(message *segment) {
 }
 
 /*
+* Envoi d'un message de fin de session
+*/
+int sendSessionEnd() {
+  int result;
+	message *msg = (message *) malloc(sizeof(message));
+
+	session_end(msg);
+	result = send_msg(msg);
+
+	free((*msg).msg_content);
+	free(msg);
+
+  return result;
+}
+
+/*
 * Envoi d'un message normal
 */
 int sendRequest(char * content) {
