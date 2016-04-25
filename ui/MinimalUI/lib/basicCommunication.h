@@ -157,10 +157,12 @@ int routine_client(int stdincdt){
 	//Structure de timeout
 	struct timeval timeoutSelect;
 	timeoutSelect.tv_usec = 10; //10 microsecondes
+	timeoutSelect.tv_sec = 0;
 	testfds = readfds;
 
   //On regarde l'activitee des FD
 	if(select(fdClientPrincipal+1, &testfds, NULL, NULL, &timeoutSelect) < 0) {
+		perror("Select");
 		return 0;
 	}
 	if (stdincdt == 1){
