@@ -40,6 +40,7 @@ typedef struct {
   char name_client[MAX_SIZE_USERNAME];
   char address_client[INET_ADDRSTRLEN];
   int rdy;
+  int ping;
   int fd_transfer;
   int fd_vocal;
   message *msg_rcv;
@@ -60,6 +61,8 @@ extern void session_accept(message *segment);
 extern void session_confirmed(message *segment);
 extern void session_denied(message *segment, int type);
 extern void normal_msg(message *segment, char * data);
+extern void ping(message *segment);
+extern void pong(message *segment);
 extern void session_end(message *segment);
 extern void session_aborted(message *segment);
 extern void transfer_accept(message *segment, char *filename);

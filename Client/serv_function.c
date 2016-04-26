@@ -189,10 +189,49 @@ int * init_server(){
 	return server_sockfd;
 }
 
+void * routine_ping(void *arg) {
+  //On récupère la structure
+  paramThread * data = (paramThread*) arg;
+  fd_set *readfds;
+  client_data *fd_array;
+  int *num_clients;
+
+  message *msg = (message *) malloc(sizeof(message));
+
+  //On recupere les donnees de la structure
+  readfds = data->readfds;
+  fd_array = data->fd_array;
+  num_clients = data->num_clients;
+
+	int i = 0;
+	int t_actuel, t_ping = 0;
+	while(1) {
+		t_actuel = time(NULL);
+		if ((t_actuel % 10 == 0) && (t_ping < t_actuel)) {
+			t_ping = t_actuel;
+			for (i=0; i<*num_clients; i++) {
+				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0)) {
+					printf("IL A PAS PING !!!!\n");
+					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
+				}
+			}
+			printf("CA PING FRERE\n");
+			ping(msg);
+			for (i=0; i<*num_clients; i++) {	
+				fd_array[i].ping = 0;	
+      				send_msg(msg, &fd_array[i].fd_client,readfds,fd_array, num_clients);
+			}	
+      			free(msg->msg_content);
+		}
+	}
+}
+
+
+
 void routine_server(int * server_sockfd){
 
 	/*La routine du programme.*/
-
+	int t_start = time(NULL);
 	int num_clients = 0;
 	int client_sockfd;
 	struct sockaddr_in client_address;
@@ -203,6 +242,17 @@ void routine_server(int * server_sockfd){
 	int maxfds;
 	char client_inaddr[INET_ADDRSTRLEN];
 	message *msg = (message *) malloc(sizeof(message));
+
+	//lance le thread de routine ping
+	pthread_t pid_ping;
+	paramThread data;
+ 	 data.readfds = &readfds;
+ 	 data.fd_array = fd_array;
+ 	 data.num_clients = &num_clients;
+	if(pthread_create(&pid_ping, NULL, routine_ping, (void *) &data) != 0){
+  		  perror("Probleme avec pthread_create");
+  		  exit(EXIT_FAILURE); 
+ 	 }
 
 	/* Initialisation de la file d'attente */
 	waitList waitlist;
@@ -264,21 +314,10 @@ void routine_server(int * server_sockfd){
 				} else {  /*activité d'un client*/
 				traiterRequete(fd, &readfds, fd_array, &num_clients, &waitlist);
 			}//if fd ==
-			/* DEBUG
-			int i;
-			printf("FD_array\n");
-			for (i = 0; i < num_clients; i++) {
-			printf("pos:%d fd:%d id:%d name:%s rdy:%d\n",i,fd_array[i].fd_client,fd_array[i].id_client,fd_array[i].name_client,fd_array[i].rdy );
-
-		}
-		printf("\n");
-		*/
 	}//if FD_ISSET
 }//for
 }//while
-
-pthread_join(pid_transfer, NULL);
-// peut être mettre une variable et faire un pthread_cancel(pid_transfer) si transfer pas terminé
+pthread_cancel(pid_ping);
 
 free(msg);
 free(server_sockfd);
@@ -300,7 +339,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 
 		//On lis le message, sinon on quitte la connection en resettant le fd de l'interface
 		if ( read(fd, buffer, MSG_SIZE) < 0 ){
-			exitClient(fd, readfds, fd_array, num_clients);
+				exitClient(fd, readfds, fd_array, num_clients);
 			userInterface_fd=-1;
 			return ;
 		}
@@ -391,6 +430,8 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			search_serv(msg, fd_array, num_clients, readfds, waitlist);
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv(fd_array, num_clients, readfds);
+		} else if (strcmp(msg, "/status\n")==0){
+			get_serv_status(fd_array, num_clients, readfds);
 		} else if (strncmp(msg, "/vocal", 6)==0){
 			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);
