@@ -1,21 +1,5 @@
 #include "online.h"
 
-int get_serv_status(client_data *fd_array, int *num_clients, fd_set *readfds){
-  if (online == 0) {
-    if (userInterface_fd > 0) {
-      sendUiMsg("ADDRSERVOFFLINE\n",readfds,fd_array,num_clients);
-    }
-    printf(BLUE"Vous êtes déconnecté du serveur d'adresses."RESET"\n");
-  } else if (online == 1){
-    if (userInterface_fd > 0) {
-      sendUiMsg("ADDRSERVONLINE\n",readfds,fd_array,num_clients);
-    }
-    printf(BLUE"Vous êtes connecté au serveur d'adresses."RESET"\n");
-  }
-
-  return 1;
-}
-
 int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
 
   online = 0;
@@ -72,10 +56,11 @@ int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
     return -1;
   }
 
-  printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n\n");
   if (userInterface_fd > 0) {
     sendUiMsg("ADDRSERVONLINE\n",readfds,fd_array,num_clients);
   }
+
+  printf(BLUE"[PROGRAM] : Your IP has been send."RESET"\n\n");
   close(online);
   return 0;
 }
