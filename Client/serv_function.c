@@ -371,6 +371,8 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			connect_refuse(fd_array, num_clients, readfds, msg, waitlist);
 		} else if (strncmp(msg, "/disconnect", 11)==0){ //on précise avec qui on se déconnecte
 			disconnect(maxfds, readfds, num_clients, fd_array, msg);
+		} else if (strncmp(msg, "/pm", 3)==0) {
+			slash_pm(msg, readfds, fd_array, num_clients);
 		} else if (strncmp(msg, "/msg", 4)==0) {
 			slash_msg(msg, readfds, fd_array, num_clients);
 		} else if (strncmp(msg, "/all", 4)==0) {
@@ -493,7 +495,7 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 
 }
 
-void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+void slash_pm(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
 
 	char data[WRITE_SIZE+MAX_SIZE_USERNAME];
 	char username[MAX_SIZE_USERNAME];
@@ -577,6 +579,72 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 
 	normal_msg(frame, msg);
 	send_msg(frame, &client_sockfd, readfds, fd_array, num_clients);
+	//on avertis l'ui si elle est connectee
+	if (userInterface_fd > 0 ) {
+		char content[MSG_SIZE];
+		sprintf(content,"MESSAGECONFIRM %s %s\n",username,msg);
+		sendUiMsg(content,readfds,fd_array,num_clients);
+	}
+
+	free((*frame).msg_content);
+	free(frame);
+}
+
+void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	char username[MAX_SIZE_USERNAME];
+	int fd[MAX_CLIENTS]={-1};
+	char msg[WRITE_SIZE];
+	int i=5; // 5 car cmd+5 correspond aux arguments (noms d'utilisateurs)
+	int w=0;
+	int cptfd=0;
+	message *frame = (message *) malloc(sizeof(message));
+
+	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
+		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
+		free(frame);
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
+		}
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on évite qu'il puisse écrire à l'infini
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+		free(frame);
+		//on avertis l'ui si elle est connectee
+		if (userInterface_fd > 0 ) {
+			sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
+		}
+		return;
+
+	}
+
+	w=my_count_word(cmd); //compte le nombre d'arg après /msg
+
+	while(w>0) {
+		sscanf(cmd+i, "%s", username);
+		if ((fd[cptfd] = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+			printf(BLUE"[PROGRAM] "RED"%s"BLUE" not connected"RESET"\n", username);
+			printf(BLUE"[PROGRAM] /msg aborted"RESET"\n");
+			free(frame);
+			//on avertis l'ui si elle est connectee
+			if (userInterface_fd > 0 ) {
+				sendUiMsg("MESSAGEERROR Client not connected\n",readfds,fd_array,num_clients);
+			}
+			return;
+		}
+		cptfd++;
+		i+=strlen(username);
+		w--;
+	}
+	printf(BLUE"Enter your message :"RESET"\n");
+	fgets(msg, WRITE_SIZE, stdin);
+	normal_msg(frame, msg);
+	int fds;
+	for(cptfd--;cptfd>=0;cptfd--) {
+		fds = fd[cptfd];
+		send_msg(frame, &fd[cptfd], readfds, fd_array, num_clients);
+	}
+
 	//on avertis l'ui si elle est connectee
 	if (userInterface_fd > 0 ) {
 		char content[MSG_SIZE];
@@ -694,7 +762,9 @@ void help(char * msg) {
 	} else if (strcmp(posSpace, "connect\n")==0){
 		printf(BLUE"\n[PROGRAM] The connect function allows you to establish a connection with another user.\n\t  Use : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\n\t  OR\n\t  Use : \"/connect USERNAME\" to connect to a user you already have in your contact list."RESET"\n");
 	} else if (strcmp(posSpace, "msg\n")==0) {
-		printf(BLUE"\n[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it."RESET"\n");
+		printf(BLUE"\n[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME(S) ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it."RESET"\n");
+	} else if (strcmp(posSpace, "pm\n")==0) {
+		printf(BLUE"\n[PROGRAM] The pm function allows you to send a direct message to one other user.\n\t  Use : \"/pm USERNAME MESSAGE(...)\" to send a direct message to the user."RESET"\n");
 	} else if (strcmp(posSpace, "all\n")==0) {
 		printf(BLUE"\n[PROGRAM] The all function allows you to send a message to everyone you're connected with.\n\t  Use : \"/all Message Written Here\"\n\t  OR\n\t  Use : \"/all\", press [Enter], then you will be asked to type your message and press [Enter] again to send it."RESET"\n");
 	} else if (strcmp(posSpace, "add\n") == 0){
@@ -714,7 +784,7 @@ void help(char * msg) {
 	} else if (strcmp(posSpace, "erase\n") == 0) {
 		printf(BLUE"\n[PROGRAM] The erase function allows you to delete you'r data in the anuary server send by /online.\n\t  Use : \"/erase\""RESET"\n");
 	} else if (strcmp(posSpace, "disconnect\n") == 0) {
-		printf(BLUE"\n[PROGRAM] The diconnect function allows you to disconnect from a user.\n\t  Use : \"/disconnect\""RESET"\n");
+		printf(BLUE"\n[PROGRAM] The disconnect function allows you to disconnect from a user.\n\t  Use : \"/disconnect\""RESET"\n");
 	} else {
 		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 	}
