@@ -167,6 +167,7 @@ int add_contact (fd_set *readfds, client_data *fd_array, int *num_clients, char 
         close(new_file);
         return -1;
       }
+      printf(BLUE"[PROGRAM] Contact "RED"%s"BLUE" added !"RESET"\n", user->username);
       //on avertis l'ui si elle est connectee
       if (userInterface_fd > 0) {
         char content[MSG_SIZE];

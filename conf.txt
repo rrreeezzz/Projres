@@ -4,4 +4,4 @@ password:yolo1200
 
 --SERVEUR--
 port:40000
-server_address:192.168.43.80
+server_address:0.0.0.0
