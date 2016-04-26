@@ -196,7 +196,7 @@ int get_Config(char * conf){
   char line[MAX_SIZE_PARAMETER];
   FILE * f;
 
-  sprintf(line, "grep '%s' ../conf.txt | cut -d':' -f2",conf);
+  sprintf(line, "grep '%s' conf.txt | cut -d':' -f2",conf);
   f = popen(line, "r");
   if(f == NULL){
     perror("Failed to fetch argument.");
