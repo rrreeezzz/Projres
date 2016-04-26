@@ -1,9 +1,19 @@
+/////INSTALLATION\\\\\\
 
-Pour tester avec le serveur mysql:
-Télécharger avec : sudo apt-get install mysql-server libmysqld-dev
-Pour avoir les -dev client et serveur. Le mysql-server permet de lancer un serveur mysql.
+Librairires a installer : 
+mysql-server 
+libmysqld-dev 
+g++
+libgtk-3-dev
+libopenal-dev
+libsndfile1-dev
 
-Ensuite configurer avec : mysql-secure-installation dans /usr/bin
+
+/////SERVEUR MYSQL\\\\\
+
+Pour tester avec le serveur annuaire, qui repose sur un serveur mysql, suivez les démarches ci-dessous.
+
+Configurer avec : mysql-secure-installation dans /usr/bin
 Retenez les ID pour gérer la base de données.
 Lancer mysql avec : mysql -u'user' -p'password'
 
@@ -13,4 +23,7 @@ Puis créer les tables: CREATE TABLE user(ID INT, NAME TEXT, IP TEXT);
 Pour plus d'informations, se référer a mysql.
 
 Remplacer ensuite les infos dans conf.txt, après les champs user: et password:
+De plus, veuillez rentrer l'IP du de la machine sur laquelle vous avez installé le serveur annuaire (0.0.0.0 ou 127.0.0.1) si c'est la votre, après server_address:
+
+
 Lancer le ./install

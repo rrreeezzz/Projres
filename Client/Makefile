@@ -18,7 +18,7 @@ client:
 	gcc -c online.c
 	g++ -c OpenAL_capture.cpp
 	g++ -c OpenAL_lecture.cpp
-	g++ -Wall -g -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o OpenAL_capture.o OpenAL_lecture.o ${CFLAGS}
+	g++ -Wall -g -o ../$@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o OpenAL_capture.o OpenAL_lecture.o ${CFLAGS}
 
 clean:
 	rm -rf *.o
@@ -39,4 +39,4 @@ client_ecole:
 	gcc -c client.c
 	gcc -c transfert.c
 	gcc -c online.c
-	gcc -Wall -g -o $@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o -Wall -g -lpthread
+	gcc -Wall -g -o ../$@ message.o protocole.o client.o client_function.o serv_function.o transfert.o annuaire.o online.o -Wall -g -lpthread
