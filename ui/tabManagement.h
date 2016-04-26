@@ -88,9 +88,9 @@ void ui_quit_signal(GtkWidget *widget) {
 
 void switch_server_update(){
   if (serverState == 0){
-    gtk_switch_set_active(GTK_SWITCH(serverSwitch), FALSE);
-  } else {
     gtk_switch_set_active(GTK_SWITCH(serverSwitch), TRUE);
+  } else {
+    gtk_switch_set_active(GTK_SWITCH(serverSwitch), FALSE);
   }
 }
 

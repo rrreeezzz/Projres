@@ -25,12 +25,15 @@ void send_ip(message *rcv, message *segment){
 	/*Fonction qui permet au serveur de répondre au 402, lui donne l'ip de la personne recherchée.*/
 
 	char name[MAX_SIZE_PARAMETER];
+	char buf [MAX_SIZE_PARAMETER];
 	strcpy(name, (*rcv).msg_content);
 
 	(*segment).code = 403;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 
 	ip_user_mysql(name, (*segment).msg_content);
+	sprintf(buf, "%s %s", name, (*segment).msg_content);
+	memcpy((*segment).msg_content, buf, strlen(buf));
 }
 
 void no_exist(message *segment){
