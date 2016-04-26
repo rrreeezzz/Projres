@@ -99,6 +99,18 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			// gestion erreur ?!!!!!!!!!! a faire
 			break;
 
+			case 103:
+		printf("RECU PIIIING\n");
+			pong(msg_send);
+			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+      			free((*msg_send).msg_content);
+			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length);
+			break;
+
+			case 104:
+		printf("RECU POOONG\n");
+			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].ping = 1;
+			break;
 			/*
 			2** : Processus d'identification
 			*/
@@ -250,6 +262,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			case 403:
 			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché est : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
 			sprintf(buffer, "/add %s\n", (*msg_rcv).msg_content);
+			printf("essaie : %s\n", buffer);
 			add_contact(readfds,fd_array,num_clients,buffer);
 			break;
 
