@@ -54,6 +54,7 @@ void ask_connect(GtkWindow *parent, char *name,char * adress){
   }
   gtk_widget_destroy(dialog);
 }
+
 void show_widget(GtkWindow *parent, GtkWidget * widget){
   gtk_widget_set_visible(GTK_WIDGET(widget) , !gtk_widget_get_visible(GTK_WIDGET(widget)));
 }
@@ -168,7 +169,7 @@ void connect_client_dialog(GtkWindow *parent){
 
 //Entrer une adresse
 void enter_adress(GtkWindow *parent){
-  GtkWidget *dialog,*labelName,*labelAdress,*labelPort,*content_area,*entryAdress,*entryPort,*entryName;
+  GtkWidget *buttonServer,*dialog,*labelName,*labelAdress,*labelPort,*content_area,*entryAdress,*entryPort,*entryName;
   GtkDialogFlags flags;
   switch(gtk_list_box_row_get_index(gtk_list_box_get_selected_row(GTK_LIST_BOX(contactList)))){
     case 1:
@@ -192,9 +193,18 @@ void enter_adress(GtkWindow *parent){
       dialog = gtk_dialog_new_with_buttons ("Add contact",GTK_WINDOW(window),flags,"OK",1,"Cancel",0,NULL);
       content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 
+      //Create check buttons
+      buttonServer = gtk_check_button_new_with_label("Chercher sur le serveur d'annuaire");
+
+      g_signal_connect(G_OBJECT( buttonServer ), "clicked", G_CALLBACK(show_widget), GTK_WIDGET(entryAdress) );
+      g_signal_connect(G_OBJECT( buttonServer ), "clicked", G_CALLBACK(show_widget), GTK_WIDGET(entryPort) );
+      g_signal_connect(G_OBJECT( buttonServer ), "clicked", G_CALLBACK(show_widget), GTK_WIDGET(labelAdress) );
+      g_signal_connect(G_OBJECT( buttonServer ), "clicked", G_CALLBACK(show_widget), GTK_WIDGET(labelPort) );
+
       //Packing
       gtk_container_add(GTK_CONTAINER(content_area), labelName);
       gtk_container_add(GTK_CONTAINER(content_area), entryName);
+      gtk_container_add(GTK_CONTAINER(content_area), buttonServer);
       gtk_container_add(GTK_CONTAINER(content_area), labelAdress);
       gtk_container_add(GTK_CONTAINER(content_area), entryAdress);
       gtk_container_add(GTK_CONTAINER(content_area), labelPort);
@@ -213,20 +223,30 @@ void enter_adress(GtkWindow *parent){
              quick_message(GTK_WINDOW(dialog),"Le nom doit être entre 3 et 15 caracteres.");
              validorquit = 0;
            }
-           if (strlen(gtk_entry_get_text(GTK_ENTRY(entryAdress))) < 7){
-             quick_message(GTK_WINDOW(dialog),"Adresse invalide.");
-             validorquit = 0;
-           }
-           if(atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) <= 0 || atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) >= 100000){
-             quick_message(GTK_WINDOW(dialog),"Le port doit être entre 0 et 100000");
-             validorquit = 0;
-           }
 
-           //Si valide on ajoute un contact
-           if (validorquit == 1){
-               char request[MSG_SIZE];
-               sprintf( request,"/add %s %s:%d \n",gtk_entry_get_text(GTK_ENTRY(entryName)),gtk_entry_get_text(GTK_ENTRY(entryAdress)),atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) );
-               sendRequest(request);
+           if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(buttonServer))){
+             if (strlen(gtk_entry_get_text(GTK_ENTRY(entryAdress))) < 7){
+               quick_message(GTK_WINDOW(dialog),"Adresse invalide.");
+               validorquit = 0;
+             }
+             if(atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) <= 0 || atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) >= 100000){
+               quick_message(GTK_WINDOW(dialog),"Le port doit être entre 0 et 100000");
+               validorquit = 0;
+             }
+
+             //Si valide on ajoute un contact
+             if (validorquit == 1){
+                 char request[MSG_SIZE];
+                 sprintf( request,"/add %s %s:%d \n",gtk_entry_get_text(GTK_ENTRY(entryName)),gtk_entry_get_text(GTK_ENTRY(entryAdress)),atoi(gtk_entry_get_text(GTK_ENTRY(entryPort))) );
+                 sendRequest(request);
+             }
+           } else {
+             //Si valide on ajoute un contact
+             if (validorquit == 1){
+                 char request[MSG_SIZE];
+                 sprintf( request,"/search %s\n",gtk_entry_get_text(GTK_ENTRY(entryName)));
+                 sendRequest(request);
+             }
            }
 
            break;

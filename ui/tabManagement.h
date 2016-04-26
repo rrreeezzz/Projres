@@ -74,7 +74,7 @@ void connectToUser(GtkWidget *widget,char * name) {
 
 void send_private_message(GtkWidget *widget,int *nbTab){
   char request[WRITE_SIZE];
-  sprintf(request,"/msg %s %s\n",tabs[*nbTab].name,gtk_entry_get_text(GTK_ENTRY(tabs[*nbTab].inputZone)));
+  sprintf(request,"/pm %s %s\n",tabs[*nbTab].name,gtk_entry_get_text(GTK_ENTRY(tabs[*nbTab].inputZone)));
   sendRequest(request);
   gtk_entry_set_text(GTK_ENTRY(tabs[*nbTab].inputZone),"");
 }
