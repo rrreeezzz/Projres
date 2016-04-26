@@ -249,7 +249,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 
 			case 403:
 			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché est : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
-			sprintf(buffer, "/add %s %s\n", (*msg_rcv).msg_content);
+			sprintf(buffer, "/add %s\n", (*msg_rcv).msg_content);
 			printf("essaie : %s\n", buffer);
 			add_contact(readfds,fd_array,num_clients,buffer);
 			break;

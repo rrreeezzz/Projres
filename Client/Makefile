@@ -5,9 +5,9 @@ else
 	CFLAGS=-Wall -g -lpthread -lopenal -lsndfile
 endif
 
-all: client clean
+all: client_normal clean
 
-client:
+client_normal:
 	gcc -c message.c -DPROJ
 	gcc -c protocole.c -DPROJ
 	gcc -c client_function.c
@@ -24,7 +24,7 @@ clean:
 	rm -rf *.o
 
 mrproper: clean
-	rm -rf client
+	rm -rf client_normal
 
 
 ecole: client_ecole clean
