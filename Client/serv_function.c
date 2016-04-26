@@ -211,11 +211,9 @@ void * routine_ping(void *arg) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0)) {
-					printf("IL A PAS PING !!!!\n");
 					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
 				}
 			}
-			printf("CA PING FRERE\n");
 			ping(msg);
 			for (i=0; i<*num_clients; i++) {	
 				fd_array[i].ping = 0;	
