@@ -1,33 +1,40 @@
 /////INSTALLATION\\\\\\
 
-Librairires à installer :
+Librairies à installer :
+
 sudo apt-get install mysql-server
 sudo apt-get install libmysqld-dev
 sudo apt-get install g++
 sudo apt-get install libgtk-3-dev
+
+Pour le transfert de message vocaux :
+
 sudo apt-get install libopenal-dev
 sudo apt-get install libsndfile1-dev
 
 
 /////SERVEUR MYSQL\\\\\
 
-Pour tester avec le serveur annuaire, qui repose sur un serveur mysql, suivez les démarches ci-dessous.
+Pour tester avec le serveur d'annuaire, qui repose sur un serveur mysql, suivez les démarches ci-dessous.
 
-Configurer avec la commande : "mysql_secure_installation" dans /usr/bin
-Retenez les ID root pour gérer la base de données.
-- Lancer mysql avec :
-  $ mysql -u'user' -p'password'
+- Configurer avec la commande :
+1  $ mysql_secure_installation    (dans /usr/bin si nécessaire)
+- Retenir les ID root rentrés pour gérer la base de données
+- Lancer mysql avec le user (root) et le password défini durant l'étape précédente
+2  $ mysql -u'user' -p'password'
 - Créer une base de donnée avec:
-  $ CREATE DATABASE pswd;
+3  $ CREATE DATABASE pswd;
 - Ensuite :
-  $ USE pswd;
+4  $ USE pswd;
 - Puis créer les tables:
-  $ CREATE TABLE user(ID INT, NAME TEXT, IP TEXT);
+5  $ CREATE TABLE user(ID INT, NAME TEXT, IP TEXT);
+(Pour plus d'informations, se référer à mysql)
 
-Pour plus d'informations, se référer à mysql.
+- Remplacer ensuite les infos dans conf.txt : champs user: et password: définis précédemment
+De plus, veuillez rentrer l'IP de la machine sur laquelle vous avez installé le serveur annuaire
+champ server_address: -> " 0.0.0.0 " ou " 127.0.0.1 " sur la machine locale
 
-Remplacer ensuite les infos dans conf.txt, après les champs user: et password:
-De plus, veuillez rentrer l'IP du de la machine sur laquelle vous avez installé le serveur annuaire (0.0.0.0 ou 127.0.0.1) si c'est la votre, après server_address:
-
-
-Lancer le ./install
+//////Compilation\\\\\
+Lancer  ./install.sh {ecole|normal}  à la racine du dossier de l'application.
+-> paramètre ecole dans le cas où il n'y a pas eu possibilité d'installer les librairies de la 1ère étape
+-> paramètre normal si toutes les librairies sont installées

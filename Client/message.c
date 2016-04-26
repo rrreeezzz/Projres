@@ -54,20 +54,6 @@ void normal_msg(message *segment, char *data) {
 	sprintf((*segment).msg_content, "%s", data);
 }
 
-void ping(message *segment) {
-	/*Fonction qui permet d'envoyer un message*/
-	(*segment).code = 103;
-	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s", General_Name);
-}
-
-void pong(message *segment) {
-	/*Fonction qui permet d'envoyer un message*/
-	(*segment).code = 104;
-	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
-	sprintf((*segment).msg_content, "%s", General_Name);
-}
-
 void session_end(message *segment) {
 
 	/*Fonction pour envoyer fin de connection*/
@@ -165,4 +151,18 @@ void vocal_end(message *segment) {
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
 	(*segment).length = strlen((*segment).msg_content);
+}
+
+void ping(message *segment) {
+	/*Fonction qui permet d'envoyer un message*/
+	(*segment).code = 600;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
+}
+
+void pong(message *segment) {
+	/*Fonction qui permet d'envoyer un message*/
+	(*segment).code = 601;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
 }
