@@ -211,11 +211,9 @@ void * routine_ping(void *arg) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0)) {
-					printf("IL A PAS PING !!!!\n");
 					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
 				}
 			}
-			printf("CA PING FRERE\n");
 			ping(msg);
 			for (i=0; i<*num_clients; i++) {	
 				fd_array[i].ping = 0;	
@@ -432,8 +430,6 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			search_serv(msg, fd_array, num_clients, readfds, waitlist);
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv(fd_array, num_clients, readfds);
-		} else if (strcmp(msg, "/status\n")==0){
-			get_serv_status(fd_array, num_clients, readfds);
 		} else if (strncmp(msg, "/vocal", 6)==0){
 			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);

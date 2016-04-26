@@ -80,6 +80,7 @@ return file_fd; //if fd < 0, send transfer_refused
 
 void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
   int file_fd = 0;
+  pthread_t pid_transfer;
   paramThread data;
   char filename[256];
 
@@ -146,6 +147,7 @@ void * file_transfer(void *arg) {
 
 void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
   int file_fd = 0;
+  pthread_t pid_vocal;
   paramThread data;
 
   if ((file_fd = open("vocal.wav", O_RDONLY)) < 0) {
@@ -160,7 +162,7 @@ void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, in
   data.fd_array = fd_array;
   data.num_clients = num_clients;
 
-  if(pthread_create(&pid_transfer, NULL, vocal_transfer, (void *) &data) != 0){
+  if(pthread_create(&pid_vocal, NULL, vocal_transfer, (void *) &data) != 0){
     perror("Probleme avec pthread_create");
     exit(EXIT_FAILURE); // A voir ce qu'on fait ?!
   }
