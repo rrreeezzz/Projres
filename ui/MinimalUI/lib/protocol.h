@@ -39,6 +39,7 @@ int rechercheProtocol(char *msg) {
 				close(fdClientPrincipal);
 				free(msg_rcv->msg_content);
 				free(msg_rcv);
+				exit(EXIT_SUCCESS);
 				return 1; //deconnection normale
 				break;
 

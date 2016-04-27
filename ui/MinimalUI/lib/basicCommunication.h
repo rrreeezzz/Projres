@@ -179,6 +179,7 @@ int routine_client(int stdincdt){
   //On regarde l'activitee des FD
 	if(select(fdClientPrincipal+1, &testfds, NULL, NULL, &timeoutSelect) < 0) {
 		perror("Select");
+		exit(EXIT_FAILURE);
 		return 0;
 	}
 	if (stdincdt == 1){
