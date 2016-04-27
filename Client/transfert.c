@@ -45,31 +45,46 @@ void parser_transfer(int mod, char *msg, char *user, char *filename, int *taille
 
 
 int ask_transfer(message *msg, char *filename) {
-  char user[16];
+  char user[MAX_SIZE_USERNAME];
   int taille;
-  char res[10];
+  char res[4];
   int file_fd;
 
   parser_transfer(1, msg->msg_content, user, filename, &taille);
 
-  printf("%s wants to transfer a file : %s (%d bytes). Do you want to accept ? Type y or n.\n", user, filename, taille);
-  fgets(res, 4, stdin);
+  printf(BLUE"[PROGRAM] "RED"%s"BLUE" wants to transfer a file : %s (%d bytes). Do you want to accept ? Type y/yes or n/no."RESET"\n", user, filename, taille);
 
+  while(strlen(res) < 2 || strlen(res) > 4) {
+    fgets(res, 4, stdin);
+    if(strlen(res) < 2 || strlen(res) > 4) {
+      printf(BLUE"[PROGRAM] Argument too short. Type y/yes or n/no"RESET"\n");
+      continue;
+    }
+  }
   if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) { // if accept
     if ((file_fd = open(filename, O_WRONLY)) > 0) { // if file exists
       close(file_fd);
-      printf("%s already exists, if you continue it will be erased. Do you want to continue ? Type y or n.\n", filename);
-      fgets(res, 4, stdin);
+      memset(res, '\0', strlen(res));
+      printf(BLUE"[PROGRAM] File \""RED"%s"BLUE"\" already exists, if you continue it will be erased. Do you want to continue ? Type y/yes or n/no.\n", filename);
+      while(strlen(res) < 2 || strlen(res) > 4) {
+        fgets(res, 4, stdin);
+        if(strlen(res) < 2 || strlen(res) > 4) {
+          printf(BLUE"[PROGRAM] Argument too short. Type y/yes or n/no"RESET"\n");
+          continue;
+        }
+      }
       if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) { // if continue
-        if ((file_fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0755)) < 0)
-        printf("An error has occurred\n"); // fd < 0
-        printf("Transfer in progress \n\n");
+        if ((file_fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY, 0755)) < 0) {
+          printf(BLUE"[PROGRAM] An error has occurred "RESET"\n"); // fd < 0
+        }
+        printf(BLUE"[PROGRAM] Transfer in progress "RESET"\n\n");
       } else { // if not continue
         file_fd = -1;
       }
     } else { // if file doesn't exist
-    if ((file_fd = open(filename, O_CREAT | O_WRONLY, 0755)) < 0)
-    printf("An error has occurred\n"); // fd < 0
+    if ((file_fd = open(filename, O_CREAT | O_WRONLY, 0755)) < 0) {
+      printf("An error has occurred\n"); // fd < 0
+    }
     printf("Transfer in progress \n\n");
   }
 } else { //if not accept

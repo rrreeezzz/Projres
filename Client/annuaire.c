@@ -482,14 +482,14 @@ void ask_contact_name(char *username){
       perror("[PROGRAM] Name read error.");
       exit(EXIT_FAILURE);
       break;
-    } else if(result > 16){ //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
+    } else if(result > MAX_SIZE_USERNAME+1){ 
       sprintf(msg, BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
       write(0,msg, strlen(msg));
-    } else if(result < 4){
+    } else if(result < MIN_SIZE_USERNAME+1){
       sprintf(msg, BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
       write(0,msg, strlen(msg));
     }
-  } while(result > 16 || result < 4);
+  } while(result > MAX_SIZE_USERNAME+1 || result < MIN_SIZE_USERNAME+1);
 
   buf[strlen(buf)-1] = '\0';
   strcpy(username, buf);

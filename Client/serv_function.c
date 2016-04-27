@@ -211,10 +211,10 @@ void * routine_ping(void *arg) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 
-				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
+				//if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
 
-					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
-				}
+					//exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
+				//}
 			}
 			ping(msg);
 			for (i=0; i<*num_clients; i++) {
@@ -223,6 +223,7 @@ void * routine_ping(void *arg) {
 			}
       			free(msg->msg_content);
 		}
+		sleep(1);
 	}
 }
 
@@ -544,7 +545,7 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
     i++;
 		if(i==2) {break;}
   }
-	printf("data1 \"%s\"\tdata2 \"%s\"\n", transfer_data[0], transfer_data[1]);
+
 	/* Vérification de la longueur des données */
   if(strlen(transfer_data[0]) < MIN_SIZE_USERNAME || strlen (transfer_data[0]) > MAX_SIZE_USERNAME || strlen(transfer_data[1]) < 1 || strlen(transfer_data[1]) > MAX_SIZE_FILEPATH) {
     printf(BLUE"[PROGRAM] Error command. Please use \"/transfer username filepath\"."RESET"\n\n");
@@ -678,7 +679,7 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 	int cptfd=0;
 	message *frame = (message *) malloc(sizeof(message));
 
-	if (strlen(cmd) < 9) { //9 car strlen("/msg \n") = 6, et name entre 3 et 16 char, donc entre 9 minimum
+	if (strlen(cmd) < MIN_SIZE_USERNAME+6) {
 		printf(BLUE"[PROGRAM] Wrong argument : /msg name, length of name must be between 3 and 16"RESET"\n");
 		free(frame);
 		//on avertis l'ui si elle est connectee
@@ -686,12 +687,12 @@ void slash_msg(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clien
 			sendUiMsg("MESSAGEERROR Wrong argument\n",readfds,fd_array,num_clients);
 		}
 		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on évite qu'il puisse écrire à l'infini
-		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+	} else if (strlen(cmd) > WRITE_SIZE+MAX_SIZE_USERNAME+6) { //on évite qu'il puisse écrire à l'infini
+		printf(BLUE"[PROGRAM] Message too long"RESET"\n");
 		free(frame);
 		//on avertis l'ui si elle est connectee
 		if (userInterface_fd > 0 ) {
-			sendUiMsg("MESSAGEERROR Argument too long\n",readfds,fd_array,num_clients);
+			sendUiMsg("MESSAGEERROR Message too long\n",readfds,fd_array,num_clients);
 		}
 		return;
 
@@ -744,7 +745,7 @@ void slash_all(int mod, char *cmd, fd_set *readfds, client_data *fd_array, int *
 
 	if (mod == 0) {
 		/* Initialisation et gestion des erreurs mod 0*/
-		if (strlen(cmd) < 7 || strlen(cmd) > WRITE_SIZE+6) { // "/all \n" = 6
+		if (strlen(cmd) < 7 || strlen(cmd) > WRITE_SIZE+6) { // "/all \n" = 6 -> Force à envoyer un message non vide
 			printf(BLUE"[PROGRAM] Message too short or too long. Please use \"/all message\""RESET"\n");
 			//on avertis l'ui si elle est connectee
 			if (userInterface_fd > 0 ) {
