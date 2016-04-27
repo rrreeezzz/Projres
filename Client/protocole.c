@@ -219,32 +219,23 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			//Quelque chose à enlever ? exitClient(*client_sockfd, readfds, fd_array, num_clients);
 			break;
 
-	    // 305 : TRANSFER_REFUSED
+			// 305 : TRANSFER_REFUSED
 			case 305:
 			printf(BLUE"["RED"%s"BLUE"] Transfer refused."RESET"\n", (*msg_rcv).msg_content);
 			break;
 
-			// 306 : TRANSFER_CANCELLED
-			/*le client peut annuler le transfert, donc on stop le thread, {est ce que ça freee et ça close bien ?} */
-			/* mais si le client plante et quitte sans envoyer de TRANSFER_CANCELLED, il se passe quoi pour le thread ??????????????? */
-
-			// 307 : TRASNFER_ABORTED
-			/*case 307:
-				printf("[%s] Transfer aborted.\n", (*msg_rcv).msg_content);
-				printf("[PROGRAM] Do you still want to keep the file ? Type y or n\n");
-				fgets(res, 4, stdin);
-				if ((strcmp(res, "yes\n")==0) || (strcmp(res, "y\n")==0)) {
-					break;
-				}
-				else {
-
-				}*/
-			/* l'expéditeur a annulé, on ferme fd et on demande si le receveur veut garder le fichier */
+			// 306 :TRANSFER_ABORTED
+			case 306:
+			printf(BLUE"Transfer aborted"RESET"\n");
+			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
+			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = 0;
+			break;
 
 			//308 : TRANSFER_END
 			case 308:
 			printf(BLUE"Transfer of file "RED"%s"BLUE" succeed"RESET"\n", (*msg_rcv).msg_content);
 			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
+			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = 0;
 			break;
 
 			case 403:

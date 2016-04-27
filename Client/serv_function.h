@@ -31,6 +31,7 @@ extern int *init_server();
 extern void * routine_ping(void *arg);
 extern void routine_server(int *server_sockfd);
 extern void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_data *fd_array, int *num_clients, waitList *waitlist);
+extern void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void slash_pm(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients);

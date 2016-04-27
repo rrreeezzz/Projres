@@ -67,6 +67,7 @@ extern void session_end(message *segment);
 extern void session_aborted(message *segment);
 extern void transfer_accept(message *segment, char *filename);
 extern void transfer_refused(message *segment);
+extern void transfer_aborted(message *segment);
 extern void transfer_initiate(message *segment, char *filename, int taille);
 extern void transfer_msg(message *segment, char *data, int n);
 extern void transfer_end(message *segment, char *filename);

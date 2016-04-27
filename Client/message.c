@@ -107,6 +107,15 @@ void transfer_refused(message *segment) {
 	(*segment).length = strlen((*segment).msg_content);
 }
 
+void transfer_aborted(message *segment) {
+
+	/*Fonction qui permet d'envoyer le message de transfer-refused*/
+	(*segment).code = 306;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = strlen((*segment).msg_content);
+}
+
 void transfer_msg(message *segment, char *data, int n) {
 
 	/*Fonction qui permet d'envoyer un morceau du fichier*/

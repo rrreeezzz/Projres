@@ -349,7 +349,13 @@ int disconnect (int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_
 	}
 	/* Fin de l'initialisation / gestion d'erreurs : on alloue de la mémoire */
 	message *discomsg = (message *) malloc(sizeof(message));
-
+	if (fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer != 0) {
+		printf(BLUE"[PROGRAM] Transfer aborted"RESET"\n");
+		transfer_abort(discomsg);
+		send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
+		close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
+		fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = 0;
+	}
 	session_end(discomsg);
 	send_msg(discomsg, &client_sockfd, readfds, fd_array, num_clients);
 	exitClient(client_sockfd, readfds, fd_array, num_clients);

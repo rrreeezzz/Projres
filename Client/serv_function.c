@@ -210,7 +210,7 @@ void * routine_ping(void *arg) {
 		if ((t_actuel % 10 == 0) && (t_ping < t_actuel)) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
-				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0)) {
+				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd))) {
 					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
 				}
 			}
@@ -430,6 +430,8 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 			search_serv(msg, fd_array, num_clients, readfds, waitlist);
 		} else if (strcmp(msg, "/erase\n")==0){
 			erase_serv(fd_array, num_clients, readfds);
+		} else if (strncmp(msg, "/abort", 6)==0){
+			slash_abort(msg, readfds, fd_array, num_clients);
 		} else if (strncmp(msg, "/vocal", 6)==0){
 			#if defined(PROJ)
 			slash_vocal(msg, readfds, fd_array, num_clients);
@@ -445,6 +447,36 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		}
 	}
 }
+
+void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	char username[16];
+	int client_fd = 0;
+	message *frame = (message *) malloc(sizeof(message));
+	if (strlen(cmd) < 11) { //11 car strlen("/abort \n") = 8, et name entre 3 et 16 char, donc 11 minimum
+		printf(BLUE"[PROGRAM] Wrong argument : /abort name"RESET"\n");
+		return;
+	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
+		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
+		return;
+	}
+	sscanf(cmd+7, "%s", username); // +7 car cmd+7 correspond aux arguments (noms d'utilisateurs)
+	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
+		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
+		printf(BLUE"[PROGRAM] /abort aborted"RESET"\n");
+		return;
+	} else if (fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer != 0) {
+		printf(BLUE"[PROGRAM] Transfer aborted"RESET"\n");
+		transfer_abort(frame);
+		send_msg(frame, &client_sockfd, readfds, fd_array, num_clients);
+		close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
+		fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = 0;
+	} else {
+		printf(BLUE"[PROGRAM] "BLUE"You are not transfering file to "RED"%s"RESET"\n", username);
+	}
+	free((*frame).msg_content);
+	free(frame);
+}	
+	
 
 #if defined(PROJ)
 void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
