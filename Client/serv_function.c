@@ -207,7 +207,7 @@ void * routine_ping(void *arg) {
 	int t_actuel, t_ping = 0;
 	while(1) {
 		t_actuel = time(NULL);
-		if ((t_actuel % 10 == 0) && (t_ping < t_actuel)) {
+		if ((t_actuel % 20 == 0) && (t_ping < t_actuel)) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 
