@@ -248,23 +248,40 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché n'existe pas dans la base de données."RESET"\n");
 			break;
 
-			#if defined(PROJ)
+			
 			case 500:
+			#if defined(PROJ)
 			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal = open(buffer, O_CREAT | O_TRUNC | O_WRONLY, 0755);
+			vocal_ok(msg_send);
+			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+      		free((*msg_send).msg_content);
+			#else
+			vocal_nok(msg_send);
+			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+      		free((*msg_send).msg_content);
+			#endif
 			break;
 
 			case 501:
+			prepare_vocal(client_sockfd, readfds, fd_array, num_clients);
+			break;
+			
+			case 502:
+			printf(BLUE"[PROGRAM] : "RED"%s "BLUE" can't receive vocal messages"RESET"\n", (*msg_rcv).msg_content);
+			break;
+			
+			case 503:
 			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal, msg_rcv->msg_content, msg_rcv->length);
 			break;
 
-			case 502:
-            		sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+			case 504:
+            sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			printf("[%s] VOCAL MESSAGE\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal);
 			main_lecture(buffer);
 			break;
-			#endif
+			
 
 			case 600:
 			pong(msg_send);

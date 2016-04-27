@@ -29,6 +29,7 @@ extern void parser_transfer(int mod, char *msg, char *user, char *filename, int 
 extern int ask_transfer(message *msg, char *filename);
 extern void prepare_transfer(message *msg, int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void *file_transfer(void *arg);
+extern void init_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients);
 extern void *vocal_transfer(void *arg);
 

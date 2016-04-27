@@ -131,19 +131,28 @@ void * file_transfer(void *arg) {
    	transfer_msg(msg, buffer, n);
    	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
    	memset(buffer, '\0', WRITE_SIZE);
-   	//usleep(100);
+   	usleep(50000);
   }
 
-  usleep(100); //Au cazouuu
+  sleep(1); //Au cazouuu
   transfer_end(msg, filename);
   send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
   printf(BLUE"Transfer of file "RED"%s "BLUE"succeed"RESET"\n", filename); // rajouter le nom à qui on a envoyé
   close(file_fd);
   free((*msg).msg_content);
+  free(msg);
   pthread_exit(NULL);
 }
 
+
+void init_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
+	message *msg = (message *) malloc(sizeof(message));
+	vocal_begin(msg);
+	send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
+	free((*msg).msg_content);
+	free(msg);
+}
 
 void prepare_vocal(int client_sockfd, fd_set *readfds, client_data *fd_array, int *num_clients) {
   int file_fd = 0;
@@ -188,23 +197,21 @@ void * vocal_transfer(void *arg) {
   fd_array = data->fd_array;
   num_clients = data->num_clients;
 
-  vocal_begin(msg);
-  send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
-  usleep(500); //Au cazou
 
 
   while ((n=read(file_fd, buffer, WRITE_SIZE))> 0) {
     vocal_msg(msg, buffer, n);
     send_msg(msg, &client_sockfd,readfds,fd_array,num_clients);
     memset(buffer, '\0', WRITE_SIZE);
-    //usleep(100);
+    usleep(50000);
   }
 
-  usleep(100); //Au cazouuu
+  sleep(1); //Au cazouuu
   vocal_end(msg);
   send_msg(msg,&client_sockfd,readfds,fd_array,num_clients);
 
   close(file_fd);
   free((*msg).msg_content);
+  free(msg);
   pthread_exit(NULL);
 }
