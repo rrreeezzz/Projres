@@ -211,7 +211,7 @@ void * routine_ping(void *arg) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 
-				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd))) {
+				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
 
 					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
 				}
@@ -466,18 +466,18 @@ void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
 		printf(BLUE"[PROGRAM] /abort aborted"RESET"\n");
 		return;
-	} else if (fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer != 0) {
+	} else if (fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer != 0) {
 		printf(BLUE"[PROGRAM] Transfer aborted"RESET"\n");
-		transfer_abort(frame);
-		send_msg(frame, &client_sockfd, readfds, fd_array, num_clients);
-		close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer);
-		fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = 0;
+		transfer_aborted(frame);
+		send_msg(frame, &client_fd, readfds, fd_array, num_clients);
+		close(fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer);
+		fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer = 0;
 	} else {
 		printf(BLUE"[PROGRAM] "BLUE"You are not transfering file to "RED"%s"RESET"\n", username);
 	}
 	free((*frame).msg_content);
 	free(frame);
-}	
+}
 	
 
 #if defined(PROJ)
