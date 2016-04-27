@@ -73,6 +73,8 @@ extern void transfer_msg(message *segment, char *data, int n);
 extern void transfer_end(message *segment, char *filename);
 extern void vocal_begin(message *segment);
 extern void vocal_msg(message *segment, char *data, int n);
+extern void vocal_ok((message *segment);
+extern void vocal_nok((message *segment);
 extern void vocal_end(message *segment);
 
 #endif

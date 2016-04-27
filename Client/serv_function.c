@@ -506,7 +506,7 @@ void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 		return;
 	}
 	main_capture();
-	prepare_vocal(client_fd, readfds, fd_array, num_clients);
+	init_vocal(client_fd, readfds, fd_array, num_clients);
 }
 #endif
 

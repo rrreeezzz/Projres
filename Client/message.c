@@ -144,10 +144,24 @@ void vocal_begin(message *segment) {
 	(*segment).length = strlen((*segment).msg_content);
 }
 
+void vocal_ok((message *segment) {
+	(*segment).code = 501;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = n;
+}
+
+void vocal_nok((message *segment) {
+	(*segment).code = 502;
+	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
+	sprintf((*segment).msg_content, "%s", General_Name);
+	(*segment).length = n;
+}
+
 void vocal_msg(message *segment, char *data, int n) {
 
 	/*Fonction qui permet d'envoyer un morceau du fichier du vocal*/
-	(*segment).code = 501;
+	(*segment).code = 503;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	memcpy((*segment).msg_content, data, n);
 	(*segment).length = n;
@@ -156,7 +170,7 @@ void vocal_msg(message *segment, char *data, int n) {
 void vocal_end(message *segment) {
 
 	/*Fonction pour envoyer fin de transfert du vocal*/
-	(*segment).code = 502;
+	(*segment).code = 504;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
 	(*segment).length = strlen((*segment).msg_content);
