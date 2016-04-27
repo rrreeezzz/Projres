@@ -19,7 +19,7 @@ void handler_sigint(){
 
 	/*Mise en plase du handler pour SIGINT*/
 
-    printf("\nExit minimal UI\n");
+    printf(GREEN"\nExit minimal UI"RESET"\n");
     sendSessionEnd();
     exit(EXIT_SUCCESS);
 

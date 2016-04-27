@@ -1,16 +1,16 @@
 /////INSTALLATION\\\\\\
 
-Librairies à installer :
+Librairies à installer (passer root si nécessaire):
 
-sudo apt-get install mysql-server
-sudo apt-get install libmysqld-dev
-sudo apt-get install g++
-sudo apt-get install libgtk-3-dev
+apt-get install mysql-server
+apt-get install libmysqld-dev
+apt-get install g++
+apt-get install libgtk-3-dev
 
 Pour le transfert de message vocaux :
 
-sudo apt-get install libopenal-dev
-sudo apt-get install libsndfile1-dev
+apt-get install libopenal-dev
+apt-get install libsndfile1-dev
 
 
 /////SERVEUR MYSQL\\\\\
@@ -32,9 +32,19 @@ Pour tester avec le serveur d'annuaire, qui repose sur un serveur mysql, suivez 
 
 - Remplacer ensuite les infos dans conf.txt : champs user: et password: définis précédemment
 De plus, veuillez rentrer l'IP de la machine sur laquelle vous avez installé le serveur annuaire
-champ server_address: -> " 0.0.0.0 " ou " 127.0.0.1 " sur la machine locale
+dans le champ server_address:     (" 0.0.0.0 " ou " 127.0.0.1 " sur la machine locale)
 
-//////Compilation\\\\\
+/////Compilation\\\\\
 Lancer  ./install.sh {ecole|normal}  à la racine du dossier de l'application.
 -> paramètre ecole dans le cas où il n'y a pas eu possibilité d'installer les librairies de la 1ère étape
 -> paramètre normal si toutes les librairies sont installées
+
+/////Exécution\\\\\
+Exécution école :
+Client  : "./client_ecole"    (Sans openAL)
+  UI    : "./ui_minimale"     (UI en console, sans GTK)
+
+Exécution normale :
+Client  : "./client_normal"   (Utilisant openAL)
+  UI    : "./ui_normal"       (UI utilisant GTK+3.10)
+Serveur : "./serveur"         (serveur d'annuaire utilisant mysql)
