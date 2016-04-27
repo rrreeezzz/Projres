@@ -472,10 +472,10 @@ void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 		send_msg(frame, &client_fd, readfds, fd_array, num_clients);
 		close(fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer);
 		fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer = 0;
+		free((*frame).msg_content);
 	} else {
 		printf(BLUE"[PROGRAM] "BLUE"You are not transfering file to "RED"%s"RESET"\n", username);
 	}
-	free((*frame).msg_content);
 	free(frame);
 }
 	
