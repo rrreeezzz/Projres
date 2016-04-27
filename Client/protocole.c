@@ -9,14 +9,14 @@ void send_msg(message *segment, int *fd, fd_set *readfds, client_data *fd_array,
 
 	sprintf(msg, "%d/%d/%d/", (*segment).code, (*segment).length, (int) (*segment).temps);
 	/* if((*segment).code != 100) {
-		printf(CYAN"msg envoyé : %s"RESET"\n", msg); //pour la trace
-	} */
-	memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
+	printf(CYAN"msg envoyé : %s"RESET"\n", msg); //pour la trace
+} */
+memcpy(msg+(strlen(msg)), (*segment).msg_content, WRITE_SIZE);  //50
 
-	if (write(*fd, msg, MSG_SIZE) <= 0) {
-		perror("Write error");
-		exitClient(*fd, readfds, fd_array, num_clients);
-	}
+if (write(*fd, msg, MSG_SIZE) <= 0) {
+	perror("Write error");
+	exitClient(*fd, readfds, fd_array, num_clients);
+}
 }
 
 void sendUiMsg(char * content, fd_set *readfds, client_data *fd_array, int *num_clients) {
@@ -91,10 +91,10 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			}
 			break;
 
-			// 101 : grp ?
 
-			// 102 : données de transfert de fichier
-			case 102:
+
+			// 101 : données de transfert de fichier
+			case 101:
 			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length);
 			// gestion erreur ?!!!!!!!!!! a faire
 			break;
@@ -164,16 +164,16 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			}
 			break;
 
-    	// 203 : TRANSFER_INITIATE
-      case 203:
-	  	if((fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = ask_transfer(msg_rcv, filename)) < 0){
+			// 203 : TRANSFER_INITIATE
+			case 203:
+			if((fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer = ask_transfer(msg_rcv, filename)) < 0){
 				transfer_refused(msg_send);
 			} else {
 				transfer_accept(msg_send, filename);
 			}
-      send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-      free((*msg_send).msg_content);
-    	break;
+			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
+			free((*msg_send).msg_content);
+			break;
 
 			// 204 : TRANSFER_ACCEPT
 			case 204:
@@ -239,54 +239,60 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 
 			case 403:
-			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché est : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
+			printf(BLUE"[PROGRAM] : Search user address is : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
 			sprintf(buffer, "/add %s\n", (*msg_rcv).msg_content);
 			add_contact(readfds,fd_array,num_clients,buffer);
 			break;
 
 			case 411:
-			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché n'existe pas dans la base de données."RESET"\n");
+			printf(BLUE"[PROGRAM] :Search user address doesn't exist in the databse."RESET"\n");
 			break;
 
-			
-			case 500:
+			// vocal begin
+			case 206:
 			#if defined(PROJ)
 			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal = open(buffer, O_CREAT | O_TRUNC | O_WRONLY, 0755);
 			vocal_ok(msg_send);
 			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-      		free((*msg_send).msg_content);
+			free((*msg_send).msg_content);
 			#else
 			vocal_nok(msg_send);
 			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-      		free((*msg_send).msg_content);
+			free((*msg_send).msg_content);
 			#endif
 			break;
 
-			case 501:
-			prepare_vocal(client_sockfd, readfds, fd_array, num_clients);
+			// vocal ok
+			case 207:
+			prepare_vocal(*client_sockfd, readfds, fd_array, num_clients);
 			break;
-			
-			case 502:
+
+			//vocal nok
+			case 208:
 			printf(BLUE"[PROGRAM] : "RED"%s "BLUE" can't receive vocal messages"RESET"\n", (*msg_rcv).msg_content);
 			break;
-			
-			case 503:
+
+			//vocal msg
+			case 102:
 			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal, msg_rcv->msg_content, msg_rcv->length);
 			break;
 
-			case 504:
-            sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
+			//vocal end
+			#if defined(PROJ)
+			case 309:
+			sprintf(buffer,"vocal_%s.wav", msg_rcv->msg_content);
 			printf("[%s] VOCAL MESSAGE\n", fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].name_client);
 			close(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_vocal);
 			main_lecture(buffer);
 			break;
-			
+			#endif
+
 
 			case 600:
 			pong(msg_send);
 			send_msg(msg_send,client_sockfd,readfds,fd_array,num_clients);
-      		free((*msg_send).msg_content);
+			free((*msg_send).msg_content);
 			write(fd_array[search_client_array_by_fd(*client_sockfd, fd_array, num_clients)].fd_transfer, msg_rcv->msg_content, msg_rcv->length);
 			break;
 

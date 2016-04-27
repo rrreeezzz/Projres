@@ -17,9 +17,9 @@ void ask_name(){
 			perror("Name read error.");
 			exit(EXIT_FAILURE);
 			break;
-		} else if(result > 16) { //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
+		} else if(result > MAX_SIZE_USERNAME+1) { //on test result car sinon bug si l'utilisateur rentre + que 15, et > 16 car result compte le \n
 			printf(BLUE"[PROGRAM] Username too long, please enter another: "RESET"\n");
-		} else if(result < 4) {
+		} else if(result < MIN_SIZE_USERNAME+1) {
 			printf(BLUE"[PROGRAM] Username too short, please enter another: "RESET"\n");
 		}
 		if (strcmp(user, "/quit\n") == 0) {
@@ -33,7 +33,7 @@ void ask_name(){
 		if (bchar) {
 			printf(BLUE"[PROGRAM] You can't have a space or any punctuation in your username, please enter another : "RESET"\n");
 		}
-	} while(result > 16 || result < 4 || bchar);
+	} while(result > MAX_SIZE_USERNAME+1 || result < MIN_SIZE_USERNAME+1 || bchar);
 
 	user[strlen(user)-1] = '\0';
 	strcpy(General_Name, user);
@@ -207,7 +207,7 @@ void * routine_ping(void *arg) {
 	int t_actuel, t_ping = 0;
 	while(1) {
 		t_actuel = time(NULL);
-		if ((t_actuel % 10 == 0) && (t_ping < t_actuel)) {
+		if ((t_actuel % 20 == 0) && (t_ping < t_actuel)) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 
@@ -250,7 +250,7 @@ void routine_server(int * server_sockfd){
  	 data.fd_array = fd_array;
  	 data.num_clients = &num_clients;
 	if(pthread_create(&pid_ping, NULL, routine_ping, (void *) &data) != 0){
-  		  perror("Probleme avec pthread_create");
+  		  perror("Error with pthread_create");
   		  exit(EXIT_FAILURE);
  	 }
 
@@ -391,7 +391,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		printf(BLUE"[PROGRAM] : Message too long, max is "RED"%d"BLUE" caracters."RESET"\n", WRITE_SIZE);
 		while((ch = getchar()) != '\n'){
 			if(ch < 0) {
-				perror("Erreur taille message");
+				perror("Lenght message error");
 			}
 		}
 	} else {
@@ -476,11 +476,11 @@ void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 		send_msg(frame, &client_fd, readfds, fd_array, num_clients);
 		close(fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer);
 		fd_array[search_client_array_by_fd(client_fd, fd_array, num_clients)].fd_transfer = 0;
+		free((*frame).msg_content);
 	} else {
 		printf(BLUE"[PROGRAM] "BLUE"You are not transfering file to "RED"%s"RESET"\n", username);
 	}
 
-	free((*frame).msg_content);
 	free(frame);
 }
 
