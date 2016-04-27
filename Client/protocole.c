@@ -264,7 +264,7 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 
 			case 501:
-			prepare_vocal(client_sockfd, readfds, fd_array, num_clients);
+			prepare_vocal(*client_sockfd, readfds, fd_array, num_clients);
 			break;
 			
 			case 502:
