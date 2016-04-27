@@ -1,5 +1,19 @@
 #include "ui.h"
+
+void handler_sigint(){
+
+	/*Mise en plase du handler pour SIGINT*/
+
+    printf("\nExit minimal UI\n");
+    sendSessionEnd();
+    exit(EXIT_SUCCESS);
+
+}
+
 int main(int argc, char *argv[] ) {
+
+  signal(SIGINT, handler_sigint);
+
   gtk_init (&argc, &argv);
 
   serverState = 0;
