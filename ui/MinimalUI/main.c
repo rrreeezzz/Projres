@@ -19,7 +19,9 @@ int main(int argc, char *argv[]) {
 	//On rentre l'adresse et le port
   strcpy(adresseClientPrincipal,"127.0.0.1");
 
-  portClientPrincipal = 55567;
+  printf("On which port you want to connect ?");
+  scanf("%d", &portClientPrincipal);
+  //portClientPrincipal = 55567;
 
 
 	//On tente de se connecter
