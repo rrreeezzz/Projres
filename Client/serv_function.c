@@ -451,17 +451,21 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 }
 
 void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
-	char username[16];
+
+	char username[MAX_SIZE_USERNAME];
 	int client_fd = 0;
 	message *frame = (message *) malloc(sizeof(message));
-	if (strlen(cmd) < 11) { //11 car strlen("/abort \n") = 8, et name entre 3 et 16 char, donc 11 minimum
+
+	if (strlen(cmd) < MIN_SIZE_USERNAME+8) { // "/abort \n"= 8
 		printf(BLUE"[PROGRAM] Wrong argument : /abort name"RESET"\n");
 		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
+	} else if (strlen(cmd) > MAX_SIZE_USERNAME+8) {
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		return;
 	}
+
 	sscanf(cmd+7, "%s", username); // +7 car cmd+7 correspond aux arguments (noms d'utilisateurs)
+
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
 		printf(BLUE"[PROGRAM] /abort aborted"RESET"\n");
@@ -475,23 +479,27 @@ void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 	} else {
 		printf(BLUE"[PROGRAM] "BLUE"You are not transfering file to "RED"%s"RESET"\n", username);
 	}
+
 	free((*frame).msg_content);
 	free(frame);
 }
-	
+
 
 #if defined(PROJ)
 void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {
-	char username[16];
+	char username[MAX_SIZE_USERNAME];
 	int client_fd = 0;
-	if (strlen(cmd) < 11) { //11 car strlen("/vocal \n") = 8, et name entre 3 et 16 char, donc 11 minimum
+
+	if (strlen(cmd) < MIN_SIZE_USERNAME+8) {
 		printf(BLUE"[PROGRAM] Wrong argument : /vocal name"RESET"\n");
 		return;
-	} else if (strlen(cmd) > WRITE_SIZE) { //on va éviter qu'il puisse écrire à l'infini hein
+	} else if (strlen(cmd) > MAX_SIZE_USERNAME+8) {
 		printf(BLUE"[PROGRAM] Argument too long"RESET"\n");
 		return;
 	}
-	sscanf(cmd+7, "%s", username); // +7 car cmd+7 correspond aux arguments (noms d'utilisateurs)
+
+	sscanf(cmd+7, "%s", username);
+
 	if ((client_fd = search_client_fd_by_name(username, fd_array, num_clients)) == -1) {
 		printf(BLUE"[PROGRAM] "RED"%s "BLUE"not connected"RESET"\n", username);
 		printf(BLUE"[PROGRAM] /vocal aborted"RESET"\n");
@@ -832,6 +840,10 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The quit function allows you to quit the chat. It will close all connections.\n\t  Use : \"/quit\""RESET"\n");
 	} else if (strcmp(posSpace, "connect\n")==0){
 		printf(BLUE"\n[PROGRAM] The connect function allows you to establish a connection with another user.\n\t  Use : \"/connect\" to connect to a user you don't already have in your contact list. You will be ask his/her socket address (address port).\n\t  OR\n\t  Use : \"/connect USERNAME\" to connect to a user you already have in your contact list."RESET"\n");
+	} else if (strcmp(posSpace, "accept\n")==0) {
+		printf(BLUE"\n[PROGRAM] The accept function allows you to refuse an incoming connection from another user.\n\t  Use : \"/accept USERNAME\" to accept the connection."RESET"\n");
+	} else if (strcmp(posSpace, "refuse\n")==0) {
+		printf(BLUE"\n[PROGRAM] The refuse function allows you to refuse an incoming connection from another user.\n\t  Use : \"/refuse USERNAME\" to refuse the connection."RESET"\n");
 	} else if (strcmp(posSpace, "msg\n")==0) {
 		printf(BLUE"\n[PROGRAM] The msg function allows you to send a direct message to other users.\n\t  Use : \"/msg USERNAME(S) ...\" to send a direct message to one or more users.\n\t  Then you will be asked to type your message and press [Enter] to send it."RESET"\n");
 	} else if (strcmp(posSpace, "pm\n")==0) {
@@ -848,6 +860,10 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The who function allows you to print every user you are currently connected to.\n\t  Use : \"/who\""RESET"\n");
 	} else if (strcmp(posSpace, "transfer\n")==0){
 		printf(BLUE"\n[PROGRAM] The transfer function allows you to transfer text files and binary files.\n\t  Use : \"/transfer\", then type the filename (absolute or relative) and press [Enter].\n\t  The transfer will start and a message will be displayed upon success or failure."RESET"\n");
+	} else if (strcmp(posSpace, "abort\n")==0) {
+		printf(BLUE"\n[PROGRAM] The abort function allows you to abort a transfer\tUse : \"/abort USERNAME\"."RESET"\n");
+	} else if (strcmp(posSpace, "vocal\n")==0) {
+		printf(BLUE"\n[PROGRAM] The vocal function allows you to send a short vocal message.\n\t  Use : \"/vocal USERNAME\" then start talking.\n\tThe other user will be asked if he can receive vocal message. On confirmation, the vocal message will be sent."RESET"\n");
 	} else if (strcmp(posSpace, "online\n") == 0) {
 		printf(BLUE"\n[PROGRAM] The online function allows you to send your ip to the annuary server, wich can allows other people to contact you.\n\t  Use : \"/online\""RESET"\n");
 	} else if (strcmp(posSpace, "search\n") == 0) {
@@ -860,3 +876,6 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }
+} else if (strncmp(msg, "/abort", 6)==0){
+	slash_abort(msg, readfds, fd_array, num_clients);
+} else if (strncmp(msg, "/vocal", 6)==0){
