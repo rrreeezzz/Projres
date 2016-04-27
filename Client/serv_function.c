@@ -876,6 +876,3 @@ void help(char * msg) {
 		printf(BLUE"\n[PROGRAM] The help function print help for functions : quit, connect, msg, all, add, remove, contact, who, transfer, online, erase, search, disconnect\n\t  Use : /help FunctionName"RESET"\n");
 	}
 }
-} else if (strncmp(msg, "/abort", 6)==0){
-	slash_abort(msg, readfds, fd_array, num_clients);
-} else if (strncmp(msg, "/vocal", 6)==0){
