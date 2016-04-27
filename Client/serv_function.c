@@ -211,10 +211,10 @@ void * routine_ping(void *arg) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
 
-				//if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
+				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
 
-					//exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
-				//}
+					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
+				}
 			}
 			ping(msg);
 			for (i=0; i<*num_clients; i++) {
