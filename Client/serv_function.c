@@ -210,15 +210,15 @@ void * routine_ping(void *arg) {
 		if ((t_actuel % 10 == 0) && (t_ping < t_actuel)) {
 			t_ping = t_actuel;
 			for (i=0; i<*num_clients; i++) {
-				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0)) {
+				if ((fd_array[i].rdy == 1) && (fd_array[i].ping == 0) && (fd_array[i].fd_client != userInterface_fd)) {
 					exitClient(fd_array[i].fd_client, readfds, fd_array, num_clients);
 				}
 			}
 			ping(msg);
-			for (i=0; i<*num_clients; i++) {	
-				fd_array[i].ping = 0;	
+			for (i=0; i<*num_clients; i++) {
+				fd_array[i].ping = 0;
       				send_msg(msg, &fd_array[i].fd_client,readfds,fd_array, num_clients);
-			}	
+			}
       			free(msg->msg_content);
 		}
 	}
@@ -249,7 +249,7 @@ void routine_server(int * server_sockfd){
  	 data.num_clients = &num_clients;
 	if(pthread_create(&pid_ping, NULL, routine_ping, (void *) &data) != 0){
   		  perror("Probleme avec pthread_create");
-  		  exit(EXIT_FAILURE); 
+  		  exit(EXIT_FAILURE);
  	 }
 
 	/* Initialisation de la file d'attente */
