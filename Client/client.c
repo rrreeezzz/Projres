@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
 
 	routine_server(server_sockfd);
 
-	system("./clean_vocal.sh");
+	//Suppression des potentiels .wav dans Client, suite a l'utilisation du vocal
+	system("rm -f Client/*.wav");
 	exit(EXIT_SUCCESS);
 }//main
