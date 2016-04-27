@@ -30,8 +30,8 @@ int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   /*Récupération configuration adresse serveur*/
   char conf[MAX_SIZE_PARAMETER] = "server_address";
   if(get_Config(conf) < 0){
-    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
-    exit(EXIT_FAILURE);
+    perror(BLUE"[PROGRAM] Error port configuration."RESET);
+    return -1;
   }
 
   info_online.sin_family = AF_INET;
@@ -41,7 +41,7 @@ int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror(BLUE"Erreur de connection, le serveur ne semble pas être en ligne"RESET);
+    perror(BLUE"Error the server does not seem to be online"RESET);
     return -1;
   }
 
@@ -52,7 +52,7 @@ int connect_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   sprintf(msg, "400/%d/%zd/%s/END", (int) tps, strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
-    perror("Erreur write serveur annuaire");
+    perror("Erreur write annuary server");
     return -1;
   }
 
@@ -87,8 +87,8 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   /*Récupération configuration adresse serveur*/
   char conf[MAX_SIZE_PARAMETER] = "server_address";
   if(get_Config(conf) < 0){
-    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
-    exit(EXIT_FAILURE);
+    perror(BLUE"[PROGRAM] Error port configuration."RESET);
+    return -1;
   }
 
   info_online.sin_family = AF_INET;
@@ -98,9 +98,9 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror(BLUE"Erreur de connection, le serveur ne semble pas être en ligne"RESET);
+    perror(BLUE"Error the server does not seem to be online"RESET);
     if (userInterface_fd > 0) {
-      sendUiMsg("SERVERROR Le serveur n'est pas en ligne.\n",readfds,fd_array,num_clients);
+      sendUiMsg("SERVERROR Error the server does not seem to be online.\n",readfds,fd_array,num_clients);
     }
     return -1;
   }
@@ -111,14 +111,14 @@ int search_serv(char *buf, client_data *fd_array, int *num_clients, fd_set *read
   sprintf(msg, "402/%d/%zd/%s/END", (int) tps, strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
-    perror("Erreur write serveur annuaire");
+    perror("Erreur write annuary server");
     return -1;
   }
 
   memset(msg, '\0', MSG_SIZE);
 
   if(read(online, msg, MSG_SIZE) <= 0){
-    perror("Erreur write serveur annuaire");
+    perror("Erreur write annuary server");
     return -1;
   }
 
@@ -139,8 +139,8 @@ int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   /*Récupération configuration adresse serveur*/
   char conf[MAX_SIZE_PARAMETER] = "server_address";
   if(get_Config(conf) < 0){
-    perror(BLUE"[PROGRAM] Erreur configuration port."RESET);
-    exit(EXIT_FAILURE);
+    perror(BLUE"[PROGRAM] Error port configuration"RESET);
+    return -1;
   }
 
   info_online.sin_family = AF_INET;
@@ -150,7 +150,7 @@ int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   online = socket(AF_INET, SOCK_STREAM, 0);
   /* Connection au serveur annuaire */
   if(connect(online, (struct sockaddr *)&info_online, sizeof(info_online)) < 0) {
-    perror("Erreur de connection, le serveur ne semble pas être en ligne");
+    perror(BLUE"Error the server does not seem to be online"RESET);
     if (userInterface_fd > 0) {
       sendUiMsg("SERVERROR Le serveur n'est pas en ligne.\n",readfds,fd_array,num_clients);
     }
@@ -161,7 +161,7 @@ int erase_serv(client_data *fd_array, int *num_clients, fd_set *readfds){
   sprintf(msg, "404/%d/%zd/%s/END", (int) tps, strlen(temp), temp);
 
   if(write(online, msg, MSG_SIZE) <= 0){
-    perror("Erreur write serveur annuaire");
+    perror("Error write annuary server");
     return -1;
   }
 

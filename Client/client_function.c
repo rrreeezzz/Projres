@@ -115,7 +115,7 @@ int client(int *maxfds, fd_set *readfds, int *num_clients, client_data *fd_array
 	if(connect(sock_host, (struct sockaddr *)&address, sizeof(address)) < 0) {
 		perror("Connect");
 		if (userInterface_fd > 0) {
-			sendUiMsg("CONNECTERROR Client injoignable.\n",readfds,fd_array,num_clients);
+			sendUiMsg("CONNECTERROR Client unreachable.\n",readfds,fd_array,num_clients);
 		}
 		return -1;
 	} //gérer autrement car il ne faut pas quitter si on arrive pas a se co

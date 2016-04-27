@@ -250,7 +250,7 @@ void routine_server(int * server_sockfd){
  	 data.fd_array = fd_array;
  	 data.num_clients = &num_clients;
 	if(pthread_create(&pid_ping, NULL, routine_ping, (void *) &data) != 0){
-  		  perror("Probleme avec pthread_create");
+  		  perror("Error with pthread_create");
   		  exit(EXIT_FAILURE);
  	 }
 
@@ -391,7 +391,7 @@ void cmde_host(int fd,fd_set *readfds, int *server_sockfd, int *maxfds, client_d
 		printf(BLUE"[PROGRAM] : Message too long, max is "RED"%d"BLUE" caracters."RESET"\n", WRITE_SIZE);
 		while((ch = getchar()) != '\n'){
 			if(ch < 0) {
-				perror("Erreur taille message");
+				perror("Lenght message error");
 			}
 		}
 	} else {
@@ -478,7 +478,7 @@ void slash_abort(char *cmd, fd_set *readfds, client_data *fd_array, int *num_cli
 	}
 	free(frame);
 }
-	
+
 
 #if defined(PROJ)
 void slash_vocal(char *cmd, fd_set *readfds, client_data *fd_array, int *num_clients) {

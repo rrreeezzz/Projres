@@ -239,13 +239,13 @@ void rechercheProtocol(char *msg, int *client_sockfd, client_data *fd_array, int
 			break;
 
 			case 403:
-			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché est : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
+			printf(BLUE"[PROGRAM] : Search user address is : "RED"%s"RESET"\n", (*msg_rcv).msg_content);
 			sprintf(buffer, "/add %s\n", (*msg_rcv).msg_content);
 			add_contact(readfds,fd_array,num_clients,buffer);
 			break;
 
 			case 411:
-			printf(BLUE"[PROGRAM] : L'adresse de l'utilisateur recherché n'existe pas dans la base de données."RESET"\n");
+			printf(BLUE"[PROGRAM] :Search user address doesn't exist in the databse."RESET"\n");
 			break;
 
 			// vocal begin
