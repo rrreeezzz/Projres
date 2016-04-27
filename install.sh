@@ -16,7 +16,7 @@ fi
 
 if [ "$1" = "ecole" ]
 then
-	cd ./Client && make client_ecole && make && cd ../ui/MinimalUI && gcc ui.c -o ../../ui_minimale
+	cd ./Client && make client_ecole && cd ../ui/MinimalUI && gcc main.c -o ../../ui_minimale
 fi
 
 if test $? == 0

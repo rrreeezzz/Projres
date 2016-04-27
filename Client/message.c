@@ -155,7 +155,7 @@ void vocal_nok(message *segment) {
 	(*segment).code = 208;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
-	(*segment).length = n;
+	//(*segment).length = n;
 }
 
 void vocal_msg(message *segment, char *data, int n) {
