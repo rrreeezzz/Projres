@@ -144,14 +144,14 @@ void vocal_begin(message *segment) {
 	(*segment).length = strlen((*segment).msg_content);
 }
 
-void vocal_ok((message *segment) {
+void vocal_ok(message *segment) {
 	(*segment).code = 501;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
-	(*segment).length = n;
+	(*segment).length = strlen((*segment).msg_content);
 }
 
-void vocal_nok((message *segment) {
+void vocal_nok(message *segment) {
 	(*segment).code = 502;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	sprintf((*segment).msg_content, "%s", General_Name);
@@ -164,7 +164,7 @@ void vocal_msg(message *segment, char *data, int n) {
 	(*segment).code = 503;
 	(*segment).msg_content = (char *) malloc(WRITE_SIZE);
 	memcpy((*segment).msg_content, data, n);
-	(*segment).length = n;
+	(*segment).length = strlen((*segment).msg_content);
 }
 
 void vocal_end(message *segment) {
