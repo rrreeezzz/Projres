@@ -536,7 +536,7 @@ void slash_transfer(char *cmd, fd_set *readfds, client_data *fd_array, int *num_
 	}
 	strcpy(data, posSpace+1);
 	data[strlen(data) - 1] = '\0';
-	printf("data %s", data);
+
   /* Remplissage de la structure contact_data */
   pch = strtok (data," ");
   while (pch != NULL) {
