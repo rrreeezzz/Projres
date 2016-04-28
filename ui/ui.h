@@ -41,7 +41,9 @@ typedef struct onglet {
 //Pour afficher les clients du carnet
 typedef struct contactData {
   char * name;
-  GtkWidget * listElement;
+  GtkWidget * listElementLabel1;
+  GtkWidget * listElementLabel2;
+  GtkWidget * listElementLabel3;
   int flag;
 } contactData;
 
