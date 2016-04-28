@@ -35,13 +35,9 @@ void removeContact(char * name){
     if (strcmp(contactArray[i].name,name) == 0){
       gtk_widget_hide(GTK_WIDGET(contactArray[i].listElementLabel1));
       gtk_widget_hide(GTK_WIDGET(contactArray[i].listElementLabel2));
-      //gtk_widget_hide(GTK_WIDGET(contactArray[i].listElementLabel3));
-      gtk_label_set_text (GTK_LABEL(contactArray[i].listElementLabel3),"Deleted");
-      contactArray[i].listElementLabel1 = NULL;
-      contactArray[i].listElementLabel2 = NULL;
-      contactArray[i].listElementLabel3 = NULL;
+      gtk_widget_hide(GTK_WIDGET(contactArray[i].listElementLabel3));
       free(contactArray[i].name);
-      contactArray[i].name=NULL;
+      contactArray[i].name = NULL;
       return;
     }
   }
